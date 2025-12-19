@@ -56,4 +56,5 @@ RUN DATABASE_URL="mysql://dummy:dummy@localhost:3306/dummy" npx prisma generate
 EXPOSE 80
 
 # 启动命令
-CMD ["npm", "start"]
+# 在启动服务前，运行 prisma migrate deploy 以确保数据库表结构已创建
+CMD npx prisma migrate deploy && npm start
