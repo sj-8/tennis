@@ -22,6 +22,8 @@ echo "Database Connection: $SAFE_URL"
 echo "Running migrations..."
 # 尝试解决 baseline 问题：如果数据库非空但没有迁移记录，尝试标记第一次迁移为已应用
 npx prisma migrate resolve --applied 0_init || true
+# 强制推送 schema 到数据库，确保表结构与 schema.prisma 一致
+npx prisma db push --accept-data-loss
 npx prisma migrate deploy
 
 echo "Starting application..."
