@@ -1,14 +1,17 @@
 const BASE_URL = 'https://express-4y4r-199217-5-1386469492.sh.run.tcloudbase.com/api';
 
+// Declare wx global for TypeScript
+declare const wx: any;
+
 export const request = (options: any) => {
   /**
-   * 封装 uni.request 请求方法
-   * 自动添加 Content-Type 头
-   * 返回 Promise 对象
+   * 封装请求方法
+   * - 微信小程序环境：使用 wx.cloud.callContainer
+   * - 其他环境：使用 uni.request
    */
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync('token');
-    const header = {
+    const header: any = {
       'Content-Type': 'application/json',
       ...options.header
     };
@@ -16,6 +19,34 @@ export const request = (options: any) => {
       header['Authorization'] = `Bearer ${token}`;
     }
 
+    // #ifdef MP-WEIXIN
+    wx.cloud.callContainer({
+      config: {
+        env: 'prod-5g8w00e00898869c' // Replace with your actual Env ID if different, or omit config to use default
+      },
+      path: `/api${options.url}`, // Ensure path starts with /api if your backend expects it, or just options.url if BASE_URL already has /api
+      header: {
+        ...header,
+        'X-WX-SERVICE': 'express-4y4r' // Your service name
+      },
+      method: options.method || 'GET',
+      data: options.data,
+      success: (res: any) => {
+        // wx.cloud.callContainer returns { data: ..., statusCode: ... }
+        // Our backend returns the data directly in body
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+           resolve(res.data);
+        } else {
+           reject(res.data || 'Request failed');
+        }
+      },
+      fail: (err: any) => {
+        reject(err);
+      }
+    });
+    // #endif
+
+    // #ifndef MP-WEIXIN
     uni.request({
       url: `${BASE_URL}${options.url}`,
       method: options.method || 'GET',
@@ -28,6 +59,7 @@ export const request = (options: any) => {
         reject(err);
       }
     });
+    // #endif
   });
 };
 
