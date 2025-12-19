@@ -3,9 +3,7 @@
     <view class="header tennis-court-bg">
       <view class="header-content">
         <TennisBall :size="32" :animated="true" />
-        <view class="title-wrapper">
-          <text class="title">近期赛事</text>
-        </view>
+        <text class="title">近期赛事</text>
       </view>
     </view>
     
@@ -125,7 +123,6 @@ onMounted(() => {
   gap: 15px;
 }
 .title { font-size: 24px; font-weight: bold; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-.title-wrapper { display: flex; align-items: center; }
 .match-list { padding: 0 20px; }
 .match-card { 
   background: #fff; 
