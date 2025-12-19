@@ -21,16 +21,21 @@ export const request = (options: any) => {
 
     // #ifdef MP-WEIXIN
     // Use wx.cloud.callContainer
-    // Important: callContainer expects the path to be relative to the container root.
-    // Our Express app is mounted at root, but routes are defined like /auth/login.
-    // However, if the container gateway routes everything to /, we might need /api prefix depending on container config.
-    // But usually callContainer path matches the Express route directly.
     
+    // 构造完整的路径，如果 options.url 不包含 /api 前缀，则添加
+    // 我们的后端路由虽然定义为 /auth/login，但通常容器服务的入口可能会统一加 /api
+    // 让我们尝试加回 /api，因为第一次失败可能是因为路径不对，第二次失败可能是因为没加 /api
+    // 最稳妥的方式：观察 BASE_URL 发现它是 .../api，说明云托管的网关可能配置了 /api 转发
+    // 所以 callContainer 的 path 应该包含 /api
+    
+    const path = options.url.startsWith('/') ? options.url : `/${options.url}`;
+    const fullPath = path.startsWith('/api') ? path : `/api${path}`;
+
     wx.cloud.callContainer({
       config: {
         env: 'prod-5g8w00e00898869c'
       },
-      path: options.url.startsWith('/') ? options.url : `/${options.url}`, // Ensure leading slash
+      path: fullPath, 
       header: {
         ...header,
         'X-WX-SERVICE': 'express-4y4r'
