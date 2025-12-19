@@ -52,9 +52,12 @@ COPY --from=builder /app/prisma ./prisma
 # 同样使用 dummy URL，因为我们只是需要生成代码
 RUN DATABASE_URL="mysql://dummy:dummy@localhost:3306/dummy" npx prisma generate
 
+# 复制启动脚本
+COPY backend/start.sh ./start.sh
+RUN chmod +x ./start.sh
+
 # 暴露端口
 EXPOSE 80
 
 # 启动命令
-# 在启动服务前，运行 prisma migrate deploy 以确保数据库表结构已创建
-CMD npx prisma migrate deploy && npm start
+CMD ["./start.sh"]
