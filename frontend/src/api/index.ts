@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'https://express-4y4r-199217-5-1386469492.sh.run.tcloudbase.com/api';
 
 export const request = (options: any) => {
   return new Promise((resolve, reject) => {
@@ -10,10 +10,10 @@ export const request = (options: any) => {
         'Content-Type': 'application/json',
         ...options.header
       },
-      success: (res) => {
+      success: (res: any) => {
         resolve(res.data);
       },
-      fail: (err) => {
+      fail: (err: any) => {
         reject(err);
       }
     });
