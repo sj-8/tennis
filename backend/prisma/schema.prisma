@@ -31,19 +31,21 @@ model AdminUser {
 }
 
 model PlayerApplication {
-  id        Int      @id @default(autoincrement())
-  playerId  Int
-  realName  String
-  phone     String
-  idCard    String
-  project   String
-  bio       String?  @db.Text
-  files     String?  @db.Text // JSON string for file URLs
-  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  player    Player   @relation(fields: [playerId], references: [id])
-  auditLogs AuditLog[]
+  id           Int        @id @default(autoincrement())
+  playerId     Int
+  tournamentId Int?       // Optional for now to avoid migration issues with existing data, but logic should enforce it
+  realName     String
+  phone        String
+  idCard       String
+  project      String?
+  bio          String?    @db.Text
+  files        String?    @db.Text // JSON string for file URLs
+  status       String     @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  player       Player     @relation(fields: [playerId], references: [id])
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+  auditLogs    AuditLog[]
 }
 
 model AuditLog {
@@ -70,6 +72,7 @@ model Tournament {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   results     TournamentResult[]
+  applications PlayerApplication[]
 }
 
 model TournamentResult {

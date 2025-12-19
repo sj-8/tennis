@@ -22,5 +22,7 @@ export const request = (options: any) => {
 
 export const getMatches = () => request({ url: '/matches' });
 export const createMatch = (data: any) => request({ url: '/matches', method: 'POST', data });
-export const getRankings = () => request({ url: '/matches/rankings' }); // Need to implement this backend API actually, or derive from results
+export const getRankings = () => request({ url: '/matches/rankings' });
 export const submitResult = (id: number, results: any) => request({ url: `/matches/${id}/results`, method: 'POST', data: { results } });
+export const submitApplication = (data: any) => request({ url: '/application/submit', method: 'POST', data });
+export const getMatchParticipants = (id: number) => request({ url: `/matches/${id}/participants` });

@@ -115,3 +115,32 @@ export const getRankings = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch rankings' });
   }
 };
+
+export const getMatchParticipants = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const participants = await prisma.playerApplication.findMany({
+      where: {
+        tournamentId: Number(id),
+        status: 'APPROVED'
+      },
+      include: {
+        player: {
+          select: {
+            name: true,
+            avatar: true
+          }
+        }
+      }
+    });
+    // Return only necessary info
+    const result = participants.map((p: any) => ({
+      id: p.id,
+      name: p.realName, // Use realName from application
+      avatar: p.player.avatar
+    }));
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch participants' });
+  }
+};

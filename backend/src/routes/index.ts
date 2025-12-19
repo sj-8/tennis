@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { login } from '../controllers/authController';
-import { getMatches, createMatch, updateMatch, submitResult, getRankings } from '../controllers/matchController';
+import { getMatches, createMatch, updateMatch, submitResult, getRankings, getMatchParticipants } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs } from '../controllers/adminController';
 import { submitApplication, getApplications, auditApplication } from '../controllers/applicationController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
@@ -20,6 +20,7 @@ router.post('/matches', authenticateToken, requireAdmin, createMatch);
 router.put('/matches/:id', authenticateToken, requireAdmin, updateMatch);
 router.post('/matches/:id/results', authenticateToken, requireAdmin, submitResult);
 router.get('/matches/rankings', getRankings);
+router.get('/matches/:id/participants', getMatchParticipants);
 
 // Player Application
 router.post('/application/submit', submitApplication);

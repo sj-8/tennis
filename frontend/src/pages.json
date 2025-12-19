@@ -13,6 +13,18 @@
       }
     },
     {
+      "path": "pages/match/register",
+      "style": {
+        "navigationBarTitleText": "赛事报名"
+      }
+    },
+    {
+      "path": "pages/match/draw",
+      "style": {
+        "navigationBarTitleText": "参赛名单"
+      }
+    },
+    {
       "path": "pages/rank/rank",
       "style": {
         "navigationBarTitleText": "排行榜"

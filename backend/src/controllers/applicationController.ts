@@ -3,16 +3,16 @@ import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 
 export const submitApplication = async (req: Request, res: Response) => {
-  const { playerId, realName, phone, idCard, project, bio, files } = req.body;
+  const { playerId, tournamentId, realName, phone, idCard, bio, files } = req.body;
   
   try {
     const application = await prisma.playerApplication.create({
       data: {
         playerId: Number(playerId),
+        tournamentId: Number(tournamentId),
         realName,
         phone,
         idCard,
-        project,
         bio,
         files: JSON.stringify(files || []),
         status: 'PENDING'

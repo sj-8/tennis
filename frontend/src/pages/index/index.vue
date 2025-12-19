@@ -14,6 +14,7 @@
         </view>
         <view class="match-action">
           <button class="btn-register" @click.stop="handleRegister(match)" v-if="match.status === 'PENDING'">报名</button>
+          <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
         </view>
       </view>
     </view>
@@ -45,8 +46,11 @@ const goToCreate = () => {
 };
 
 const handleRegister = (match: any) => {
-  // 这里可以跳转到报名详情页，或者直接调用报名接口
-  uni.showToast({ title: '功能开发中', icon: 'none' });
+  uni.navigateTo({ url: `/pages/match/register?id=${match.id}` });
+};
+
+const handleViewDraw = (match: any) => {
+  uni.navigateTo({ url: `/pages/match/draw?id=${match.id}` });
 };
 
 const checkUserRole = () => {
@@ -85,8 +89,9 @@ onMounted(() => {
 .title { font-size: 24px; font-weight: bold; }
 .match-card { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
 .match-info { flex: 1; }
-.match-action { margin-left: 10px; }
-.btn-register { background-color: #2e7d32; color: white; font-size: 14px; padding: 0 15px; height: 32px; line-height: 32px; border-radius: 16px; }
+.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 5px; }
+.btn-register { background-color: #2e7d32; color: white; font-size: 12px; padding: 0 10px; height: 28px; line-height: 28px; border-radius: 14px; }
+.btn-draw { background-color: #1976d2; color: white; font-size: 12px; padding: 0 10px; height: 28px; line-height: 28px; border-radius: 14px; }
 .match-name { font-size: 18px; font-weight: bold; display: block; margin-bottom: 5px; }
 .match-detail { color: #666; font-size: 14px; display: block; }
 .match-status { margin-top: 5px; font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #eee; display: inline-block; }
