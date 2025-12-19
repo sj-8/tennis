@@ -20,14 +20,20 @@ export const request = (options: any) => {
     }
 
     // #ifdef MP-WEIXIN
+    // Use wx.cloud.callContainer
+    // Important: callContainer expects the path to be relative to the container root.
+    // Our Express app is mounted at root, but routes are defined like /auth/login.
+    // However, if the container gateway routes everything to /, we might need /api prefix depending on container config.
+    // But usually callContainer path matches the Express route directly.
+    
     wx.cloud.callContainer({
       config: {
-        env: 'prod-5g8w00e00898869c' // Replace with your actual Env ID if different, or omit config to use default
+        env: 'prod-5g8w00e00898869c'
       },
-      path: `/api${options.url}`, // Ensure path starts with /api if your backend expects it, or just options.url if BASE_URL already has /api
+      path: options.url.startsWith('/') ? options.url : `/${options.url}`, // Ensure leading slash
       header: {
         ...header,
-        'X-WX-SERVICE': 'express-4y4r' // Your service name
+        'X-WX-SERVICE': 'express-4y4r'
       },
       method: options.method || 'GET',
       data: options.data,
