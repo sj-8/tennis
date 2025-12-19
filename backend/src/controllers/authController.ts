@@ -58,6 +58,7 @@ export const login = async (req: Request, res: Response) => {
     const token = jwt.sign({ id: player.id, role: player.role, openid: player.openid }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, player });
   } catch (error) {
-    res.status(500).json({ error: 'Login failed' });
+    console.error('Login error detail:', error); // Enhanced error logging
+    res.status(500).json({ error: 'Login failed', details: String(error) });
   }
 };
