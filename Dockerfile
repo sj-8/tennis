@@ -28,6 +28,9 @@ RUN npm run build
 # 运行阶段
 FROM node:20-alpine
 
+# 安装 OpenSSL 1.1 (Prisma 需要)
+RUN apk add --no-cache openssl
+
 # 设置工作目录
 WORKDIR /app
 
