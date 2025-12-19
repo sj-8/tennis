@@ -13,7 +13,7 @@
           <text class="match-status" :class="match.status">{{ getStatusText(match.status) }}</text>
         </view>
         <view class="match-action">
-          <button class="btn-register" @click.stop="handleRegister(match)" v-if="match.status === 'PENDING'">报名</button>
+          <button class="btn-register" @click.stop="handleRegister(match)" v-if="match.status === 'PENDING' || true">报名</button>
           <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
         </view>
       </view>
