@@ -3,25 +3,25 @@
     {
       "path": "pages/index/index",
       "style": {
-        "navigationBarTitleText": "Tennisot - Matches"
+        "navigationBarTitleText": "网球热土 - 赛事"
       }
     },
     {
       "path": "pages/match/create",
       "style": {
-        "navigationBarTitleText": "Create Match"
+        "navigationBarTitleText": "创建赛事"
       }
     },
     {
       "path": "pages/rank/rank",
       "style": {
-        "navigationBarTitleText": "Rankings"
+        "navigationBarTitleText": "排行榜"
       }
     }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "Tennisot",
+    "navigationBarTitleText": "网球热土",
     "navigationBarBackgroundColor": "#F8F8F8",
     "backgroundColor": "#F8F8F8"
   },
@@ -33,11 +33,11 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "Matches"
+        "text": "赛事"
       },
       {
         "pagePath": "pages/rank/rank",
-        "text": "Rankings"
+        "text": "排行榜"
       }
     ]
   }

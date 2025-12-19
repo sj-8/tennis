@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id        Int      @id @default(autoincrement())
+  openid    String   @unique
+  name      String?
+  avatar    String?
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  results   TournamentResult[]
+}
+
+model Tournament {
+  id          Int      @id @default(autoincrement())
+  name        String
+  location    String
+  startTime   DateTime
+  description String?
+  rules       String?
+  status      String   @default("PENDING") // PENDING, ONGOING, COMPLETED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  results     TournamentResult[]
+}
+
+model TournamentResult {
+  id           Int        @id @default(autoincrement())
+  tournamentId Int
+  playerId     Int
+  rank         Int?
+  pointsChange Int        @default(0)
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  player       Player     @relation(fields: [playerId], references: [id])
+  
+  @@unique([tournamentId, playerId])
+}

@@ -1,17 +1,17 @@
 <template>
   <view class="container">
-    <text class="title">Player Rankings</text>
+    <text class="title">选手排行榜</text>
     
     <view class="rank-list">
       <view class="rank-header">
-        <text class="col rank">#</text>
-        <text class="col name">Player</text>
-        <text class="col points">Points</text>
+        <text class="col rank">排名</text>
+        <text class="col name">选手</text>
+        <text class="col points">积分</text>
       </view>
       
       <view v-for="(player, index) in players" :key="player.id" class="rank-item">
         <text class="col rank">{{ index + 1 }}</text>
-        <text class="col name">{{ player.name || 'Unknown' }}</text>
+        <text class="col name">{{ player.name || '未知' }}</text>
         <text class="col points">{{ player.points }}</text>
       </view>
     </view>

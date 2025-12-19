@@ -1,7 +1,7 @@
 <template>
   <view class="container">
     <view class="header">
-      <text class="title">Upcoming Matches</text>
+      <text class="title">近期赛事</text>
     </view>
     
     <view class="match-list">
@@ -10,7 +10,7 @@
           <text class="match-name">{{ match.name }}</text>
           <text class="match-detail">📍 {{ match.location }}</text>
           <text class="match-detail">🕒 {{ formatDate(match.startTime) }}</text>
-          <text class="match-status" :class="match.status">{{ match.status }}</text>
+          <text class="match-status" :class="match.status">{{ getStatusText(match.status) }}</text>
         </view>
       </view>
     </view>
@@ -41,7 +41,17 @@ const goToCreate = () => {
 };
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleString();
+  return new Date(dateStr).toLocaleString('zh-CN');
+};
+
+const getStatusText = (status: string) => {
+  const statusMap: Record<string, string> = {
+    'PENDING': '报名中',
+    'COMPLETED': '已结束',
+    'IN_PROGRESS': '进行中',
+    'CANCELLED': '已取消'
+  };
+  return statusMap[status] || status;
 };
 
 onMounted(() => {

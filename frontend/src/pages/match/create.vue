@@ -1,26 +1,26 @@
 <template>
   <view class="container">
     <view class="form-group">
-      <text class="label">Match Name</text>
-      <input class="input" v-model="form.name" placeholder="e.g. Sunday Open" />
+      <text class="label">赛事名称</text>
+      <input class="input" v-model="form.name" placeholder="例如：周日公开赛" />
     </view>
     
     <view class="form-group">
-      <text class="label">Location</text>
-      <input class="input" v-model="form.location" placeholder="Court 1" />
+      <text class="label">地点</text>
+      <input class="input" v-model="form.location" placeholder="例如：1号场" />
     </view>
     
     <view class="form-group">
-      <text class="label">Date & Time</text>
+      <text class="label">时间</text>
       <input class="input" v-model="form.startTime" placeholder="YYYY-MM-DD HH:mm" />
     </view>
 
     <view class="form-group">
-      <text class="label">Rules</text>
-      <textarea class="textarea" v-model="form.rules" placeholder="Description of rules..." />
+      <text class="label">规则</text>
+      <textarea class="textarea" v-model="form.rules" placeholder="规则描述..." />
     </view>
 
-    <button class="btn-submit" @click="submit">Create Match</button>
+    <button class="btn-submit" @click="submit">创建赛事</button>
   </view>
 </template>
 
@@ -39,12 +39,12 @@ const form = ref({
 const submit = async () => {
   try {
     await createMatch(form.value);
-    uni.showToast({ title: 'Match Created' });
+    uni.showToast({ title: '赛事已创建' });
     setTimeout(() => {
       uni.navigateBack();
     }, 1500);
   } catch (err) {
-    uni.showToast({ title: 'Error', icon: 'none' });
+    uni.showToast({ title: '错误', icon: 'none' });
   }
 };
 </script>
