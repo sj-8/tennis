@@ -52,6 +52,8 @@ const handleRegister = (match: any) => {
 const checkUserRole = () => {
   // 模拟从本地存储获取用户信息
   const userInfo = uni.getStorageSync('userInfo');
+  // 临时调试：强制设为管理员，方便看到按钮
+  isAdmin.value = true; 
   if (userInfo && userInfo.role === 'ADMIN') {
     isAdmin.value = true;
   }
