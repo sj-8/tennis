@@ -14,7 +14,7 @@ export const getMatches = async (req: Request, res: Response) => {
 };
 
 export const createMatch = async (req: Request, res: Response) => {
-  const { name, location, startTime, description, rules } = req.body;
+  const { name, location, startTime, description, rules, registrationStart, registrationEnd } = req.body;
   try {
     const match = await prisma.tournament.create({
       data: {
@@ -23,6 +23,8 @@ export const createMatch = async (req: Request, res: Response) => {
         startTime: new Date(startTime),
         description,
         rules,
+        registrationStart: registrationStart ? new Date(registrationStart) : null,
+        registrationEnd: registrationEnd ? new Date(registrationEnd) : null,
       },
     });
     res.json(match);
@@ -39,7 +41,9 @@ export const updateMatch = async (req: Request, res: Response) => {
       where: { id: Number(id) },
       data: {
         ...data,
-        startTime: data.startTime ? new Date(data.startTime) : undefined
+        startTime: data.startTime ? new Date(data.startTime) : undefined,
+        registrationStart: data.registrationStart ? new Date(data.registrationStart) : undefined,
+        registrationEnd: data.registrationEnd ? new Date(data.registrationEnd) : undefined,
       },
     });
     res.json(match);

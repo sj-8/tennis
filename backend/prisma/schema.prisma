@@ -61,6 +61,8 @@ model Tournament {
   name        String
   location    String
   startTime   DateTime
+  registrationStart DateTime? // 报名开始时间
+  registrationEnd   DateTime? // 报名截止时间
   description String?
   rules       String?
   status      String   @default("PENDING") // PENDING, ONGOING, COMPLETED

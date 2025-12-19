@@ -2,16 +2,16 @@
   <view class="container">
     <view class="form-group">
       <text class="label">赛事名称</text>
-      <input class="input" v-model="form.name" placeholder="例如：周日公开赛" />
+      <input class="input" v-model="form.name" placeholder="例如：周日公开赛" placeholder-style="z-index: 0" />
     </view>
     
     <view class="form-group">
       <text class="label">地点</text>
-      <input class="input" v-model="form.location" placeholder="例如：1号场" />
+      <input class="input" v-model="form.location" placeholder="例如：1号场" placeholder-style="z-index: 0" />
     </view>
     
     <view class="form-group">
-      <text class="label">时间</text>
+      <text class="label">比赛时间</text>
       <picker mode="date" :value="form.date" start="2025-01-01" end="2030-12-31" @change="bindDateChange">
         <view class="picker-view">
           {{ form.date || '请选择日期' }}
@@ -20,6 +20,34 @@
       <picker mode="time" :value="form.time" start="00:00" end="23:59" @change="bindTimeChange" style="margin-top: 10px;">
         <view class="picker-view">
           {{ form.time || '请选择时间' }}
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-group">
+      <text class="label">报名开始时间</text>
+      <picker mode="date" :value="form.regStartDate" start="2025-01-01" end="2030-12-31" @change="bindRegStartDateChange">
+        <view class="picker-view">
+          {{ form.regStartDate || '请选择日期' }}
+        </view>
+      </picker>
+      <picker mode="time" :value="form.regStartTime" start="00:00" end="23:59" @change="bindRegStartTimeChange" style="margin-top: 10px;">
+        <view class="picker-view">
+          {{ form.regStartTime || '请选择时间' }}
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-group">
+      <text class="label">报名截止时间</text>
+      <picker mode="date" :value="form.regEndDate" start="2025-01-01" end="2030-12-31" @change="bindRegEndDateChange">
+        <view class="picker-view">
+          {{ form.regEndDate || '请选择日期' }}
+        </view>
+      </picker>
+      <picker mode="time" :value="form.regEndTime" start="00:00" end="23:59" @change="bindRegEndTimeChange" style="margin-top: 10px;">
+        <view class="picker-view">
+          {{ form.regEndTime || '请选择时间' }}
         </view>
       </picker>
     </view>
@@ -42,6 +70,10 @@ const form = ref({
   location: '',
   date: '',
   time: '',
+  regStartDate: '',
+  regStartTime: '',
+  regEndDate: '',
+  regEndTime: '',
   rules: '',
   description: ''
 });
@@ -54,10 +86,29 @@ const bindTimeChange = (e: any) => {
   form.value.time = e.detail.value;
 };
 
+const bindRegStartDateChange = (e: any) => {
+  form.value.regStartDate = e.detail.value;
+};
+
+const bindRegStartTimeChange = (e: any) => {
+  form.value.regStartTime = e.detail.value;
+};
+
+const bindRegEndDateChange = (e: any) => {
+  form.value.regEndDate = e.detail.value;
+};
+
+const bindRegEndTimeChange = (e: any) => {
+  form.value.regEndTime = e.detail.value;
+};
+
 const submit = async () => {
   try {
     const startTime = `${form.value.date}T${form.value.time}:00`;
-    await createMatch({ ...form.value, startTime });
+    const registrationStart = form.value.regStartDate && form.value.regStartTime ? `${form.value.regStartDate}T${form.value.regStartTime}:00` : undefined;
+    const registrationEnd = form.value.regEndDate && form.value.regEndTime ? `${form.value.regEndDate}T${form.value.regEndTime}:00` : undefined;
+    
+    await createMatch({ ...form.value, startTime, registrationStart, registrationEnd });
     uni.showToast({ title: '赛事已创建' });
     setTimeout(() => {
       uni.navigateBack();
