@@ -20,6 +20,8 @@ SAFE_URL=$(echo "$DATABASE_URL" | sed -E 's/:([^:@]+)@/:****@/')
 echo "Database Connection: $SAFE_URL"
 
 echo "Running migrations..."
+# 尝试解决 baseline 问题：如果数据库非空但没有迁移记录，尝试标记第一次迁移为已应用
+npx prisma migrate resolve --applied 0_init || true
 npx prisma migrate deploy
 
 echo "Starting application..."
