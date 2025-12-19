@@ -50,6 +50,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
+import { request } from '../../api';
 
 const userInfo = ref<any>(null);
 
@@ -63,14 +64,42 @@ const checkLogin = () => {
 };
 
 const handleLogin = () => {
-  // 触发登录逻辑，通常是跳转到登录页或调用登录接口
-  // 这里假设 index 页或其他地方已经处理了登录，或者可以在这里再次调用
-  uni.getUserProfile({
-    desc: '用于完善会员资料',
-    success: (res) => {
-      // 实际逻辑应该调用后端的 /auth/login
-      console.log(res);
-      uni.showToast({ title: '请在首页完成登录', icon: 'none' });
+  uni.showLoading({ title: '登录中...' });
+  
+  // 1. Get Code
+  uni.login({
+    provider: 'weixin',
+    success: (loginRes: any) => {
+      console.log('Login res:', loginRes);
+      
+      // 2. Call backend login
+      request({
+        url: '/auth/login',
+        method: 'POST',
+        data: {
+          code: loginRes.code
+        }
+      }).then((res: any) => {
+        console.log('Backend login res:', res);
+        if (res.token && res.player) {
+          uni.setStorageSync('token', res.token);
+          uni.setStorageSync('userInfo', res.player);
+          userInfo.value = res.player;
+          uni.showToast({ title: '登录成功' });
+        } else {
+          uni.showToast({ title: '登录失败', icon: 'none' });
+        }
+      }).catch(err => {
+        console.error('Login error:', err);
+        uni.showToast({ title: '登录出错', icon: 'none' });
+      }).finally(() => {
+        uni.hideLoading();
+      });
+    },
+    fail: (err: any) => {
+      console.error('uni.login fail:', err);
+      uni.showToast({ title: '无法获取登录授权', icon: 'none' });
+      uni.hideLoading();
     }
   });
 };

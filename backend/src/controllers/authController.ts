@@ -5,27 +5,40 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export const login = async (req: Request, res: Response) => {
-  // For real WeChat login, we need to call jscode2session
-  // This part is skipped for local dev if we just assume openid is passed or mocked
-  // In production, uncomment and implement:
-  // const { code } = req.body;
-  // const wxRes = await axios.get(`https://api.weixin.qq.com/sns/jscode2session...`);
-  // const openId = wxRes.data.openid;
+  // Try to get OpenID from WeChat Cloud Hosting header first (most reliable in production)
+  const wxOpenIdHeader = req.headers['x-wx-openid'];
+  
+  // Fallback to code from body (for local dev or if header missing)
+  // Note: On real device without jscode2session implemented on backend, code is NOT the openid.
+  // But if running on WeChat Cloud Hosting, x-wx-openid SHOULD be present.
+  let openId = (wxOpenIdHeader as string) || req.body.code;
 
-  // For now, assume code IS the openid for simplicity in this demo environment or use a fixed one
-  const mockOpenId = req.body.code || 'mock_openid_12345';
+  // If we still don't have a valid "openid" looking string (e.g. just a short code), 
+  // and we are NOT in production cloud hosting (no header), this will create a temporary user.
+  // Ideally, you should implement jscode2session here if not using Cloud Hosting.
+  
+  if (!openId) {
+     return res.status(400).json({ error: 'Missing code or openid' });
+  }
+
+  // Debug log
+  console.log('Login request:', { 
+    headers: req.headers, 
+    body: req.body, 
+    resolvedOpenId: openId 
+  });
 
   try {
     let player = await prisma.player.findUnique({
-      where: { openid: mockOpenId },
+      where: { openid: openId },
     });
 
     if (!player) {
       player = await prisma.player.create({
         data: {
-          openid: mockOpenId,
+          openid: openId,
           role: 'USER', // Default role
-          name: `User_${mockOpenId.substring(0, 6)}`
+          name: `User_${openId.substring(0, 6)}`
         }
       });
     }
