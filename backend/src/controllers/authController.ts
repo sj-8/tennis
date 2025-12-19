@@ -45,6 +45,7 @@ export const login = async (req: Request, res: Response) => {
     if (WX_APP_ID && WX_APP_SECRET) {
       try {
         const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${WX_APP_ID}&secret=${WX_APP_SECRET}&js_code=${req.body.code}&grant_type=authorization_code`;
+        console.log('Calling WeChat API:', url.replace(WX_APP_SECRET, '****')); // Log URL but mask secret
         const wxRes = await axios.get(url);
         
         if (wxRes.data.openid) {
@@ -54,9 +55,10 @@ export const login = async (req: Request, res: Response) => {
           console.error('WeChat API error:', wxRes.data);
           return res.status(400).json({ error: 'Failed to fetch OpenID from WeChat', details: wxRes.data });
         }
-      } catch (err) {
-        console.error('Network error calling WeChat API:', err);
-        return res.status(500).json({ error: 'Network error calling WeChat API' });
+      } catch (err: any) { // Type as any to access properties
+        console.error('Network error calling WeChat API:', err.message, err.response?.data);
+        // Return detailed error for debugging (remove details in production if sensitive)
+        return res.status(500).json({ error: 'Network error calling WeChat API', details: err.message });
       }
     } else {
       console.warn('Missing WX_APP_ID or WX_APP_SECRET env vars. Falling back to code as openid (NOT RECOMMENDED for production).');
