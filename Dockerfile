@@ -15,7 +15,10 @@ RUN npm install
 # 复制 Prisma Schema 并生成 Client
 COPY backend/prisma ./prisma/
 COPY backend/prisma.config.ts ./
-RUN npx prisma generate
+# 在构建时生成 Prisma Client 需要 DATABASE_URL，但构建环境可能没有。
+# 使用 --no-engine 或设置一个临时的环境变量来绕过检查，或者只生成客户端代码而不尝试连接数据库。
+# Prisma 7 需要配置，我们可以给一个假的 URL 用于构建阶段，实际运行时会用真实环境变量。
+RUN DATABASE_URL="mysql://dummy:dummy@localhost:3306/dummy" npx prisma generate
 
 # 复制源代码
 COPY backend/ .
@@ -45,7 +48,8 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./
 
 # 重新生成 Prisma Client (确保二进制文件匹配)
-RUN npx prisma generate
+# 同样使用 dummy URL，因为我们只是需要生成代码
+RUN DATABASE_URL="mysql://dummy:dummy@localhost:3306/dummy" npx prisma generate
 
 # 暴露端口
 EXPOSE 80
