@@ -14,6 +14,7 @@ RUN npm install
 
 # 复制 Prisma Schema 并生成 Client
 COPY backend/prisma ./prisma/
+COPY backend/prisma.config.ts ./
 RUN npx prisma generate
 
 # 复制源代码
@@ -41,6 +42,7 @@ RUN npm install --production
 # 复制构建产物
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./
 
 # 重新生成 Prisma Client (确保二进制文件匹配)
 RUN npx prisma generate
