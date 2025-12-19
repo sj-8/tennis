@@ -7,17 +7,17 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # 复制依赖文件
-COPY package*.json ./
+COPY backend/package*.json ./
 
 # 安装所有依赖（包括 devDependencies 用于构建）
 RUN npm install
 
 # 复制 Prisma Schema 并生成 Client
-COPY prisma ./prisma/
+COPY backend/prisma ./prisma/
 RUN npx prisma generate
 
 # 复制源代码
-COPY . .
+COPY backend/ .
 
 # 构建 TypeScript 代码
 RUN npm run build
@@ -33,7 +33,7 @@ ENV NODE_ENV=production
 ENV PORT=80
 
 # 复制依赖文件
-COPY package*.json ./
+COPY backend/package*.json ./
 
 # 只安装生产环境依赖
 RUN npm install --production
