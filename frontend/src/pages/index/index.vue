@@ -12,10 +12,13 @@
           <text class="match-detail">🕒 {{ formatDate(match.startTime) }}</text>
           <text class="match-status" :class="match.status">{{ getStatusText(match.status) }}</text>
         </view>
+        <view class="match-action">
+          <button class="btn-register" @click.stop="handleRegister(match)" v-if="match.status === 'PENDING'">报名</button>
+        </view>
       </view>
     </view>
 
-    <view class="fab" @click="goToCreate">
+    <view class="fab" @click="goToCreate" v-if="isAdmin">
       <text class="fab-icon">+</text>
     </view>
   </view>
@@ -26,6 +29,7 @@ import { ref, onMounted } from 'vue';
 import { getMatches } from '../../api';
 
 const matches = ref<any[]>([]);
+const isAdmin = ref(false); // 控制添加按钮显示
 
 const fetchMatches = async () => {
   try {
@@ -38,6 +42,19 @@ const fetchMatches = async () => {
 
 const goToCreate = () => {
   uni.navigateTo({ url: '/pages/match/create' });
+};
+
+const handleRegister = (match: any) => {
+  // 这里可以跳转到报名详情页，或者直接调用报名接口
+  uni.showToast({ title: '功能开发中', icon: 'none' });
+};
+
+const checkUserRole = () => {
+  // 模拟从本地存储获取用户信息
+  const userInfo = uni.getStorageSync('userInfo');
+  if (userInfo && userInfo.role === 'ADMIN') {
+    isAdmin.value = true;
+  }
 };
 
 const formatDate = (dateStr: string) => {
@@ -56,6 +73,7 @@ const getStatusText = (status: string) => {
 
 onMounted(() => {
   fetchMatches();
+  checkUserRole();
 });
 </script>
 
@@ -63,7 +81,10 @@ onMounted(() => {
 .container { padding: 20px; }
 .header { margin-bottom: 20px; }
 .title { font-size: 24px; font-weight: bold; }
-.match-card { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.match-card { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+.match-info { flex: 1; }
+.match-action { margin-left: 10px; }
+.btn-register { background-color: #2e7d32; color: white; font-size: 14px; padding: 0 15px; height: 32px; line-height: 32px; border-radius: 16px; }
 .match-name { font-size: 18px; font-weight: bold; display: block; margin-bottom: 5px; }
 .match-detail { color: #666; font-size: 14px; display: block; }
 .match-status { margin-top: 5px; font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #eee; display: inline-block; }

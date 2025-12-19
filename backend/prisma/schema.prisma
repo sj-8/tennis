@@ -13,6 +13,7 @@ model Player {
   name      String?
   avatar    String?
   points    Int      @default(0)
+  role      String   @default("USER") // USER, ADMIN
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   results   TournamentResult[]
