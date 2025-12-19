@@ -1,6 +1,11 @@
 <template>
   <view class="container">
-    <text class="title">选手排行榜</text>
+    <view class="header tennis-court-bg">
+      <view class="header-content">
+        <TennisBall :size="24" />
+        <text class="title">选手排行榜</text>
+      </view>
+    </view>
     
     <!-- Podium for Top 3 (领奖台) -->
     <view class="podium-container" v-if="players.length > 0">
@@ -64,6 +69,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { getRankings } from '../../api';
+import TennisBall from '../../components/TennisBall.vue';
 
 const players = ref<any[]>([]);
 
@@ -93,17 +99,32 @@ onMounted(() => {
 </script>
 
 <style>
-.container { padding: 20px; background-color: #fff; min-height: 100vh; }
-.title { font-size: 24px; font-weight: bold; margin-bottom: 20px; display: block; text-align: center; }
+.container { padding: 0; background-color: #f5f5f5; min-height: 100vh; }
+.header { 
+  margin-bottom: 20px; 
+  padding: 20px 20px 30px; /* 底部留空间给领奖台 */
+  border-bottom-left-radius: 30px; 
+  border-bottom-right-radius: 30px; 
+  box-shadow: 0 4px 10px rgba(58, 95, 11, 0.3);
+  color: white;
+}
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.title { font-size: 24px; font-weight: bold; display: block; text-align: center; color: white; margin-bottom: 0; }
 
 /* Podium Styles */
 .podium-container {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  margin-bottom: 40px;
-  padding-top: 30px;
-  height: 200px; /* Adjust based on needs */
+  margin-top: -40px; /* 向上重叠到 Header */
+  margin-bottom: 30px;
+  padding: 0 20px;
+  height: 220px;
 }
 
 .podium-item {

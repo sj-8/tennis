@@ -14,10 +14,17 @@
 
 /* 颜色变量 */
 
+/* 网球主题色 */
+$tennis-yellow: #FFD700;
+$tennis-green: #3A5F0B;
+$tennis-green-light: #4E7A12;
+$tennis-court-blue: #3C6382; /* 常见的硬地蓝 */
+$tennis-clay: #B35B2E; /* 红土色 */
+
 /* 行为相关颜色 */
-$uni-color-primary: #007aff;
+$uni-color-primary: $tennis-green;
 $uni-color-success: #4cd964;
-$uni-color-warning: #f0ad4e;
+$uni-color-warning: $tennis-yellow;
 $uni-color-error: #dd524d;
 
 /* 文字基本颜色 */

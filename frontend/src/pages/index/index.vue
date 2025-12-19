@@ -1,13 +1,19 @@
 <template>
   <view class="container">
-    <view class="header">
-      <text class="title">近期赛事</text>
+    <view class="header tennis-court-bg">
+      <view class="header-content">
+        <TennisBall :size="32" :animated="true" />
+        <text class="title">近期赛事</text>
+      </view>
     </view>
     
     <view class="match-list">
       <view v-for="match in matches" :key="match.id" class="match-card">
         <view class="match-info">
-          <text class="match-name">{{ match.name }}</text>
+          <text class="match-name">
+            <text class="tennis-title-deco"></text>
+            {{ match.name }}
+          </text>
           <text class="match-detail">📍 {{ match.location }}</text>
           <text class="match-detail">🕒 {{ formatDate(match.startTime) }}</text>
           <text class="match-status" :class="match.status">{{ getStatusText(match.status) }}</text>
@@ -29,6 +35,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { getMatches } from '../../api';
+import TennisBall from '../../components/TennisBall.vue';
 
 const matches = ref<any[]>([]);
 const isAdmin = ref(false); // 控制添加按钮显示
@@ -89,20 +96,43 @@ onMounted(() => {
 </script>
 
 <style>
-.container { padding: 20px; }
-.header { margin-bottom: 20px; }
-.title { font-size: 24px; font-weight: bold; }
-.match-card { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+.container { padding: 0; background-color: #f5f5f5; min-height: 100vh; }
+.header { 
+  margin-bottom: 20px; 
+  padding: 30px 20px; 
+  border-bottom-left-radius: 20px; 
+  border-bottom-right-radius: 20px; 
+  box-shadow: 0 4px 10px rgba(58, 95, 11, 0.3);
+  color: white;
+}
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.title { font-size: 24px; font-weight: bold; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.match-list { padding: 0 20px; }
+.match-card { 
+  background: #fff; 
+  padding: 15px; 
+  border-radius: 12px; 
+  margin-bottom: 15px; 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05); 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  border-left: 5px solid #FFD700; /* 网球黄装饰线 */
+}
 .match-info { flex: 1; }
-.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 5px; }
-.btn-register { background-color: #2e7d32; color: white; font-size: 12px; padding: 0 10px; height: 28px; line-height: 28px; border-radius: 14px; }
-.btn-draw { background-color: #1976d2; color: white; font-size: 12px; padding: 0 10px; height: 28px; line-height: 28px; border-radius: 14px; }
-.btn-score { background-color: #f57c00; color: white; font-size: 12px; padding: 0 10px; height: 28px; line-height: 28px; border-radius: 14px; }
-.match-name { font-size: 18px; font-weight: bold; display: block; margin-bottom: 5px; }
-.match-detail { color: #666; font-size: 14px; display: block; }
-.match-status { margin-top: 5px; font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #eee; display: inline-block; }
-.match-status.PENDING { background: #e3f2fd; color: #1976d2; }
-.match-status.COMPLETED { background: #e8f5e9; color: #2e7d32; }
-.fab { position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; background: #2e7d32; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-.fab-icon { color: white; font-size: 30px; }
+.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 8px; }
+.btn-register { background-color: #3A5F0B; color: white; font-size: 12px; padding: 0 15px; height: 30px; line-height: 30px; border-radius: 15px; font-weight: bold; }
+.btn-draw { background-color: #3C6382; color: white; font-size: 12px; padding: 0 15px; height: 30px; line-height: 30px; border-radius: 15px; font-weight: bold; }
+.btn-score { background-color: #FFD700; color: #3A5F0B; font-size: 12px; padding: 0 15px; height: 30px; line-height: 30px; border-radius: 15px; font-weight: bold; }
+.match-name { font-size: 18px; font-weight: bold; display: flex; align-items: center; margin-bottom: 8px; color: #333; }
+.match-detail { color: #666; font-size: 14px; display: block; margin-bottom: 4px; }
+.match-status { margin-top: 5px; font-size: 12px; padding: 2px 8px; border-radius: 4px; background: #eee; display: inline-block; font-weight: bold; }
+.match-status.PENDING { background: #e8f5e9; color: #3A5F0B; }
+.match-status.COMPLETED { background: #f5f5f5; color: #666; }
+.fab { position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; background: #FFD700; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4); border: 2px solid white; }
+.fab-icon { color: #3A5F0B; font-size: 32px; font-weight: bold; }
 </style>
