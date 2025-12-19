@@ -1,9 +1,16 @@
 <template>
   <view class="container">
-    <view class="header tennis-court-bg">
+ <view class="header tennis-court-bg">
       <view class="header-content">
-        <TennisBall :size="32" :animated="true" />
-        <text class="title">近期赛事</text>
+        <TennisBall :size="40" :animated="true" />
+        <view class="header-text">
+          <view class="app-title">
+            <text class="title-text">Tennis</text>
+            <text class="hot-text">Hot</text>
+            <text class="title-text">Land</text>
+          </view>
+          <text class="sub-title">近期赛事</text>
+        </view>
       </view>
     </view>
     
@@ -122,7 +129,40 @@ onMounted(() => {
   align-items: center;
   gap: 15px;
 }
-.title { font-size: 24px; font-weight: bold; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+.app-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.hot-text {
+  color: #FFD700;
+  text-shadow: 
+    0 0 4px #ff0000,
+    0 -2px 4px #ff9900,
+    2px -5px 6px #ff5500;
+  font-style: italic;
+  animation: fire-flicker 1.5s infinite alternate;
+}
+.sub-title {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: normal;
+}
+
+@keyframes fire-flicker {
+  0% { text-shadow: 0 0 4px #ff0000, 0 -2px 4px #ff9900, 2px -5px 6px #ff5500; transform: scale(1); }
+  50% { text-shadow: 0 0 4px #ff0000, 0 -3px 5px #ff9900, -2px -6px 8px #ff5500; transform: scale(1.05); }
+  100% { text-shadow: 0 0 4px #ff0000, 0 -2px 4px #ff9900, 2px -5px 6px #ff5500; transform: scale(1); }
+}
 .match-list { padding: 0 20px; }
 .match-card { 
   background: #fff; 
