@@ -134,28 +134,29 @@ onMounted(() => {
   flex-direction: column;
 }
 .app-title {
-  font-size: 24px;
-  font-weight: 900;
-  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.9);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 .hot-text {
   color: #FFD700;
   text-shadow: 
-    0 0 4px #ff0000,
-    0 -2px 4px #ff9900,
-    2px -5px 6px #ff5500;
+    0 0 2px #ff0000,
+    0 -1px 2px #ff9900;
   font-style: italic;
   animation: fire-flicker 1.5s infinite alternate;
 }
 .sub-title {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: normal;
+  font-size: 28px;
+  color: white;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 @keyframes fire-flicker {
