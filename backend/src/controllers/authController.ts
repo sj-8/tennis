@@ -4,6 +4,25 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
+export const updateProfile = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { name, avatar } = req.body;
+
+  try {
+    const player = await prisma.player.update({
+      where: { id: Number(id) },
+      data: {
+        name: name || undefined,
+        avatar: avatar || undefined
+      }
+    });
+    res.json(player);
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+};
+
 export const login = async (req: Request, res: Response) => {
   /**
    * 用户登录接口

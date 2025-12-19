@@ -2,9 +2,24 @@
   <view class="container">
     <view class="header tennis-court-bg">
       <view class="user-info" v-if="userInfo">
-        <image class="avatar" :src="userInfo.avatar || '/static/logo.png'" mode="aspectFill"></image>
+        <view class="avatar-container" @click="handleAvatarClick">
+          <image class="avatar" :src="userInfo.avatar || '/static/logo.png'" mode="aspectFill"></image>
+          <view class="edit-badge" v-if="userInfo">
+            <text class="edit-icon">📷</text>
+          </view>
+        </view>
         <view class="info-content">
-          <text class="nickname">{{ userInfo.name || '微信用户' }}</text>
+          <view class="name-row">
+            <input 
+              v-if="isEditing" 
+              class="name-input" 
+              v-model="editForm.name" 
+              focus
+              @blur="saveName"
+              placeholder="请输入昵称"
+            />
+            <text v-else class="nickname" @click="startEditName">{{ userInfo.name || '微信用户' }} <text class="edit-hint">✎</text></text>
+          </view>
           <view class="role-badge" v-if="userInfo.role === 'ADMIN'">
             <text class="role-text">管理员</text>
           </view>
@@ -50,9 +65,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { request } from '../../api';
+import { request, updateProfile } from '../../api';
 
 const userInfo = ref<any>(null);
+const isEditing = ref(false);
+const editForm = ref({
+  name: '',
+  avatar: ''
+});
 
 const checkLogin = () => {
   /**
@@ -141,6 +161,78 @@ const truncateString = (str: string) => {
   return str.substring(0, 6) + '...' + str.substring(str.length - 4);
 };
 
+const startEditName = () => {
+  if (!userInfo.value) return;
+  editForm.value.name = userInfo.value.name || '';
+  isEditing.value = true;
+};
+
+const saveName = async () => {
+  if (!editForm.value.name || editForm.value.name === userInfo.value.name) {
+    isEditing.value = false;
+    return;
+  }
+  
+  try {
+    const res = await updateProfile(userInfo.value.id, { name: editForm.value.name });
+    userInfo.value = res;
+    uni.setStorageSync('userInfo', res);
+    uni.showToast({ title: '昵称已更新' });
+  } catch (err) {
+    console.error(err);
+    uni.showToast({ title: '更新失败', icon: 'none' });
+  } finally {
+    isEditing.value = false;
+  }
+};
+
+const handleAvatarClick = () => {
+  if (!userInfo.value) return;
+  
+  uni.chooseImage({
+    count: 1,
+    sizeType: ['compressed'],
+    sourceType: ['album', 'camera'],
+    success: (res: any) => {
+      const tempFilePath = res.tempFilePaths[0];
+      
+      // Check size (1MB = 1048576 bytes)
+      const size = res.tempFiles[0].size;
+      if (size > 1048576) {
+        uni.showToast({ title: '图片不能超过1MB', icon: 'none' });
+        return;
+      }
+      
+      uni.showLoading({ title: '上传中...' });
+      
+      // Upload to WeChat Cloud Hosting (or your backend)
+      // For simplicity, we'll convert to Base64 here if it's small enough, 
+      // OR ideally upload to cloud storage. 
+      // Since we are using WeChat Cloud Hosting, we can use uni.uploadFile or cloud.uploadFile
+      // Here we assume a direct upload endpoint or base64 for MVP.
+      // Let's use Base64 for simplicity in this demo, but warn about size.
+      
+      uni.getFileSystemManager().readFile({
+        filePath: tempFilePath,
+        encoding: 'base64',
+        success: async (readRes: any) => {
+          const base64 = 'data:image/jpeg;base64,' + readRes.data;
+          try {
+             const updateRes = await updateProfile(userInfo.value.id, { avatar: base64 });
+             userInfo.value = updateRes;
+             uni.setStorageSync('userInfo', updateRes);
+             uni.showToast({ title: '头像已更新' });
+          } catch (err) {
+             uni.showToast({ title: '上传失败', icon: 'none' });
+          } finally {
+             uni.hideLoading();
+          }
+        }
+      });
+    }
+  });
+};
+
 onShow(() => {
   checkLogin();
 });
@@ -158,11 +250,52 @@ onShow(() => {
   align-items: center;
 }
 .user-info { display: flex; align-items: center; gap: 15px; }
-.avatar { width: 64px; height: 64px; border-radius: 50%; border: 3px solid white; background: #fff; }
-.avatar.placeholder { display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); }
+.avatar-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.avatar { 
+  width: 100%; 
+  height: 100%; 
+  border-radius: 50%; 
+  border: 3px solid white; 
+  background: #fff; 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.edit-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #FFD700;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+.edit-icon { font-size: 14px; }
+
+.name-row { display: flex; align-items: center; margin-bottom: 5px; height: 32px; }
+.nickname { font-size: 20px; font-weight: bold; color: white; display: flex; align-items: center; }
+.edit-hint { font-size: 14px; margin-left: 8px; opacity: 0.8; }
+.name-input { 
+  background: rgba(255,255,255,0.2); 
+  border: 1px solid rgba(255,255,255,0.5); 
+  border-radius: 4px; 
+  color: white; 
+  padding: 0 8px; 
+  height: 28px; 
+  font-size: 16px; 
+  width: 150px;
+}
+
+.avatar.placeholder { display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); width: 80px; height: 80px; }
 .placeholder-text { font-size: 30px; color: white; }
 .info-content { display: flex; flex-direction: column; }
-.nickname { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+
 .role-badge { background: #FFD700; padding: 2px 8px; border-radius: 10px; align-self: flex-start; }
 .role-text { color: #3A5F0B; font-size: 10px; font-weight: bold; }
 .login-tip { font-size: 18px; font-weight: bold; }

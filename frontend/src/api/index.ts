@@ -37,3 +37,5 @@ export const submitResult = (id: number, results: any) => request({ url: `/match
 export const submitApplication = (data: any) => request({ url: '/application/submit', method: 'POST', data });
 // 获取赛事参赛人员
 export const getMatchParticipants = (id: number) => request({ url: `/matches/${id}/participants` });
+// 更新个人信息
+export const updateProfile = (id: number, data: any) => request({ url: `/auth/${id}/profile`, method: 'PUT', data });

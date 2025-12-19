@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login } from '../controllers/authController';
+import { login, updateProfile } from '../controllers/authController';
 import { getMatches, createMatch, updateMatch, submitResult, getRankings, getMatchParticipants } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs, promotePlayerToAdmin } from '../controllers/adminController';
 import { submitApplication, getApplications, auditApplication } from '../controllers/applicationController';
@@ -9,6 +9,7 @@ const router = Router();
 
 // Auth (WeChat Player)
 router.post('/auth/login', login);
+router.put('/auth/:id/profile', authenticateToken, updateProfile);
 
 // Admin Auth
 router.post('/admin/login', adminLogin);
