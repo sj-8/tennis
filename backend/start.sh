@@ -9,6 +9,12 @@ if [ -z "$DATABASE_URL" ]; then
   exit 1
 fi
 
+# 自动修复：将中文冒号替换为英文冒号
+if echo "$DATABASE_URL" | grep -q "："; then
+  echo "WARNING: Detected Chinese colon in DATABASE_URL. Auto-fixing..."
+  export DATABASE_URL=$(echo "$DATABASE_URL" | sed 's/：/:/g')
+fi
+
 # Mask password for logging safety (assuming format mysql://user:pass@host:port/db)
 SAFE_URL=$(echo "$DATABASE_URL" | sed -E 's/:([^:@]+)@/:****@/')
 echo "Database Connection: $SAFE_URL"
