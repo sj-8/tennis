@@ -41,6 +41,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import { getMatches } from '../../api';
 import TennisBall from '../../components/TennisBall.vue';
 
@@ -111,6 +112,10 @@ const getStatusText = (status: string) => {
 onMounted(() => {
   fetchMatches();
   checkUserRole();
+});
+
+onShow(() => {
+  fetchMatches();
 });
 </script>
 

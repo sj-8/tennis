@@ -7,14 +7,20 @@ export const request = (options: any) => {
    * 返回 Promise 对象
    */
   return new Promise((resolve, reject) => {
+    const token = uni.getStorageSync('token');
+    const header = {
+      'Content-Type': 'application/json',
+      ...options.header
+    };
+    if (token) {
+      header['Authorization'] = `Bearer ${token}`;
+    }
+
     uni.request({
       url: `${BASE_URL}${options.url}`,
       method: options.method || 'GET',
       data: options.data,
-      header: {
-        'Content-Type': 'application/json',
-        ...options.header
-      },
+      header,
       success: (res: any) => {
         resolve(res.data);
       },
