@@ -55,6 +55,10 @@ import { request } from '../../api';
 const userInfo = ref<any>(null);
 
 const checkLogin = () => {
+  /**
+   * 检查本地登录状态
+   * 从 Storage 读取用户信息，如果存在则自动登录
+   */
   const info = uni.getStorageSync('userInfo');
   if (info) {
     userInfo.value = info;
@@ -64,6 +68,12 @@ const checkLogin = () => {
 };
 
 const handleLogin = () => {
+  /**
+   * 处理登录逻辑
+   * 1. 调用 uni.login 获取微信 Code
+   * 2. 将 Code 发送给后端进行登录/注册
+   * 3. 保存后端返回的 Token 和用户信息
+   */
   uni.showLoading({ title: '登录中...' });
   
   // 1. Get Code
@@ -105,6 +115,7 @@ const handleLogin = () => {
 };
 
 const handleLogout = () => {
+  // 退出登录：清除本地存储并重置状态
   uni.removeStorageSync('userInfo');
   uni.removeStorageSync('token');
   userInfo.value = null;
@@ -112,6 +123,7 @@ const handleLogout = () => {
 };
 
 const copyOpenId = () => {
+  // 复制 OpenID 到剪贴板，方便用户设置管理员
   if (userInfo.value?.openid) {
     uni.setClipboardData({
       data: userInfo.value.openid,
@@ -123,6 +135,7 @@ const copyOpenId = () => {
 };
 
 const truncateString = (str: string) => {
+  // 截断长字符串，只显示前6位和后4位
   if (!str) return '';
   if (str.length <= 10) return str;
   return str.substring(0, 6) + '...' + str.substring(str.length - 4);

@@ -103,6 +103,12 @@ const bindRegEndTimeChange = (e: any) => {
 };
 
 const submit = async () => {
+  /**
+   * 提交赛事创建
+   * 1. 组合日期和时间
+   * 2. 调用创建赛事 API
+   * 3. 成功后返回上一页
+   */
   try {
     const startTime = `${form.value.date}T${form.value.time}:00`;
     const registrationStart = form.value.regStartDate && form.value.regStartTime ? `${form.value.regStartDate}T${form.value.regStartTime}:00` : undefined;

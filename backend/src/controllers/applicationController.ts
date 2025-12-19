@@ -3,6 +3,11 @@ import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 
 export const submitApplication = async (req: Request, res: Response) => {
+  /**
+   * 提交报名申请接口
+   * 接收选手提交的报名信息（真实姓名、手机号、身份证等）
+   * 创建初始状态为 'PENDING' 的报名记录
+   */
   const { playerId, tournamentId, realName, phone, idCard, bio, files } = req.body;
   
   try {
@@ -25,6 +30,10 @@ export const submitApplication = async (req: Request, res: Response) => {
 };
 
 export const getApplications = async (req: Request, res: Response) => {
+  /**
+   * 获取报名申请列表接口
+   * 查询所有报名申请记录，按时间倒序排列
+   */
   try {
     const apps = await prisma.playerApplication.findMany({
       orderBy: { createdAt: 'desc' }
@@ -36,6 +45,11 @@ export const getApplications = async (req: Request, res: Response) => {
 };
 
 export const auditApplication = async (req: AuthRequest, res: Response) => {
+  /**
+   * 审核报名申请接口
+   * 更新申请状态（APPROVED 或 REJECTED）
+   * 同时记录审计日志 (AuditLog)
+   */
   const { id } = req.params;
   const { status, comment } = req.body; // status: APPROVED or REJECTED
   const adminId = req.user.id;

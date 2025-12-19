@@ -8,6 +8,11 @@ export interface AuthRequest extends Request {
 }
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+  /**
+   * JWT 认证中间件
+   * 验证请求头中的 Bearer Token
+   * 如果验证通过，将用户信息挂载到 req.user
+   */
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -21,6 +26,10 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 };
 
 export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+  /**
+   * 管理员权限验证中间件
+   * 确保用户角色为 'ADMIN' 或 'SUPER_ADMIN'
+   */
   if (!req.user || (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN')) {
     return res.status(403).json({ error: 'Requires admin role' });
   }
@@ -28,6 +37,10 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
 };
 
 export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+  /**
+   * 超级管理员权限验证中间件
+   * 确保用户角色为 'SUPER_ADMIN'
+   */
   if (!req.user || req.user.role !== 'SUPER_ADMIN') {
     return res.status(403).json({ error: 'Requires super admin role' });
   }

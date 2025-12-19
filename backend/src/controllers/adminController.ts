@@ -6,6 +6,10 @@ import prisma from '../prisma';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export const adminLogin = async (req: Request, res: Response) => {
+  /**
+   * 管理员登录接口
+   * 验证用户名和密码，成功后颁发 JWT Token
+   */
   const { username, password } = req.body;
   
   try {
@@ -23,6 +27,10 @@ export const adminLogin = async (req: Request, res: Response) => {
 };
 
 export const createAdmin = async (req: Request, res: Response) => {
+  /**
+   * 创建管理员接口
+   * 仅超级管理员可调用，用于创建新的管理员账户
+   */
   const { username, password, role } = req.body;
   // In a real app, this endpoint should be protected or disabled
   try {
@@ -41,6 +49,10 @@ export const createAdmin = async (req: Request, res: Response) => {
 };
 
 export const getAuditLogs = async (req: Request, res: Response) => {
+  /**
+   * 获取审计日志接口
+   * 查询管理员的操作日志
+   */
   try {
     const logs = await prisma.auditLog.findMany({
       include: {
@@ -56,6 +68,10 @@ export const getAuditLogs = async (req: Request, res: Response) => {
 };
 
 export const promotePlayerToAdmin = async (req: Request, res: Response) => {
+  /**
+   * 提拔选手为管理员接口
+   * 将指定选手 ID 的角色更新为 'ADMIN'
+   */
   const { id } = req.params;
   const { role } = req.body; // 'ADMIN' or 'USER'
 

@@ -78,6 +78,7 @@ const restPlayers = computed(() => {
 });
 
 const getAvatarText = (player: any) => {
+  // 获取头像占位文字（取名字第一个字）
   if (player && player.name) {
     return player.name[0];
   }
@@ -85,6 +86,10 @@ const getAvatarText = (player: any) => {
 };
 
 const fetchRankings = async () => {
+  /**
+   * 获取排行榜数据
+   * 调用 API 获取积分排名
+   */
   try {
     const res = await getRankings();
     players.value = res as any[];

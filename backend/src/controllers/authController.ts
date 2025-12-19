@@ -5,6 +5,15 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export const login = async (req: Request, res: Response) => {
+  /**
+   * 用户登录接口
+   * 1. 优先尝试从微信云托管请求头 'x-wx-openid' 获取 OpenID (生产环境最可靠)
+   * 2. 如果没有请求头，回退使用请求体中的 code (用于本地开发)
+   * 3. 如果 OpenID 获取失败，返回 400 错误
+   * 4. 查询数据库中是否存在该 OpenID 的用户
+   * 5. 如果不存在，自动创建新用户，默认角色为 'USER'
+   * 6. 生成 JWT Token 并返回
+   */
   // Try to get OpenID from WeChat Cloud Hosting header first (most reliable in production)
   const wxOpenIdHeader = req.headers['x-wx-openid'];
   

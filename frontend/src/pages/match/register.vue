@@ -49,6 +49,12 @@ onLoad((options: any) => {
 });
 
 const submit = async () => {
+  /**
+   * 提交报名信息
+   * 1. 验证必填项
+   * 2. 检查登录状态
+   * 3. 调用报名 API
+   */
   if (!form.value.realName || !form.value.idCard || !form.value.phone) {
     uni.showToast({ title: '请填写必填项', icon: 'none' });
     return;

@@ -41,6 +41,10 @@ const matches = ref<any[]>([]);
 const isAdmin = ref(false); // 控制添加按钮显示
 
 const fetchMatches = async () => {
+  /**
+   * 获取赛事列表
+   * 调用 API 获取最新赛事数据并更新 matches
+   */
   try {
     const res = await getMatches();
     matches.value = res as any[];
@@ -50,22 +54,30 @@ const fetchMatches = async () => {
 };
 
 const goToCreate = () => {
+  // 跳转到创建赛事页面
   uni.navigateTo({ url: '/pages/match/create' });
 };
 
 const handleRegister = (match: any) => {
+  // 跳转到赛事报名页面
   uni.navigateTo({ url: `/pages/match/register?id=${match.id}` });
 };
 
 const handleViewDraw = (match: any) => {
+  // 跳转到签表查看页面
   uni.navigateTo({ url: `/pages/match/draw?id=${match.id}` });
 };
 
 const handleScore = (match: any) => {
+  // 跳转到录分页面
   uni.navigateTo({ url: `/pages/match/score?id=${match.id}` });
 };
 
 const checkUserRole = () => {
+  /**
+   * 检查用户角色
+   * 如果是管理员，显示创建赛事和录分按钮
+   */
   // 模拟从本地存储获取用户信息
   const userInfo = uni.getStorageSync('userInfo');
   // 临时调试：强制设为管理员，方便看到按钮

@@ -32,6 +32,10 @@ onLoad((options: any) => {
 });
 
 const fetchParticipants = async (id: number) => {
+  /**
+   * 获取参赛选手名单
+   * 调用 API 获取指定赛事的已审核通过选手
+   */
   try {
     const res = await getMatchParticipants(id);
     participants.value = res as any[];

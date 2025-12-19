@@ -41,6 +41,10 @@ onLoad((options: any) => {
 });
 
 const fetchParticipants = async (id: number) => {
+  /**
+   * 获取参赛选手并初始化录分表单
+   * 为每个选手添加 rank 和 points 字段用于输入
+   */
   try {
     const res = await getMatchParticipants(id);
     participants.value = (res as any[]).map(p => ({
@@ -55,6 +59,12 @@ const fetchParticipants = async (id: number) => {
 };
 
 const submit = async () => {
+  /**
+   * 提交比赛成绩
+   * 1. 过滤出有输入的选手数据
+   * 2. 调用提交成绩 API
+   * 3. 成功后返回上一页
+   */
   loading.value = true;
   try {
     const results = participants.value

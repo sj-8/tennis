@@ -2,6 +2,10 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 
 export const getMatches = async (req: Request, res: Response) => {
+  /**
+   * 获取赛事列表接口
+   * 查询所有赛事，并包含比赛结果，按开始时间倒序排列
+   */
   try {
     const matches = await prisma.tournament.findMany({
       include: { results: true },
@@ -14,6 +18,10 @@ export const getMatches = async (req: Request, res: Response) => {
 };
 
 export const createMatch = async (req: Request, res: Response) => {
+  /**
+   * 创建赛事接口
+   * 接收赛事名称、地点、时间等信息，创建新的赛事记录
+   */
   const { name, location, startTime, description, rules, registrationStart, registrationEnd } = req.body;
   try {
     const match = await prisma.tournament.create({
@@ -34,6 +42,10 @@ export const createMatch = async (req: Request, res: Response) => {
 };
 
 export const updateMatch = async (req: Request, res: Response) => {
+  /**
+   * 更新赛事接口
+   * 根据赛事 ID 更新赛事信息
+   */
   const { id } = req.params;
   const data = req.body;
   try {
@@ -53,6 +65,14 @@ export const updateMatch = async (req: Request, res: Response) => {
 };
 
 export const submitResult = async (req: Request, res: Response) => {
+  /**
+   * 提交比赛结果接口
+   * 1. 接收比赛结果数组（包含选手 ID、排名、积分等）
+   * 2. 使用数据库事务批量处理：
+   *    - 更新或创建 TournamentResult 记录
+   *    - 更新 Player 的总积分
+   * 3. 将赛事状态更新为 'COMPLETED'
+   */
   const { id } = req.params; // Tournament ID
   const { results } = req.body; // Array of { playerId, rank, score, bonusPoints }
 
@@ -105,6 +125,10 @@ export const submitResult = async (req: Request, res: Response) => {
 };
 
 export const getRankings = async (req: Request, res: Response) => {
+  /**
+   * 获取排行榜接口
+   * 查询前 50 名积分最高的选手
+   */
   try {
     const players = await prisma.player.findMany({
       orderBy: { points: 'desc' },
@@ -117,6 +141,11 @@ export const getRankings = async (req: Request, res: Response) => {
 };
 
 export const getMatchParticipants = async (req: Request, res: Response) => {
+  /**
+   * 获取赛事参赛人员接口
+   * 查询指定赛事下状态为 'APPROVED' 的报名记录
+   * 返回包含选手 ID、真实姓名、头像等信息
+   */
   const { id } = req.params;
   try {
     const participants = await prisma.playerApplication.findMany({
