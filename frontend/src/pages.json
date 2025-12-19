@@ -3,7 +3,7 @@
     {
       "path": "pages/index/index",
       "style": {
-        "navigationBarTitleText": "网球热土 - 赛事"
+        "navigationBarTitleText": "Tennis Hot Land - 赛事"
       }
     },
     {
@@ -21,7 +21,7 @@
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "网球热土",
+    "navigationBarTitleText": "Tennis Hot Land",
     "navigationBarBackgroundColor": "#F8F8F8",
     "backgroundColor": "#F8F8F8"
   },

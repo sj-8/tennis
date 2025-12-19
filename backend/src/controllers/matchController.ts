@@ -50,17 +50,30 @@ export const updateMatch = async (req: Request, res: Response) => {
 
 export const submitResult = async (req: Request, res: Response) => {
   const { id } = req.params; // Tournament ID
-  const { results } = req.body; // Array of { playerId, rank }
+  const { results } = req.body; // Array of { playerId, rank, score, bonusPoints }
 
   try {
     const operations = results.map((r: any) => {
-      let points = 1;
-      if (r.rank === 1) points = 10;
-      if (r.rank === 2) points = 5;
+      // Base points logic (can be overridden by bonusPoints)
+      let points = r.bonusPoints || 1; 
+      if (!r.bonusPoints) {
+          if (r.rank === 1) points = 10;
+          if (r.rank === 2) points = 5;
+      }
 
       return prisma.$transaction([
-        prisma.tournamentResult.create({
-          data: {
+        prisma.tournamentResult.upsert({
+          where: {
+            tournamentId_playerId: {
+                tournamentId: Number(id),
+                playerId: r.playerId
+            }
+          },
+          update: {
+            rank: r.rank,
+            pointsChange: points
+          },
+          create: {
             tournamentId: Number(id),
             playerId: r.playerId,
             rank: r.rank,

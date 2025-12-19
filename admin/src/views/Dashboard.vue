@@ -34,6 +34,25 @@
             <el-table-column prop="createdAt" label="Time" />
           </el-table>
         </el-tab-pane>
+        <el-tab-pane label="Score Management" name="scores">
+          <el-form :inline="true" :model="scoreForm" class="demo-form-inline">
+            <el-form-item label="Tournament ID">
+              <el-input v-model="scoreForm.tournamentId" placeholder="ID" />
+            </el-form-item>
+            <el-form-item label="Player ID">
+              <el-input v-model="scoreForm.playerId" placeholder="ID" />
+            </el-form-item>
+             <el-form-item label="Rank">
+              <el-input v-model="scoreForm.rank" placeholder="Rank (Optional)" />
+            </el-form-item>
+            <el-form-item label="Bonus Points">
+              <el-input v-model="scoreForm.bonusPoints" placeholder="Points" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="submitScore">Update Score</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
       </el-tabs>
     </el-main>
   </div>
@@ -49,11 +68,38 @@ const router = useRouter()
 const activeTab = ref('applications')
 const applications = ref([])
 const logs = ref([])
+const scoreForm = ref({
+  tournamentId: '',
+  playerId: '',
+  rank: '',
+  bonusPoints: ''
+})
 const API_URL = 'http://localhost:3000/api'
 
 const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
 })
+
+const submitScore = async () => {
+  if (!scoreForm.value.tournamentId || !scoreForm.value.playerId) {
+    ElMessage.error('Tournament ID and Player ID are required')
+    return
+  }
+  
+  try {
+    await axios.post(`${API_URL}/matches/${scoreForm.value.tournamentId}/results`, {
+      results: [{
+        playerId: Number(scoreForm.value.playerId),
+        rank: scoreForm.value.rank ? Number(scoreForm.value.rank) : undefined,
+        bonusPoints: scoreForm.value.bonusPoints ? Number(scoreForm.value.bonusPoints) : undefined
+      }]
+    }, getAuthHeader())
+    ElMessage.success('Score updated successfully')
+    scoreForm.value = { tournamentId: '', playerId: '', rank: '', bonusPoints: '' }
+  } catch (err) {
+    ElMessage.error('Failed to update score')
+  }
+}
 
 const fetchData = async () => {
   try {

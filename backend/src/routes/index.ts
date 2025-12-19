@@ -3,7 +3,7 @@ import { login } from '../controllers/authController';
 import { getMatches, createMatch, updateMatch, submitResult, getRankings } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs } from '../controllers/adminController';
 import { submitApplication, getApplications, auditApplication } from '../controllers/applicationController';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 
 const router = Router();
 
@@ -12,13 +12,13 @@ router.post('/auth/login', login);
 
 // Admin Auth
 router.post('/admin/login', adminLogin);
-router.post('/admin/create', createAdmin); // Should be secured
+router.post('/admin/create', authenticateToken, requireSuperAdmin, createAdmin); // Secured by Super Admin
 
 // Matches
 router.get('/matches', getMatches);
-router.post('/matches', createMatch);
-router.put('/matches/:id', updateMatch);
-router.post('/matches/:id/results', submitResult);
+router.post('/matches', authenticateToken, requireAdmin, createMatch);
+router.put('/matches/:id', authenticateToken, requireAdmin, updateMatch);
+router.post('/matches/:id/results', authenticateToken, requireAdmin, submitResult);
 router.get('/matches/rankings', getRankings);
 
 // Player Application
