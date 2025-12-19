@@ -12,7 +12,16 @@
     
     <view class="form-group">
       <text class="label">时间</text>
-      <input class="input" v-model="form.startTime" placeholder="YYYY-MM-DD HH:mm" />
+      <picker mode="date" :value="form.date" start="2025-01-01" end="2030-12-31" @change="bindDateChange">
+        <view class="picker-view">
+          {{ form.date || '请选择日期' }}
+        </view>
+      </picker>
+      <picker mode="time" :value="form.time" start="00:00" end="23:59" @change="bindTimeChange" style="margin-top: 10px;">
+        <view class="picker-view">
+          {{ form.time || '请选择时间' }}
+        </view>
+      </picker>
     </view>
 
     <view class="form-group">
@@ -31,14 +40,24 @@ import { createMatch } from '../../api';
 const form = ref({
   name: '',
   location: '',
-  startTime: '',
+  date: '',
+  time: '',
   rules: '',
   description: ''
 });
 
+const bindDateChange = (e: any) => {
+  form.value.date = e.detail.value;
+};
+
+const bindTimeChange = (e: any) => {
+  form.value.time = e.detail.value;
+};
+
 const submit = async () => {
   try {
-    await createMatch(form.value);
+    const startTime = `${form.value.date}T${form.value.time}:00`;
+    await createMatch({ ...form.value, startTime });
     uni.showToast({ title: '赛事已创建' });
     setTimeout(() => {
       uni.navigateBack();
@@ -54,6 +73,7 @@ const submit = async () => {
 .form-group { margin-bottom: 15px; }
 .label { display: block; margin-bottom: 5px; font-weight: bold; }
 .input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+.picker-view { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fff; }
 .textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
 .btn-submit { background: #2e7d32; color: white; padding: 12px; border-radius: 4px; text-align: center; margin-top: 20px; }
 </style>
