@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { login } from '../controllers/authController';
 import { getMatches, createMatch, updateMatch, submitResult, getRankings, getMatchParticipants } from '../controllers/matchController';
-import { adminLogin, createAdmin, getAuditLogs } from '../controllers/adminController';
+import { adminLogin, createAdmin, getAuditLogs, promotePlayerToAdmin } from '../controllers/adminController';
 import { submitApplication, getApplications, auditApplication } from '../controllers/applicationController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 
@@ -13,6 +13,7 @@ router.post('/auth/login', login);
 // Admin Auth
 router.post('/admin/login', adminLogin);
 router.post('/admin/create', authenticateToken, requireSuperAdmin, createAdmin); // Secured by Super Admin
+router.post('/admin/promote/:id', authenticateToken, requireAdmin, promotePlayerToAdmin); // Promote player to admin
 
 // Matches
 router.get('/matches', getMatches);

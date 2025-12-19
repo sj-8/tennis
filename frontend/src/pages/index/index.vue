@@ -15,6 +15,7 @@
         <view class="match-action">
           <button class="btn-register" @click.stop="handleRegister(match)" v-if="match.status === 'PENDING' || true">报名</button>
           <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
+          <button class="btn-score" @click.stop="handleScore(match)" v-if="isAdmin">录分</button>
         </view>
       </view>
     </view>
@@ -51,6 +52,10 @@ const handleRegister = (match: any) => {
 
 const handleViewDraw = (match: any) => {
   uni.navigateTo({ url: `/pages/match/draw?id=${match.id}` });
+};
+
+const handleScore = (match: any) => {
+  uni.navigateTo({ url: `/pages/match/score?id=${match.id}` });
 };
 
 const checkUserRole = () => {
@@ -92,6 +97,7 @@ onMounted(() => {
 .match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 5px; }
 .btn-register { background-color: #2e7d32; color: white; font-size: 12px; padding: 0 10px; height: 28px; line-height: 28px; border-radius: 14px; }
 .btn-draw { background-color: #1976d2; color: white; font-size: 12px; padding: 0 10px; height: 28px; line-height: 28px; border-radius: 14px; }
+.btn-score { background-color: #f57c00; color: white; font-size: 12px; padding: 0 10px; height: 28px; line-height: 28px; border-radius: 14px; }
 .match-name { font-size: 18px; font-weight: bold; display: block; margin-bottom: 5px; }
 .match-detail { color: #666; font-size: 14px; display: block; }
 .match-status { margin-top: 5px; font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #eee; display: inline-block; }

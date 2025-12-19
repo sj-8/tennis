@@ -25,6 +25,12 @@
       }
     },
     {
+      "path": "pages/match/score",
+      "style": {
+        "navigationBarTitleText": "录入比分"
+      }
+    },
+    {
       "path": "pages/rank/rank",
       "style": {
         "navigationBarTitleText": "排行榜"

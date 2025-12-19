@@ -54,3 +54,18 @@ export const getAuditLogs = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch logs' });
   }
 };
+
+export const promotePlayerToAdmin = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { role } = req.body; // 'ADMIN' or 'USER'
+
+  try {
+    const player = await prisma.player.update({
+      where: { id: Number(id) },
+      data: { role: role || 'ADMIN' }
+    });
+    res.json({ message: `Player ${player.name} role updated to ${player.role}`, player });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update player role' });
+  }
+};

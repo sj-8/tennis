@@ -136,6 +136,7 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
     // Return only necessary info
     const result = participants.map((p: any) => ({
       id: p.id,
+      playerId: p.playerId, // Add playerId
       name: p.realName, // Use realName from application
       avatar: p.player.avatar
     }));
