@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
 import jwt from 'jsonwebtoken';
+import axios from 'axios';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const WX_APP_ID = process.env.WX_APP_ID;
+const WX_APP_SECRET = process.env.WX_APP_SECRET;
 
 export const updateProfile = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -35,16 +38,32 @@ export const login = async (req: Request, res: Response) => {
    */
   // Try to get OpenID from WeChat Cloud Hosting header first (most reliable in production)
   const wxOpenIdHeader = req.headers['x-wx-openid'];
-  
-  // Fallback to code from body (for local dev or if header missing)
-  // Note: On real device without jscode2session implemented on backend, code is NOT the openid.
-  // But if running on WeChat Cloud Hosting, x-wx-openid SHOULD be present.
-  let openId = (wxOpenIdHeader as string) || req.body.code;
+  let openId = wxOpenIdHeader as string;
 
-  // If we still don't have a valid "openid" looking string (e.g. just a short code), 
-  // and we are NOT in production cloud hosting (no header), this will create a temporary user.
-  // Ideally, you should implement jscode2session here if not using Cloud Hosting.
-  
+  // If no header (e.g. public network access or local dev), exchange code for openid
+  if (!openId && req.body.code) {
+    if (WX_APP_ID && WX_APP_SECRET) {
+      try {
+        const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${WX_APP_ID}&secret=${WX_APP_SECRET}&js_code=${req.body.code}&grant_type=authorization_code`;
+        const wxRes = await axios.get(url);
+        
+        if (wxRes.data.openid) {
+          openId = wxRes.data.openid;
+          console.log('Fetched OpenID from WeChat API:', openId);
+        } else {
+          console.error('WeChat API error:', wxRes.data);
+          return res.status(400).json({ error: 'Failed to fetch OpenID from WeChat', details: wxRes.data });
+        }
+      } catch (err) {
+        console.error('Network error calling WeChat API:', err);
+        return res.status(500).json({ error: 'Network error calling WeChat API' });
+      }
+    } else {
+      console.warn('Missing WX_APP_ID or WX_APP_SECRET env vars. Falling back to code as openid (NOT RECOMMENDED for production).');
+      openId = req.body.code;
+    }
+  }
+
   if (!openId) {
      return res.status(400).json({ error: 'Missing code or openid' });
   }
