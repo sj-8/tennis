@@ -5,7 +5,6 @@
         <TennisBall :size="32" :animated="true" />
         <view class="title-wrapper">
           <text class="title">近期赛事</text>
-          <text class="hot-tag">HOT</text>
         </view>
       </view>
     </view>
@@ -127,30 +126,6 @@ onMounted(() => {
 }
 .title { font-size: 24px; font-weight: bold; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .title-wrapper { display: flex; align-items: center; }
-.hot-tag {
-  font-size: 14px;
-  color: #fff;
-  font-weight: 900;
-  font-style: italic;
-  margin-left: 8px;
-  padding: 2px 6px;
-  background: linear-gradient(to top, #ff9a00, #ff5200);
-  border-radius: 4px;
-  position: relative;
-  box-shadow: 0 0 10px #ff5200;
-  animation: burn 0.8s infinite alternate;
-}
-
-@keyframes burn {
-  from {
-    box-shadow: 0 0 5px #ff9a00, 0 0 10px #ff5200;
-    transform: scale(1) rotate(0deg);
-  }
-  to {
-    box-shadow: 0 0 15px #ff9a00, 0 0 20px #ff0000;
-    transform: scale(1.1) rotate(3deg);
-  }
-}
 .match-list { padding: 0 20px; }
 .match-card { 
   background: #fff; 
