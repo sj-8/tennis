@@ -152,7 +152,7 @@ onMounted(() => {
   animation: fire-flicker 1.5s infinite alternate;
 }
 .sub-title {
-  font-size: 28px;
+  font-size: 24px;
   color: white;
   font-weight: 900;
   letter-spacing: 1px;
