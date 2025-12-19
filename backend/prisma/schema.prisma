@@ -16,6 +16,44 @@ model Player {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   results   TournamentResult[]
+  applications PlayerApplication[]
+}
+
+model AdminUser {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      String   @default("ADMIN") // ADMIN, SUPER_ADMIN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  auditLogs AuditLog[]
+}
+
+model PlayerApplication {
+  id        Int      @id @default(autoincrement())
+  playerId  Int
+  realName  String
+  phone     String
+  idCard    String
+  project   String
+  bio       String?  @db.Text
+  files     String?  @db.Text // JSON string for file URLs
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  player    Player   @relation(fields: [playerId], references: [id])
+  auditLogs AuditLog[]
+}
+
+model AuditLog {
+  id            Int               @id @default(autoincrement())
+  adminId       Int
+  applicationId Int
+  action        String            // APPROVED, REJECTED
+  comment       String?
+  createdAt     DateTime          @default(now())
+  admin         AdminUser         @relation(fields: [adminId], references: [id])
+  application   PlayerApplication @relation(fields: [applicationId], references: [id])
 }
 
 model Tournament {
