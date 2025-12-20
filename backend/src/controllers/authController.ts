@@ -9,14 +9,16 @@ const WX_APP_SECRET = process.env.WX_APP_SECRET;
 
 export const updateProfile = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, avatar } = req.body;
+  const { name, avatar, gender, birthday } = req.body;
 
   try {
     const player = await prisma.player.update({
       where: { id: Number(id) },
       data: {
         name: name || undefined,
-        avatar: avatar || undefined
+        avatar: avatar || undefined,
+        gender: gender || undefined,
+        birthday: birthday ? new Date(birthday) : undefined
       }
     });
     res.json(player);

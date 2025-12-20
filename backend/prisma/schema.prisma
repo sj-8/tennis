@@ -11,7 +11,9 @@ model Player {
   id        Int      @id @default(autoincrement())
   openid    String   @unique
   name      String?
-  avatar    String?
+  avatar    String?  @db.LongText
+  gender    String?  // '男' or '女'
+  birthday  DateTime?
   points    Int      @default(0)
   role      String   @default("USER") // USER, ADMIN
   createdAt DateTime @default(now())

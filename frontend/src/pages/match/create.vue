@@ -63,8 +63,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { createMatch } from '../../api';
+import { onLoad } from '@dcloudio/uni-app';
+import { createMatch, updateMatch, getMatches } from '../../api';
 
+const isEdit = ref(false);
+const matchId = ref(0);
 const form = ref({
   name: '',
   location: '',
@@ -76,6 +79,38 @@ const form = ref({
   regEndTime: '',
   rules: '',
   description: ''
+});
+
+onLoad(async (options: any) => {
+  if (options.id) {
+    isEdit.value = true;
+    matchId.value = Number(options.id);
+    uni.setNavigationBarTitle({ title: '编辑赛事' });
+    
+    const matches: any = await getMatches();
+    const match = matches.find((m: any) => m.id === matchId.value);
+    if (match) {
+      const start = new Date(match.startTime);
+      form.value.name = match.name;
+      form.value.location = match.location;
+      form.value.date = start.toISOString().split('T')[0];
+      form.value.time = start.toTimeString().slice(0, 5);
+      form.value.rules = match.rules || '';
+      
+      if (match.registrationStart) {
+         const rs = new Date(match.registrationStart);
+         form.value.regStartDate = rs.toISOString().split('T')[0];
+         form.value.regStartTime = rs.toTimeString().slice(0, 5);
+      }
+      if (match.registrationEnd) {
+         const re = new Date(match.registrationEnd);
+         form.value.regEndDate = re.toISOString().split('T')[0];
+         form.value.regEndTime = re.toTimeString().slice(0, 5);
+      }
+    }
+  } else {
+    uni.setNavigationBarTitle({ title: '创建赛事' });
+  }
 });
 
 const bindDateChange = (e: any) => {
@@ -103,24 +138,42 @@ const bindRegEndTimeChange = (e: any) => {
 };
 
 const submit = async () => {
-  /**
-   * 提交赛事创建
-   * 1. 组合日期和时间
-   * 2. 调用创建赛事 API
-   * 3. 成功后返回上一页
-   */
+  if (!form.value.name || !form.value.location || !form.value.date || !form.value.time) {
+    uni.showToast({ title: '请填写必填信息（名称、地点、比赛时间）', icon: 'none' });
+    return;
+  }
+  
+  // Validate Registration Dates if partial
+  if ((form.value.regStartDate && !form.value.regStartTime) || (!form.value.regStartDate && form.value.regStartTime)) {
+    uni.showToast({ title: '请完整填写报名开始时间', icon: 'none' });
+    return;
+  }
+  if ((form.value.regEndDate && !form.value.regEndTime) || (!form.value.regEndDate && form.value.regEndTime)) {
+    uni.showToast({ title: '请完整填写报名截止时间', icon: 'none' });
+    return;
+  }
+
   try {
     const startTime = `${form.value.date}T${form.value.time}:00`;
     const registrationStart = form.value.regStartDate && form.value.regStartTime ? `${form.value.regStartDate}T${form.value.regStartTime}:00` : undefined;
     const registrationEnd = form.value.regEndDate && form.value.regEndTime ? `${form.value.regEndDate}T${form.value.regEndTime}:00` : undefined;
     
-    await createMatch({ ...form.value, startTime, registrationStart, registrationEnd });
-    uni.showToast({ title: '赛事已创建' });
+    const data = { ...form.value, startTime, registrationStart, registrationEnd };
+    
+    if (isEdit.value) {
+      await updateMatch(matchId.value, data);
+      uni.showToast({ title: '赛事已更新' });
+    } else {
+      await createMatch(data);
+      uni.showToast({ title: '赛事已创建' });
+    }
+    
     setTimeout(() => {
       uni.navigateBack();
     }, 1500);
-  } catch (err) {
-    uni.showToast({ title: '错误', icon: 'none' });
+  } catch (err: any) {
+    console.error('Submit match error:', err);
+    uni.showToast({ title: err.message || '操作失败', icon: 'none' });
   }
 };
 </script>

@@ -189,6 +189,32 @@ const saveName = async () => {
   }
 };
 
+const handleGenderChange = async (e: any) => {
+  const gender = ['男', '女'][e.detail.value];
+  try {
+    const res = await updateProfile(userInfo.value.id, { gender });
+    userInfo.value = res;
+    uni.setStorageSync('userInfo', res);
+    uni.showToast({ title: '性别已更新' });
+  } catch (err) {
+    console.error(err);
+    uni.showToast({ title: '更新失败', icon: 'none' });
+  }
+};
+
+const handleBirthdayChange = async (e: any) => {
+  const birthday = e.detail.value; // YYYY-MM-DD
+  try {
+    const res = await updateProfile(userInfo.value.id, { birthday });
+    userInfo.value = res;
+    uni.setStorageSync('userInfo', res);
+    uni.showToast({ title: '生日已更新' });
+  } catch (err) {
+    console.error(err);
+    uni.showToast({ title: '更新失败', icon: 'none' });
+  }
+};
+
 const handleAvatarClick = () => {
   if (!userInfo.value) return;
   

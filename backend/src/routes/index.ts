@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { login, updateProfile } from '../controllers/authController';
-import { getMatches, createMatch, updateMatch, submitResult, getRankings, getMatchParticipants } from '../controllers/matchController';
+import { getMatches, createMatch, updateMatch, deleteMatch, submitResult, getRankings, getMatchParticipants } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs, promotePlayerToAdmin } from '../controllers/adminController';
 import { submitApplication, getApplications, auditApplication } from '../controllers/applicationController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
@@ -20,6 +20,7 @@ router.post('/admin/promote/:id', authenticateToken, requireAdmin, promotePlayer
 router.get('/matches', getMatches);
 router.post('/matches', authenticateToken, requireAdmin, createMatch);
 router.put('/matches/:id', authenticateToken, requireAdmin, updateMatch);
+router.delete('/matches/:id', authenticateToken, requireSuperAdmin, deleteMatch); // Only Super Admin can delete
 router.post('/matches/:id/results', authenticateToken, requireAdmin, submitResult);
 router.get('/matches/rankings', getRankings);
 router.get('/matches/:id/participants', getMatchParticipants);

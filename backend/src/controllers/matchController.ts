@@ -23,12 +23,22 @@ export const createMatch = async (req: Request, res: Response) => {
    * 接收赛事名称、地点、时间等信息，创建新的赛事记录
    */
   const { name, location, startTime, description, rules, registrationStart, registrationEnd } = req.body;
+
+  if (!name || !location || !startTime) {
+      return res.status(400).json({ error: '缺少必填字段：名称、地点、时间' });
+  }
+
+  const start = new Date(startTime);
+  if (isNaN(start.getTime())) {
+      return res.status(400).json({ error: '无效的时间格式' });
+  }
+
   try {
     const match = await prisma.tournament.create({
       data: {
         name,
         location,
-        startTime: new Date(startTime),
+        startTime: start,
         description,
         rules,
         registrationStart: registrationStart ? new Date(registrationStart) : null,
@@ -37,6 +47,7 @@ export const createMatch = async (req: Request, res: Response) => {
     });
     res.json(match);
   } catch (error) {
+    console.error('Create match error:', error);
     res.status(500).json({ error: 'Failed to create match' });
   }
 };
@@ -61,6 +72,28 @@ export const updateMatch = async (req: Request, res: Response) => {
     res.json(match);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update match' });
+  }
+};
+
+export const deleteMatch = async (req: Request, res: Response) => {
+  /**
+   * 删除赛事接口
+   * 物理删除赛事记录
+   * 注意：如果有相关联的报名记录或结果，可能会因外键约束失败，需要先处理关联数据
+   */
+  const { id } = req.params;
+  try {
+    // Optional: Delete related data first if cascade delete is not configured in DB
+    // await prisma.playerApplication.deleteMany({ where: { tournamentId: Number(id) } });
+    // await prisma.tournamentResult.deleteMany({ where: { tournamentId: Number(id) } });
+
+    await prisma.tournament.delete({
+      where: { id: Number(id) }
+    });
+    res.json({ message: 'Match deleted successfully' });
+  } catch (error) {
+    console.error('Delete match error:', error);
+    res.status(500).json({ error: 'Failed to delete match' });
   }
 };
 
