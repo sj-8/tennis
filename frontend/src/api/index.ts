@@ -21,13 +21,20 @@ export const request = (options: any) => {
 
     // #ifdef MP-WEIXIN
     // Use wx.cloud.callContainer
+    // 错误分析：Cannot POST /auth/login 说明后端收到了请求，但找不到这个路由。
+    // 这意味着后端确实需要 /api 前缀。
+    // 我们之前的尝试（带/api）失败是因为环境 ID 错了。
+    // 现在的尝试（不带/api）失败是因为路径不对。
+    // 所以正确的组合是：正确的环境 ID + 带 /api 前缀的路径。
+    
     const path = options.url.startsWith('/') ? options.url : `/${options.url}`;
+    const fullPath = path.startsWith('/api') ? path : `/api${path}`;
     
     wx.cloud.callContainer({
       config: {
         env: 'prod-8g8j609ye88db758' // User provided env ID
       },
-      path, // 使用原始路径，例如 /auth/login
+      path: fullPath, 
       header: {
         ...header,
         'X-WX-SERVICE': 'express-4y4r'
