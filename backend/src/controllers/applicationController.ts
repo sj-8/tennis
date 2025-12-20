@@ -180,6 +180,7 @@ export const auditApplication = async (req: Request, res: Response) => {
    */
   const { id } = req.params;
   const { status, comment } = req.body; // status: APPROVED or REJECTED
+  // @ts-ignore
   const adminId = req.user.id;
 
   try {

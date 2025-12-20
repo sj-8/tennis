@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { login, updateProfile } from '../controllers/authController';
 import { getMatches, createMatch, updateMatch, deleteMatch, submitResult, getRankings, getMatchParticipants, getReferees, addReferee, removeReferee } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs, promotePlayerToAdmin } from '../controllers/adminController';
-import { submitApplication, getApplications, auditApplication, getUserApplications } from '../controllers/applicationController';
+import { submitApplication, getApplications, auditApplication, getUserApplications, cancelApplication } from '../controllers/applicationController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 
 const router = Router();
