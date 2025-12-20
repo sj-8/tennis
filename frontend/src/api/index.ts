@@ -21,13 +21,11 @@ export const request = (options: any) => {
 
     // #ifdef MP-WEIXIN
     // Use wx.cloud.callContainer
-    // 如果继续报错 INVALID_HOST，说明 path 依然不对，或者 header 中的 X-WX-SERVICE 有误
-    // 尝试移除 /api 前缀，回到原始路径
     const path = options.url.startsWith('/') ? options.url : `/${options.url}`;
     
     wx.cloud.callContainer({
       config: {
-        env: 'prod-5g8w00e00898869c'
+        env: 'prod-8g8j609ye88db758' // User provided env ID
       },
       path, // 使用原始路径，例如 /auth/login
       header: {
