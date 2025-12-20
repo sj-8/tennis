@@ -225,38 +225,43 @@ const handleAvatarClick = () => {
     success: (res: any) => {
       const tempFilePath = res.tempFilePaths[0];
       
-      // Check size (1MB = 1048576 bytes)
+      // Check size (limit to 10MB)
       const size = res.tempFiles[0].size;
-      if (size > 1048576) {
-        uni.showToast({ title: '图片不能超过1MB', icon: 'none' });
+      if (size > 10 * 1024 * 1024) {
+        uni.showToast({ title: '图片不能超过10MB', icon: 'none' });
         return;
       }
       
       uni.showLoading({ title: '上传中...' });
       
-      uni.getFileSystemManager().readFile({
+      // Use wx.cloud.uploadFile instead of callContainer for better performance and stability
+      // Generate a unique file path: avatars/{openid}_{timestamp}.ext
+      const ext = tempFilePath.split('.').pop() || 'jpg';
+      const cloudPath = `avatars/${userInfo.value.openid}_${Date.now()}.${ext}`;
+      
+      // @ts-ignore
+      wx.cloud.uploadFile({
+        cloudPath,
         filePath: tempFilePath,
-        encoding: 'base64',
-        success: async (readRes: any) => {
-          const base64 = 'data:image/jpeg;base64,' + readRes.data;
+        success: async (uploadRes: any) => {
+          console.log('Upload success, fileID:', uploadRes.fileID);
           try {
-             // 检查 base64 长度，如果太长可能会导致请求失败
-             console.log('Avatar Base64 length:', base64.length);
-             const updateRes = await updateProfile(userInfo.value.id, { avatar: base64 });
+             // Save fileID to database instead of base64
+             const updateRes = await updateProfile(userInfo.value.id, { avatar: uploadRes.fileID });
              userInfo.value = updateRes;
              uni.setStorageSync('userInfo', updateRes);
              uni.showToast({ title: '头像已更新' });
           } catch (err) {
-             console.error('Upload avatar error:', err);
-             uni.showToast({ title: '上传失败', icon: 'none' });
-          } finally {
-             uni.hideLoading();
+             console.error('Update profile error:', err);
+             uni.showToast({ title: '保存头像失败', icon: 'none' });
           }
         },
         fail: (err: any) => {
-            console.error('Read file failed:', err);
-            uni.hideLoading();
-            uni.showToast({ title: '读取图片失败', icon: 'none' });
+          console.error('wx.cloud.uploadFile fail:', err);
+          uni.showToast({ title: '上传失败: ' + (err.errMsg || '未知错误'), icon: 'none' });
+        },
+        complete: () => {
+          uni.hideLoading();
         }
       });
     }

@@ -19,17 +19,16 @@ export const request = (options: any) => {
       header['Authorization'] = `Bearer ${token}`;
     }
 
-    // #ifdef MP-WEIXIN
-    // Use wx.cloud.callContainer
-    // 错误分析：Cannot POST /auth/login 说明后端收到了请求，但找不到这个路由。
-    // 这意味着后端确实需要 /api 前缀。
-    // 我们之前的尝试（带/api）失败是因为环境 ID 错了。
-    // 现在的尝试（不带/api）失败是因为路径不对。
-    // 所以正确的组合是：正确的环境 ID + 带 /api 前缀的路径。
-    
+    // Validate path
     const path = options.url.startsWith('/') ? options.url : `/${options.url}`;
+    if (!/^[a-zA-Z0-9\/\-_]+$/.test(path)) {
+       return reject({ code: 'INVALID_PATH_FORMAT', message: '请求路径包含非法字符' });
+    }
+
     const fullPath = path.startsWith('/api') ? path : `/api${path}`;
     
+    console.log(`[API] Request: ${options.method || 'GET'} ${fullPath}`, { data: options.data });
+
     wx.cloud.callContainer({
       config: {
         env: 'prod-8g8j609ye88db758' // User provided env ID
@@ -37,7 +36,7 @@ export const request = (options: any) => {
       path: fullPath, 
       header: {
         ...header,
-        // 'X-WX-SERVICE': 'express-4y4r' // Removed: let cloud resolve service automatically or use default
+        'X-WX-SERVICE': 'express-4y4r' // Restore service name to ensure correct routing
       },
       method: options.method || 'GET',
       data: options.data || {}, // Ensure data is not undefined
@@ -47,10 +46,16 @@ export const request = (options: any) => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
            resolve(res.data);
         } else {
+           console.error(`[API] Error ${res.statusCode}:`, res.data);
            reject(res.data || 'Request failed');
         }
       },
       fail: (err: any) => {
+        console.error('[API] CallContainer Fail:', err);
+        // Enhance error message for INVALID_PATH
+        if (err?.error === 'INVALID_PATH' || (err?.message && err.message.includes('INVALID_PATH'))) {
+            console.error('API Path Error: Please check if the service is running and the path is correct in CloudBase console.');
+        }
         reject(err);
       }
     });
