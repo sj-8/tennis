@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import https from 'https';
 import prisma from '../prisma';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
@@ -48,7 +49,13 @@ export const login = async (req: Request, res: Response) => {
       try {
         const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${WX_APP_ID}&secret=${WX_APP_SECRET}&js_code=${req.body.code}&grant_type=authorization_code`;
         console.log('Calling WeChat API:', url.replace(WX_APP_SECRET, '****')); // Log URL but mask secret
-        const wxRes = await axios.get(url);
+        
+        // Create an https agent that ignores self-signed certificate errors
+        const agent = new https.Agent({  
+          rejectUnauthorized: false
+        });
+        
+        const wxRes = await axios.get(url, { httpsAgent: agent });
         
         if (wxRes.data.openid) {
           openId = wxRes.data.openid;

@@ -207,3 +207,57 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch participants' });
   }
 };
+
+// Referee Management
+export const getReferees = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const referees = await prisma.tournamentReferee.findMany({
+      where: { tournamentId: Number(id) },
+      include: { player: true }
+    });
+    res.json(referees.map(r => r.player));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch referees' });
+  }
+};
+
+export const addReferee = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { openid } = req.body;
+  
+  try {
+    const player = await prisma.player.findUnique({ where: { openid } });
+    if (!player) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await prisma.tournamentReferee.create({
+      data: {
+        tournamentId: Number(id),
+        playerId: player.id
+      }
+    });
+    res.json({ message: 'Referee added' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to add referee' });
+  }
+};
+
+export const removeReferee = async (req: Request, res: Response) => {
+  const { id, playerId } = req.params;
+  try {
+    await prisma.tournamentReferee.delete({
+      where: {
+        tournamentId_playerId: {
+          tournamentId: Number(id),
+          playerId: Number(playerId)
+        }
+      }
+    });
+    res.json({ message: 'Referee removed' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to remove referee' });
+  }
+};

@@ -96,3 +96,8 @@ export const updateProfile = (id: number, data: any) => request({ url: `/auth/${
 export const updateMatch = (id: number, data: any) => request({ url: `/matches/${id}`, method: 'PUT', data });
 // 删除赛事
 export const deleteMatch = (id: number) => request({ url: `/matches/${id}`, method: 'DELETE' });
+
+// 裁判员管理
+export const getReferees = (matchId: number) => request({ url: `/matches/${matchId}/referees` });
+export const addReferee = (matchId: number, openid: string) => request({ url: `/matches/${matchId}/referees`, method: 'POST', data: { openid } });
+export const removeReferee = (matchId: number, playerId: number) => request({ url: `/matches/${matchId}/referees/${playerId}`, method: 'DELETE' });

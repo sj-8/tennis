@@ -20,6 +20,7 @@ model Player {
   updatedAt DateTime @updatedAt
   results   TournamentResult[]
   applications PlayerApplication[]
+  refereeOf TournamentReferee[]
 }
 
 model AdminUser {
@@ -75,6 +76,7 @@ model Tournament {
   updatedAt   DateTime @updatedAt
   results     TournamentResult[]
   applications PlayerApplication[]
+  referees    TournamentReferee[]
 }
 
 model TournamentResult {
@@ -87,4 +89,13 @@ model TournamentResult {
   player       Player     @relation(fields: [playerId], references: [id])
   
   @@unique([tournamentId, playerId])
+}
+
+model TournamentReferee {
+  tournamentId Int
+  playerId     Int
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  player       Player     @relation(fields: [playerId], references: [id])
+
+  @@id([tournamentId, playerId])
 }

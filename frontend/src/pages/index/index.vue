@@ -35,7 +35,8 @@
             <button class="btn-edit" @click.stop="handleEdit(match)">编辑</button>
           </view>
           <view class="action-row" v-if="isAdmin">
-            <button class="btn-delete full-width" @click.stop="handleDelete(match)">删除</button>
+            <button class="btn-referee" @click.stop="handleManageReferees(match)">裁判</button>
+            <button class="btn-delete" @click.stop="handleDelete(match)">删除</button>
           </view>
         </view>
       </view>
@@ -62,6 +63,8 @@ const fetchMatches = async () => {
    * 调用 API 获取最新赛事数据并更新 matches
    */
   try {
+    // Clear matches first to force UI refresh and show loading state if needed
+    matches.value = [];
     const res = await getMatches();
     matches.value = res as any[];
   } catch (err) {
@@ -230,6 +233,7 @@ onShow(() => {
 .btn-draw { background-color: #3C6382; color: white; }
 .btn-score { background-color: #FFD700; color: #3A5F0B; }
 .btn-edit { background-color: #2e86de; color: white; }
+.btn-referee { background-color: #9b59b6; color: white; }
 .btn-delete { background-color: #e74c3c; color: white; }
 .btn-delete.full-width { width: 100%; flex: none; }
 .match-name { font-size: 18px; font-weight: bold; display: flex; align-items: center; margin-bottom: 8px; color: #333; }

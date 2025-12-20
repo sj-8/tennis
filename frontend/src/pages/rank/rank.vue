@@ -193,11 +193,17 @@ onMounted(() => {
   font-size: 28px;
   border: 4px solid #FFD700;
 }
-.crown-icon {
+.medal-icon {
   font-size: 32px;
   position: absolute;
   top: -45px;
   animation: float 2s ease-in-out infinite;
+}
+.podium-item.second .medal-icon {
+  animation-delay: 0.5s;
+}
+.podium-item.third .medal-icon {
+  animation-delay: 1s;
 }
 
 /* Second Place */
