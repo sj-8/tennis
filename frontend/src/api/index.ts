@@ -56,6 +56,10 @@ export const request = (options: any) => {
         if (err?.error === 'INVALID_PATH' || (err?.message && err.message.includes('INVALID_PATH'))) {
             console.error('API Path Error: Please check if the service is running and the path is correct in CloudBase console.');
         }
+        // Enhance 404 error message
+        if (err?.statusCode === 404 || err?.message?.includes('404')) {
+            console.error('API 404 Not Found: 接口端点不存在或路径错误。请检查 backend/src/routes/index.ts 是否已包含该路由，并确认后端已重新部署。');
+        }
         reject(err);
       }
     });

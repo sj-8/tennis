@@ -11,8 +11,10 @@
     <view class="podium-container" v-if="players.length > 0">
       <!-- 2nd Place (Left) -->
       <view class="podium-item second" v-if="players[1]">
+        <view class="medal-icon">🥈</view>
         <view class="avatar-wrapper">
-          <view class="avatar">{{ getAvatarText(players[1]) }}</view>
+          <image class="avatar-img" v-if="players[1].avatar" :src="players[1].avatar" mode="aspectFill"></image>
+          <view class="avatar" v-else>{{ getAvatarText(players[1]) }}</view>
           <view class="badge silver">2</view>
         </view>
         <text class="name">{{ players[1].name || '未知' }}</text>
@@ -24,7 +26,8 @@
       <view class="podium-item first" v-if="players[0]">
         <view class="crown-icon">👑</view>
         <view class="avatar-wrapper">
-          <view class="avatar">{{ getAvatarText(players[0]) }}</view>
+          <image class="avatar-img" v-if="players[0].avatar" :src="players[0].avatar" mode="aspectFill"></image>
+          <view class="avatar" v-else>{{ getAvatarText(players[0]) }}</view>
           <view class="badge gold">1</view>
         </view>
         <text class="name">{{ players[0].name || '未知' }}</text>
@@ -187,11 +190,18 @@ onMounted(() => {
   z-index: 2;
   padding-bottom: 20px; /* Elevate visually if we had a podium base, here just positioning */
 }
-.podium-item.first .avatar {
+.podium-item.first .avatar, .podium-item.first .avatar-img {
   width: 80px;
   height: 80px;
   font-size: 28px;
   border: 4px solid #FFD700;
+  border-radius: 50%;
+}
+.crown-icon {
+  font-size: 32px;
+  position: absolute;
+  top: -45px;
+  animation: float 1s ease-in-out infinite; /* Restore crown animation: 1s infinite */
 }
 .medal-icon {
   font-size: 32px;
@@ -211,22 +221,24 @@ onMounted(() => {
   order: -1; /* Ensure it appears to the left */
   padding-bottom: 0;
 }
-.podium-item.second .avatar {
+.podium-item.second .avatar, .podium-item.second .avatar-img {
   width: 60px;
   height: 60px;
   font-size: 20px;
   border: 3px solid #C0C0C0;
+  border-radius: 50%;
 }
 
 /* Third Place */
 .podium-item.third {
   padding-bottom: 0;
 }
-.podium-item.third .avatar {
+.podium-item.third .avatar, .podium-item.third .avatar-img {
   width: 60px;
   height: 60px;
   font-size: 20px;
   border: 3px solid #CD7F32;
+  border-radius: 50%;
 }
 
 .podium-item .name {
@@ -248,7 +260,7 @@ onMounted(() => {
 
 @keyframes float {
   0% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  50% { transform: translateY(-10px); } /* 10px float range */
   100% { transform: translateY(0); }
 }
 
