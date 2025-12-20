@@ -97,7 +97,7 @@ const handleEdit = (match: any) => {
 const handleDelete = async (match: any) => {
   uni.showModal({
     title: '确认删除',
-    content: '确定要删除该赛事吗？此操作不可恢复。',
+    content: `确定要删除赛事“${match.name}”吗？此操作不可恢复。`,
     success: async (res: any) => {
       if (res.confirm) {
         try {
