@@ -3,7 +3,10 @@
     <view class="header tennis-court-bg">
       <view class="user-info" v-if="userInfo">
         <view class="avatar-container" @click="handleAvatarClick">
-          <image class="avatar" :src="userInfo.avatar || '/static/logo.png'" mode="aspectFill"></image>
+          <image class="avatar" v-if="userInfo.avatar" :src="userInfo.avatar" mode="aspectFill"></image>
+          <view class="avatar placeholder" v-else>
+            <text class="placeholder-text">{{ (userInfo.name || 'U').charAt(0).toUpperCase() }}</text>
+          </view>
           <view class="edit-badge" v-if="userInfo">
             <text class="edit-icon">📷</text>
           </view>
@@ -205,28 +208,29 @@ const handleAvatarClick = () => {
       
       uni.showLoading({ title: '上传中...' });
       
-      // Upload to WeChat Cloud Hosting (or your backend)
-      // For simplicity, we'll convert to Base64 here if it's small enough, 
-      // OR ideally upload to cloud storage. 
-      // Since we are using WeChat Cloud Hosting, we can use uni.uploadFile or cloud.uploadFile
-      // Here we assume a direct upload endpoint or base64 for MVP.
-      // Let's use Base64 for simplicity in this demo, but warn about size.
-      
       uni.getFileSystemManager().readFile({
         filePath: tempFilePath,
         encoding: 'base64',
         success: async (readRes: any) => {
           const base64 = 'data:image/jpeg;base64,' + readRes.data;
           try {
+             // 检查 base64 长度，如果太长可能会导致请求失败
+             console.log('Avatar Base64 length:', base64.length);
              const updateRes = await updateProfile(userInfo.value.id, { avatar: base64 });
              userInfo.value = updateRes;
              uni.setStorageSync('userInfo', updateRes);
              uni.showToast({ title: '头像已更新' });
           } catch (err) {
+             console.error('Upload avatar error:', err);
              uni.showToast({ title: '上传失败', icon: 'none' });
           } finally {
              uni.hideLoading();
           }
+        },
+        fail: (err: any) => {
+            console.error('Read file failed:', err);
+            uni.hideLoading();
+            uni.showToast({ title: '读取图片失败', icon: 'none' });
         }
       });
     }
