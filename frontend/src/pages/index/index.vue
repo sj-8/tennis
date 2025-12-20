@@ -80,6 +80,7 @@ const fetchMatches = async () => {
 };
 
 const isRegistered = (matchId: number) => {
+  if (!myApplications.value) return false;
   return myApplications.value.some((app: any) => app.tournamentId === matchId && app.status !== 'REJECTED');
 };
 

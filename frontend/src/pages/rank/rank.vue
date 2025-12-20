@@ -264,6 +264,13 @@ onMounted(() => {
   100% { transform: translateY(0); }
 }
 
+.crown-icon {
+  font-size: 32px;
+  position: absolute;
+  top: -45px;
+  animation: float 2s ease-in-out infinite; /* Restore crown animation: 2s infinite */
+}
+
 /* List Styles */
 .rank-list { margin-top: 10px; border-top: 1px solid #f0f0f0; }
 .rank-header { display: flex; font-weight: bold; border-bottom: 1px solid #eee; padding: 10px 0; color: #666; font-size: 14px; }
