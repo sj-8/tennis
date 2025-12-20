@@ -26,9 +26,17 @@
           <text class="match-status" :class="match.status">{{ getStatusText(match.status) }}</text>
         </view>
         <view class="match-action">
-          <button class="btn-register" @click.stop="handleRegister(match)" v-if="match.status === 'PENDING' || true">报名</button>
-          <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
-          <button class="btn-score" @click.stop="handleScore(match)" v-if="isAdmin">录分</button>
+          <view class="action-row">
+            <button class="btn-register" @click.stop="handleRegister(match)" v-if="match.status === 'PENDING' || true">报名</button>
+            <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
+          </view>
+          <view class="action-row" v-if="isAdmin">
+            <button class="btn-score" @click.stop="handleScore(match)">录分</button>
+            <button class="btn-edit" @click.stop="handleEdit(match)">编辑</button>
+          </view>
+          <view class="action-row" v-if="isAdmin">
+            <button class="btn-delete full-width" @click.stop="handleDelete(match)">删除</button>
+          </view>
         </view>
       </view>
     </view>
@@ -42,7 +50,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { getMatches } from '../../api';
+import { getMatches, deleteMatch } from '../../api';
 import TennisBall from '../../components/TennisBall.vue';
 
 const matches = ref<any[]>([]);
@@ -79,6 +87,29 @@ const handleViewDraw = (match: any) => {
 const handleScore = (match: any) => {
   // 跳转到录分页面
   uni.navigateTo({ url: `/pages/match/score?id=${match.id}` });
+};
+
+const handleEdit = (match: any) => {
+  // 跳转到编辑页面（复用创建页面，带上 ID）
+  uni.navigateTo({ url: `/pages/match/create?id=${match.id}` });
+};
+
+const handleDelete = async (match: any) => {
+  uni.showModal({
+    title: '确认删除',
+    content: '确定要删除该赛事吗？此操作不可恢复。',
+    success: async (res: any) => {
+      if (res.confirm) {
+        try {
+          await deleteMatch(match.id);
+          uni.showToast({ title: '删除成功' });
+          fetchMatches(); // 刷新列表
+        } catch (err) {
+          uni.showToast({ title: '删除失败，权限不足或有依赖数据', icon: 'none' });
+        }
+      }
+    }
+  });
 };
 
 const checkUserRole = () => {
@@ -182,10 +213,25 @@ onShow(() => {
   border-left: 5px solid #FFD700; /* 网球黄装饰线 */
 }
 .match-info { flex: 1; }
-.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 8px; }
-.btn-register { background-color: #3A5F0B; color: white; font-size: 12px; padding: 0 15px; height: 30px; line-height: 30px; border-radius: 15px; font-weight: bold; }
-.btn-draw { background-color: #3C6382; color: white; font-size: 12px; padding: 0 15px; height: 30px; line-height: 30px; border-radius: 15px; font-weight: bold; }
-.btn-score { background-color: #FFD700; color: #3A5F0B; font-size: 12px; padding: 0 15px; height: 30px; line-height: 30px; border-radius: 15px; font-weight: bold; }
+.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 140px; }
+.action-row { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-register, .btn-draw, .btn-score, .btn-edit, .btn-delete { 
+  font-size: 12px; 
+  padding: 0; 
+  height: 28px; 
+  line-height: 28px; 
+  border-radius: 14px; 
+  font-weight: bold; 
+  flex: 1;
+  text-align: center;
+  min-width: 60px;
+}
+.btn-register { background-color: #3A5F0B; color: white; }
+.btn-draw { background-color: #3C6382; color: white; }
+.btn-score { background-color: #FFD700; color: #3A5F0B; }
+.btn-edit { background-color: #2e86de; color: white; }
+.btn-delete { background-color: #e74c3c; color: white; }
+.btn-delete.full-width { width: 100%; flex: none; }
 .match-name { font-size: 18px; font-weight: bold; display: flex; align-items: center; margin-bottom: 8px; color: #333; }
 .match-detail { color: #666; font-size: 14px; display: block; margin-bottom: 4px; }
 .match-status { margin-top: 5px; font-size: 12px; padding: 2px 8px; border-radius: 4px; background: #eee; display: inline-block; font-weight: bold; }
