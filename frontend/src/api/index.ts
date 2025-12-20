@@ -90,6 +90,8 @@ export const submitResult = (id: number, results: any) => request({ url: `/match
 export const submitApplication = (data: any) => request({ url: '/application/submit', method: 'POST', data });
 // 获取赛事参赛人员
 export const getMatchParticipants = (id: number) => request({ url: `/matches/${id}/participants` });
+// 获取用户报名记录
+export const getUserApplications = () => request({ url: '/application/my' });
 // 更新个人信息
 export const updateProfile = (id: number, data: any) => request({ url: `/auth/${id}/profile`, method: 'PUT', data });
 // 更新赛事信息

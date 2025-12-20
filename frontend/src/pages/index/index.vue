@@ -27,7 +27,8 @@
         </view>
         <view class="match-action">
           <view class="action-row">
-            <button class="btn-register" @click.stop="handleRegister(match)" v-if="match.status === 'PENDING' || true">报名</button>
+            <button class="btn-registered" v-if="isRegistered(match.id)">已报名</button>
+            <button class="btn-register" @click.stop="handleRegister(match)" v-else-if="match.status === 'PENDING'">报名</button>
             <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
           </view>
           <view class="action-row" v-if="isAdmin">
@@ -51,11 +52,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { getMatches, deleteMatch } from '../../api';
+import { getMatches, deleteMatch, getUserApplications } from '../../api';
 import TennisBall from '../../components/TennisBall.vue';
 
 const matches = ref<any[]>([]);
 const isAdmin = ref(false); // 控制添加按钮显示
+const myApplications = ref<any[]>([]);
 
 const fetchMatches = async () => {
   /**
@@ -65,11 +67,20 @@ const fetchMatches = async () => {
   try {
     // Clear matches first to force UI refresh and show loading state if needed
     matches.value = [];
-    const res = await getMatches();
-    matches.value = res as any[];
+    const [matchesRes, appsRes] = await Promise.all([
+      getMatches(),
+      getUserApplications().catch(() => []) // Ignore error if not logged in
+    ]);
+    
+    matches.value = matchesRes as any[];
+    myApplications.value = appsRes as any[];
   } catch (err) {
     console.error(err);
   }
+};
+
+const isRegistered = (matchId: number) => {
+  return myApplications.value.some((app: any) => app.tournamentId === matchId && app.status !== 'REJECTED');
 };
 
 const goToCreate = () => {
@@ -230,6 +241,7 @@ onShow(() => {
   min-width: 60px;
 }
 .btn-register { background-color: #3A5F0B; color: white; }
+.btn-registered { background-color: #ccc; color: #666; cursor: not-allowed; }
 .btn-draw { background-color: #3C6382; color: white; }
 .btn-score { background-color: #FFD700; color: #3A5F0B; }
 .btn-edit { background-color: #2e86de; color: white; }

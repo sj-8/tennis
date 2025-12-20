@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { login, updateProfile } from '../controllers/authController';
 import { getMatches, createMatch, updateMatch, deleteMatch, submitResult, getRankings, getMatchParticipants, getReferees, addReferee, removeReferee } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs, promotePlayerToAdmin } from '../controllers/adminController';
-import { submitApplication, getApplications, auditApplication } from '../controllers/applicationController';
+import { submitApplication, getApplications, auditApplication, getUserApplications } from '../controllers/applicationController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -32,6 +32,7 @@ router.delete('/matches/:id/referees/:playerId', authenticateToken, requireSuper
 
 // Player Application
 router.post('/application/submit', submitApplication);
+router.get('/application/my', authenticateToken, getUserApplications);
 
 // Admin Routes (Protected)
 router.get('/admin/applications', authenticateToken, requireAdmin, getApplications);

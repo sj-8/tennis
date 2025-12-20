@@ -35,16 +35,37 @@ export const getApplications = async (req: Request, res: Response) => {
    * 查询所有报名申请记录，按时间倒序排列
    */
   try {
-    const apps = await prisma.playerApplication.findMany({
+    const applications = await prisma.playerApplication.findMany({
+      include: {
+        player: true,
+        tournament: true
+      },
       orderBy: { createdAt: 'desc' }
     });
-    res.json(apps);
+    res.json(applications);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch applications' });
   }
 };
 
-export const auditApplication = async (req: AuthRequest, res: Response) => {
+export const getUserApplications = async (req: Request, res: Response) => {
+  // @ts-ignore
+  const userId = req.user?.id;
+  try {
+    const applications = await prisma.playerApplication.findMany({
+      where: { playerId: Number(userId) },
+      select: {
+        tournamentId: true,
+        status: true
+      }
+    });
+    res.json(applications);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user applications' });
+  }
+};
+
+export const auditApplication = async (req: Request, res: Response) => {
   /**
    * 审核报名申请接口
    * 更新申请状态（APPROVED 或 REJECTED）

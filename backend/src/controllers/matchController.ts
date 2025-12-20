@@ -59,18 +59,49 @@ export const updateMatch = async (req: Request, res: Response) => {
    */
   const { id } = req.params;
   const data = req.body;
+  
   try {
+    // Validate time format if provided
+    let startTime = undefined;
+    if (data.startTime) {
+      const d = new Date(data.startTime);
+      if (isNaN(d.getTime())) return res.status(400).json({ error: '无效的比赛时间格式' });
+      startTime = d;
+    }
+
+    let registrationStart = undefined;
+    if (data.registrationStart) {
+      const d = new Date(data.registrationStart);
+      if (isNaN(d.getTime())) return res.status(400).json({ error: '无效的报名开始时间格式' });
+      registrationStart = d;
+    } else if (data.registrationStart === null) {
+      registrationStart = null;
+    }
+
+    let registrationEnd = undefined;
+    if (data.registrationEnd) {
+      const d = new Date(data.registrationEnd);
+      if (isNaN(d.getTime())) return res.status(400).json({ error: '无效的报名截止时间格式' });
+      registrationEnd = d;
+    } else if (data.registrationEnd === null) {
+      registrationEnd = null;
+    }
+
     const match = await prisma.tournament.update({
       where: { id: Number(id) },
       data: {
-        ...data,
-        startTime: data.startTime ? new Date(data.startTime) : undefined,
-        registrationStart: data.registrationStart ? new Date(data.registrationStart) : undefined,
-        registrationEnd: data.registrationEnd ? new Date(data.registrationEnd) : undefined,
+        name: data.name,
+        location: data.location,
+        description: data.description,
+        rules: data.rules,
+        startTime: startTime,
+        registrationStart: registrationStart,
+        registrationEnd: registrationEnd,
       },
     });
     res.json(match);
   } catch (error) {
+    console.error('Update match error:', error);
     res.status(500).json({ error: 'Failed to update match' });
   }
 };
