@@ -3,28 +3,77 @@ import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 
 export const submitApplication = async (req: Request, res: Response) => {
-  /**
-   * 提交报名申请接口
-   * 接收选手提交的报名信息（真实姓名、手机号、身份证等）
-   * 创建初始状态为 'PENDING' 的报名记录
-   */
-  const { playerId, tournamentId, realName, phone, idCard, bio, files } = req.body;
-  
+  const { tournamentId } = req.body;
+  // @ts-ignore
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   try {
-    const application = await prisma.playerApplication.create({
-      data: {
-        playerId: Number(playerId),
+    // Check if tournament exists
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: Number(tournamentId) }
+    });
+
+    if (!tournament) {
+      return res.status(404).json({ error: 'Tournament not found' });
+    }
+
+    // Check if already applied
+    const existingApp = await prisma.playerApplication.findFirst({
+      where: {
         tournamentId: Number(tournamentId),
-        realName,
-        phone,
-        idCard,
-        bio,
-        files: JSON.stringify(files || []),
-        status: 'PENDING'
+        playerId: Number(userId)
       }
     });
+
+    if (existingApp && ['APPROVED', 'PENDING', 'WAITLIST'].includes(existingApp.status)) {
+      return res.status(400).json({ error: 'Already applied' });
+    }
+    
+    // Determine Status (APPROVED or WAITLIST)
+    let status = 'APPROVED'; // Default to Approved (Signed Up)
+    
+    // @ts-ignore
+    if (tournament.drawSize) {
+        const count = await prisma.playerApplication.count({
+            where: { 
+                tournamentId: Number(tournamentId),
+                status: 'APPROVED'
+            }
+        });
+        
+        // @ts-ignore
+        if (count >= tournament.drawSize) {
+            status = 'WAITLIST';
+        }
+    }
+
+    // If previously CANCELLED/REJECTED, update it. Else create new.
+    let application;
+    if (existingApp) {
+        application = await prisma.playerApplication.update({
+            where: { id: existingApp.id },
+            data: { status, createdAt: new Date() } // Reset time for waitlist queue
+        });
+    } else {
+        application = await prisma.playerApplication.create({
+            data: {
+                tournamentId: Number(tournamentId),
+                playerId: Number(userId),
+                realName: '',
+                phone: '',
+                idCard: '',
+                status
+            }
+        });
+    }
+
     res.json(application);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to submit application' });
   }
 };
@@ -46,6 +95,64 @@ export const getApplications = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch applications' });
   }
+};
+
+export const cancelApplication = async (req: Request, res: Response) => {
+    // @ts-ignore
+    const userId = req.user?.id;
+    const { id } = req.params; // Tournament ID
+    
+    try {
+        const tournament = await prisma.tournament.findUnique({ where: { id: Number(id) } });
+        if (!tournament) return res.status(404).json({ error: 'Tournament not found' });
+        
+        // Check time (24h before start)
+        const now = new Date();
+        const start = new Date(tournament.startTime);
+        const diffHours = (start.getTime() - now.getTime()) / (1000 * 60 * 60);
+        
+        if (diffHours < 24) {
+            return res.status(400).json({ error: 'Cannot cancel within 24 hours of start' });
+        }
+
+        // Transaction: Cancel self -> Promote waitlist
+        await prisma.$transaction(async (tx) => {
+            // 1. Cancel Self
+            const myApp = await tx.playerApplication.findFirst({
+                where: { tournamentId: Number(id), playerId: Number(userId) }
+            });
+            
+            if (!myApp || !['APPROVED', 'WAITLIST'].includes(myApp.status)) {
+                throw new Error('No active application found');
+            }
+            
+            await tx.playerApplication.update({
+                where: { id: myApp.id },
+                data: { status: 'CANCELLED' }
+            });
+            
+            // 2. If I was APPROVED, promote first WAITLIST
+            // @ts-ignore
+            if (myApp.status === 'APPROVED' && tournament.drawSize) {
+                const firstWaitlist = await tx.playerApplication.findFirst({
+                    where: { tournamentId: Number(id), status: 'WAITLIST' },
+                    orderBy: { createdAt: 'asc' }
+                });
+                
+                if (firstWaitlist) {
+                    await tx.playerApplication.update({
+                        where: { id: firstWaitlist.id },
+                        data: { status: 'APPROVED' }
+                    });
+                }
+            }
+        });
+        
+        res.json({ message: 'Application cancelled' });
+    } catch (error: any) {
+        console.error(error);
+        res.status(500).json({ error: error.message || 'Failed to cancel' });
+    }
 };
 
 export const getUserApplications = async (req: Request, res: Response) => {

@@ -69,6 +69,7 @@ model Tournament {
   startTime   DateTime
   registrationStart DateTime? // 报名开始时间
   registrationEnd   DateTime? // 报名截止时间
+  drawSize          Int?      // 签位数量
   description String?
   rules       String?
   status      String   @default("PENDING") // PENDING, ONGOING, COMPLETED

@@ -31,7 +31,8 @@ router.post('/matches/:id/referees', authenticateToken, requireSuperAdmin, addRe
 router.delete('/matches/:id/referees/:playerId', authenticateToken, requireSuperAdmin, removeReferee);
 
 // Player Application
-router.post('/application/submit', submitApplication);
+router.post('/application/submit', authenticateToken, submitApplication);
+router.post('/application/:id/cancel', authenticateToken, cancelApplication);
 router.get('/application/my', authenticateToken, getUserApplications);
 
 // Admin Routes (Protected)

@@ -2,14 +2,14 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 
 export const getMatches = async (req: Request, res: Response) => {
-  /**
-   * 获取赛事列表接口
-   * 查询所有赛事，并包含比赛结果，按开始时间倒序排列
-   */
   try {
     const matches = await prisma.tournament.findMany({
-      include: { results: true },
-      orderBy: { startTime: 'desc' }
+      orderBy: { startTime: 'desc' },
+      include: {
+        _count: {
+          select: { applications: { where: { status: { in: ['APPROVED', 'PENDING', 'WAITLIST'] } } } } // Count valid applications
+        }
+      }
     });
     res.json(matches);
   } catch (error) {
