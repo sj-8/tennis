@@ -23,6 +23,7 @@
           </text>
           <text class="match-detail">📍 {{ match.location }}</text>
           <text class="match-detail">🕒 {{ formatDate(match.startTime) }}</text>
+          <text class="match-detail" v-if="match.drawSize">👥 {{ match._count?.applications || 0 }}/{{ match.drawSize }}</text>
           <text class="match-status" :class="match.status">{{ getStatusText(match.status) }}</text>
         </view>
         <view class="match-action">
@@ -81,7 +82,7 @@ const fetchMatches = async () => {
 
 const isRegistered = (matchId: number) => {
   if (!myApplications.value) return false;
-  return myApplications.value.some((app: any) => app.tournamentId === matchId && app.status !== 'REJECTED');
+  return myApplications.value.some((app: any) => app.tournamentId === matchId && ['APPROVED', 'WAITLIST', 'PENDING'].includes(app.status));
 };
 
 const goToCreate = () => {

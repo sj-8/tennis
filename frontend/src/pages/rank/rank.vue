@@ -201,7 +201,7 @@ onMounted(() => {
   font-size: 32px;
   position: absolute;
   top: -45px;
-  animation: float 1s ease-in-out infinite; /* Restore crown animation: 1s infinite */
+  animation: float-small 2s ease-in-out infinite; /* Reduced float distance */
 }
 .medal-icon {
   font-size: 32px;
@@ -212,7 +212,9 @@ onMounted(() => {
 .podium-item.second .medal-icon {
   animation-delay: 0.5s;
 }
+/* Third Place Animation */
 .podium-item.third .medal-icon {
+  animation: float 2s ease-in-out infinite; /* Ensure animation is applied */
   animation-delay: 1s;
 }
 
@@ -260,15 +262,14 @@ onMounted(() => {
 
 @keyframes float {
   0% { transform: translateY(0); }
-  50% { transform: translateY(-10px); } /* 10px float range */
+  50% { transform: translateY(-10px); }
   100% { transform: translateY(0); }
 }
 
-.crown-icon {
-  font-size: 32px;
-  position: absolute;
-  top: -45px;
-  animation: float 2s ease-in-out infinite; /* Restore crown animation: 2s infinite */
+@keyframes float-small {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); } /* Reduced to 5px */
+  100% { transform: translateY(0); }
 }
 
 /* List Styles */

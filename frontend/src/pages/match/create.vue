@@ -77,6 +77,7 @@ const form = ref({
   regStartTime: '',
   regEndDate: '',
   regEndTime: '',
+  drawSize: '',
   rules: '',
   description: ''
 });
@@ -95,6 +96,8 @@ onLoad(async (options: any) => {
       form.value.location = match.location;
       form.value.date = start.toISOString().split('T')[0];
       form.value.time = start.toTimeString().slice(0, 5);
+      form.value.drawSize = match.drawSize || '';
+      form.value.description = match.description || '';
       form.value.rules = match.rules || '';
       
       if (match.registrationStart) {
