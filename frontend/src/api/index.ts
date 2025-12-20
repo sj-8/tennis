@@ -37,10 +37,10 @@ export const request = (options: any) => {
       path: fullPath, 
       header: {
         ...header,
-        'X-WX-SERVICE': 'express-4y4r'
+        // 'X-WX-SERVICE': 'express-4y4r' // Removed: let cloud resolve service automatically or use default
       },
       method: options.method || 'GET',
-      data: options.data,
+      data: options.data || {}, // Ensure data is not undefined
       success: (res: any) => {
         // wx.cloud.callContainer returns { data: ..., statusCode: ... }
         // Our backend returns the data directly in body
@@ -87,3 +87,7 @@ export const submitApplication = (data: any) => request({ url: '/application/sub
 export const getMatchParticipants = (id: number) => request({ url: `/matches/${id}/participants` });
 // 更新个人信息
 export const updateProfile = (id: number, data: any) => request({ url: `/auth/${id}/profile`, method: 'PUT', data });
+// 更新赛事信息
+export const updateMatch = (id: number, data: any) => request({ url: `/matches/${id}`, method: 'PUT', data });
+// 删除赛事
+export const deleteMatch = (id: number) => request({ url: `/matches/${id}`, method: 'DELETE' });
