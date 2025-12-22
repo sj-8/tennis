@@ -172,7 +172,14 @@ const submit = async () => {
     }
     
     setTimeout(() => {
-      uni.navigateBack();
+      // Check page stack to prevent navigateBack failure
+      const pages = getCurrentPages();
+      if (pages.length > 1) {
+        uni.navigateBack();
+      } else {
+        // Fallback if no history (e.g. entered directly or cleared stack)
+        uni.switchTab({ url: '/pages/index/index' });
+      }
     }, 1500);
   } catch (err: any) {
     console.error('Submit match error:', err);

@@ -68,13 +68,25 @@ const fetchMatches = async () => {
   try {
     // Clear matches first to force UI refresh and show loading state if needed
     matches.value = [];
-    const [matchesRes, appsRes] = await Promise.all([
-      getMatches(),
-      getUserApplications().catch(() => []) // Ignore error if not logged in
-    ]);
     
-    matches.value = matchesRes as any[];
-    myApplications.value = appsRes as any[];
+    // Fetch matches separately to ensure list is shown even if applications fail
+    try {
+        const matchesRes = await getMatches();
+        matches.value = matchesRes as any[];
+    } catch (e) {
+        console.error('Failed to fetch matches:', e);
+        uni.showToast({ title: '获取赛事失败', icon: 'none' });
+        return;
+    }
+    
+    // Try to fetch applications, but don't block UI if it fails (e.g. 404 or not logged in)
+    try {
+        const appsRes = await getUserApplications();
+        myApplications.value = appsRes as any[];
+    } catch (e: any) {
+        console.warn('Failed to fetch user applications (possibly not logged in or API missing):', e);
+        myApplications.value = [];
+    }
   } catch (err) {
     console.error(err);
   }
