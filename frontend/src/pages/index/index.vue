@@ -1,6 +1,13 @@
 <template>
   <view class="container">
- <view class="header tennis-court-bg">
+    <!-- Draggable Tennis Ball Background -->
+    <movable-area class="bg-area">
+      <movable-view class="bg-ball" direction="all" :x="200" :y="100" scale="true">
+        <image src="/static/tennis-ball-bg.png" class="ball-img" mode="aspectFit"></image>
+      </movable-view>
+    </movable-area>
+
+    <view class="header tennis-court-bg">
       <view class="header-content">
         <TennisBall :size="40" :animated="true" />
         <view class="header-text">
@@ -15,14 +22,21 @@
     </view>
     
     <view class="match-list">
-      <view v-for="match in matches" :key="match.id" class="match-card">
+      <view class="match-card" 
+            v-for="match in matches" 
+            :key="match.id" 
+            @click="handleEdit(match)"
+            :class="getMatchCardClass(match.matchType)">
         <view class="match-info">
           <text class="match-name">
             <text class="tennis-title-deco"></text>
             {{ match.name }}
           </text>
-          <text class="match-detail">📍 {{ match.location }}</text>
-          <text class="match-detail">🕒 {{ formatDate(match.startTime) }}</text>
+          <view class="match-meta">
+            <text class="match-type-tag" v-if="match.matchType">{{ match.matchType }}</text>
+            <text class="match-detail">📍 {{ match.location }}</text>
+            <text class="match-detail">🕒 {{ formatDate(match.startTime) }}</text>
+          </view>
           <text class="match-detail" v-if="match.drawSize">👥 {{ match._count?.applications || 0 }}/{{ match.drawSize }}</text>
           <text class="match-status" :class="match.status">{{ getStatusText(match.status) }}</text>
         </view>
@@ -166,6 +180,14 @@ const getStatusText = (status: string) => {
     'CANCELLED': '已取消'
   };
   return statusMap[status] || status;
+};
+
+const getMatchCardClass = (type: string) => {
+  if (!type) return '';
+  if (['男单', '男双'].includes(type)) return 'style-blue';
+  if (['女单', '女双'].includes(type)) return 'style-pink';
+  if (['混双', '不限'].includes(type)) return 'style-mixed';
+  return '';
 };
 
 onMounted(() => {

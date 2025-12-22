@@ -29,6 +29,7 @@ export const request = (options: any) => {
     
     console.log(`[API] Request: ${options.method || 'GET'} ${fullPath}`, { data: options.data });
 
+    // #ifdef MP-WEIXIN
     wx.cloud.callContainer({
       config: {
         env: 'prod-8g8j609ye88db758' // User provided env ID

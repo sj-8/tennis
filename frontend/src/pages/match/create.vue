@@ -1,12 +1,27 @@
 <template>
-  <view class="container">
-    <view class="form-group">
-      <text class="label">赛事名称</text>
-      <input class="input" v-model="form.name" placeholder="例如：周日公开赛" placeholder-style="z-index: 0" />
-    </view>
-    
-    <view class="form-group">
-      <text class="label">地点</text>
+  <view class="container tennis-court-bg">
+    <view class="form-card">
+      <view class="form-item">
+        <text class="label">赛事名称</text>
+        <input class="input" v-model="form.name" placeholder="请输入赛事名称" />
+      </view>
+
+      <view class="form-item">
+        <text class="label">比赛类型</text>
+        <picker @change="bindMatchTypeChange" :value="matchTypeIndex" :range="matchTypes">
+          <view class="picker-view">
+            {{ form.matchType || '请选择比赛类型' }}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="label">签位数量</text>
+        <input class="input" v-model="form.drawSize" placeholder="请输入签位数量" type="number" />
+      </view>
+
+      <view class="form-item">
+        <text class="label">地点</text>
       <input class="input" v-model="form.location" placeholder="例如：1号场" placeholder-style="z-index: 0" />
     </view>
     
@@ -58,6 +73,7 @@
     </view>
 
     <button class="btn-submit" @click="submit">创建赛事</button>
+  </view>
   </view>
 </template>
 
