@@ -233,7 +233,8 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
       id: p.id,
       playerId: p.playerId, // Add playerId
       name: p.realName, // Use realName from application
-      avatar: p.player.avatar
+      nickname: p.player.name, // Nickname from Player profile
+      avatarUrl: p.player.avatar // Map to avatarUrl to match frontend
     }));
     res.json(result);
   } catch (error) {

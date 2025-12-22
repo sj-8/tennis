@@ -158,7 +158,7 @@ const handleCancel = async (match: any) => {
           uni.showToast({ title: '取消成功' });
           fetchMatches();
         } catch (err: any) {
-          uni.showToast({ title: err.message || '取消失败', icon: 'none' });
+          uni.showToast({ title: (err.message || '取消失败') + '，请联系管理员', icon: 'none' });
         }
       }
     }
