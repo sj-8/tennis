@@ -84,6 +84,8 @@ import { createMatch, updateMatch, getMatches } from '../../api';
 
 const isEdit = ref(false);
 const matchId = ref(0);
+const matchTypes = ['男单', '男双', '女单', '女双', '混双', '不限'];
+const matchTypeIndex = ref(-1);
 const form = ref({
   name: '',
   location: '',
@@ -93,6 +95,7 @@ const form = ref({
   regStartTime: '',
   regEndDate: '',
   regEndTime: '',
+  matchType: '',
   drawSize: '',
   rules: '',
   description: ''
@@ -112,9 +115,15 @@ onLoad(async (options: any) => {
       form.value.location = match.location;
       form.value.date = start.toISOString().split('T')[0];
       form.value.time = start.toTimeString().slice(0, 5);
+      form.value.matchType = match.matchType || '';
       form.value.drawSize = match.drawSize || '';
       form.value.description = match.description || '';
       form.value.rules = match.rules || '';
+      
+      // Set picker index
+      if (form.value.matchType) {
+        matchTypeIndex.value = matchTypes.indexOf(form.value.matchType);
+      }
       
       if (match.registrationStart) {
          const rs = new Date(match.registrationStart);
@@ -131,6 +140,12 @@ onLoad(async (options: any) => {
     uni.setNavigationBarTitle({ title: '创建赛事' });
   }
 });
+
+const bindMatchTypeChange = (e: any) => {
+  const index = e.detail.value;
+  matchTypeIndex.value = index;
+  form.value.matchType = matchTypes[index];
+};
 
 const bindDateChange = (e: any) => {
   form.value.date = e.detail.value;

@@ -42,7 +42,12 @@
         </view>
         <view class="match-action">
           <view class="action-row">
-            <button class="btn-registered" v-if="isRegistered(match.id)">已报名</button>
+            <template v-if="isRegistered(match.id)">
+                <button class="btn-registered" v-if="getApplicationStatus(match.id) === 'APPROVED'" @click.stop="handleViewDraw(match)">已报名</button>
+                <button class="btn-waitlist" v-else-if="getApplicationStatus(match.id) === 'WAITLIST'" @click.stop="handleViewDraw(match)">候补中</button>
+                <button class="btn-registered" v-else>审核中</button>
+                <button class="btn-cancel" @click.stop="handleCancel(match)">取消</button>
+            </template>
             <button class="btn-register" @click.stop="handleRegister(match)" v-else-if="match.status === 'PENDING'">报名</button>
             <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
           </view>
@@ -277,7 +282,7 @@ onShow(() => {
   min-width: 60px;
 }
 .btn-register { background-color: #3A5F0B; color: white; }
-.btn-registered { background-color: #ccc; color: #666; cursor: not-allowed; }
+.btn-registered { background-color: #27ae60; color: white; cursor: pointer; }
 .btn-waitlist { background-color: #f39c12; color: white; cursor: not-allowed; }
 .btn-cancel { background-color: #e74c3c; color: white; margin-left: 5px; }
 .btn-draw { background-color: #3C6382; color: white; }
