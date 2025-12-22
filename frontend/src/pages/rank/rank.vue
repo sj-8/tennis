@@ -41,8 +41,10 @@
       
       <!-- 3rd Place (Right) -->
       <view class="podium-item third" v-if="players[2]">
+        <view class="medal-icon">🥉</view>
         <view class="avatar-wrapper">
-          <view class="avatar">{{ getAvatarText(players[2]) }}</view>
+          <image class="avatar-img" v-if="players[2].avatar" :src="players[2].avatar" mode="aspectFill"></image>
+          <view class="avatar" v-else>{{ getAvatarText(players[2]) }}</view>
           <view class="badge bronze">3</view>
         </view>
         <text class="name">{{ players[2].name || '未知' }}</text>
@@ -139,16 +141,20 @@ onMounted(() => {
 }
 .confetti {
   position: absolute;
-  top: -10px;
-  width: 10px;
-  height: 10px;
+  top: -20px;
+  width: 8px;
+  height: 25px; /* Ribbon shape */
   background-color: #f00;
   animation: confetti-fall linear infinite;
-  border-radius: 2px;
+  border-radius: 4px;
+  opacity: 0.8;
 }
 @keyframes confetti-fall {
-  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  0% { transform: translateY(-10vh) rotate(0deg) translateX(0); opacity: 1; }
+  25% { transform: translateY(25vh) rotate(90deg) translateX(20px); }
+  50% { transform: translateY(50vh) rotate(180deg) translateX(-20px); }
+  75% { transform: translateY(75vh) rotate(270deg) translateX(20px); }
+  100% { transform: translateY(110vh) rotate(360deg) translateX(0); opacity: 0; }
 }
 
 .header { 
