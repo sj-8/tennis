@@ -175,6 +175,9 @@ const handleLogin = () => {
           uni.setStorageSync('userInfo', res.player);
           userInfo.value = res.player;
           uni.showToast({ title: '登录成功' });
+          
+          // Clear login flag if it exists (from global interceptor)
+          uni.removeStorageSync('login_redirect_flag');
         } else {
           uni.showToast({ title: '登录失败', icon: 'none' });
         }

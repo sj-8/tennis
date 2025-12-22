@@ -4,6 +4,12 @@ const BASE_URL = 'https://express-4y4r-199217-5-1386469492.sh.run.tcloudbase.com
 declare const wx: any;
 
 const handleLoginError = () => {
+  // Check if we are already handling a login error to avoid multiple modals
+  const isRedirecting = uni.getStorageSync('login_redirect_flag');
+  if (isRedirecting) return;
+
+  uni.setStorageSync('login_redirect_flag', true);
+  
   uni.showModal({
     title: '未登录',
     content: '请先到“我的”页面重新登录',
@@ -12,6 +18,27 @@ const handleLoginError = () => {
     success: (res: any) => {
       if (res.confirm) {
         uni.switchTab({ url: '/pages/my/my' });
+        // Flag will be cleared after successful login in my.vue or can be cleared here after a timeout if user doesn't login
+        // But better to clear it on successful login.
+        // For now, let's also set a timeout to clear it just in case user cancels or doesn't login immediately but navigates back
+        // Actually, since we use switchTab, the page will change.
+        // But if we want to suppress the modal *on the previous page* when navigating back without login,
+        // we might need to keep it.
+        // However, user requirement is: "after prompt, directly jump to My page. And when switching back, prompt should be gone".
+        // If we don't clear flag, it might block future 401s.
+        // Let's clear it on 'success' of modal for now, assuming the user is taking action.
+        // Wait, if we clear it here, and the page re-renders/re-fetches on show, it might pop up again?
+        // The user said: "切回去提示需已消失" (Switch back, prompt should be gone).
+        // This implies the previous page might still be trying to fetch.
+        // By switching tab, the previous page (if not a tab) might be unloaded or hidden.
+        // If it's a tab (like Match List), onShow will trigger again when switching back.
+        // If still not logged in, it will trigger 401 again.
+        // So we need to ensure we don't show modal again immediately.
+        
+        // Let's rely on the fact that we switched tabs.
+        setTimeout(() => {
+             uni.removeStorageSync('login_redirect_flag');
+        }, 5000); // Reset flag after 5 seconds to allow retrying later
       }
     }
   });
