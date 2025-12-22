@@ -52,7 +52,7 @@
         <text class="label">性别</text>
         <picker @change="handleGenderChange" :value="genderIndex" :range="genderOptions">
           <view class="picker-value">
-            {{ userInfo.gender || '未设置' }} <text class="edit-arrow">></text>
+            {{ userInfo.gender || '未设置' }}
           </view>
         </picker>
       </view>
@@ -61,7 +61,7 @@
         <text class="label">出生年月</text>
         <picker mode="date" @change="handleBirthdayChange" :value="userInfo.birthday || '2000-01-01'">
           <view class="picker-value">
-            {{ formatDate(userInfo.birthday) || '未设置' }} <text class="edit-arrow">></text>
+            {{ formatDate(userInfo.birthday) || '未设置' }}
           </view>
         </picker>
       </view>

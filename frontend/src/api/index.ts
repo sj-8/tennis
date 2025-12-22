@@ -110,3 +110,8 @@ export const deleteMatch = (id: number) => request({ url: `/matches/${id}`, meth
 export const getReferees = (matchId: number) => request({ url: `/matches/${matchId}/referees` });
 export const addReferee = (matchId: number, openid: string) => request({ url: `/matches/${matchId}/referees`, method: 'POST', data: { openid } });
 export const removeReferee = (matchId: number, playerId: number) => request({ url: `/matches/${matchId}/referees/${playerId}`, method: 'DELETE' });
+
+// 比赛对战管理 (Game/Draw)
+export const getGames = (tournamentId: number) => request({ url: `/matches/${tournamentId}/games` });
+export const createGame = (tournamentId: number, data: any) => request({ url: `/matches/${tournamentId}/games`, method: 'POST', data });
+export const updateGameScore = (gameId: number, data: any) => request({ url: `/games/${gameId}/score`, method: 'PUT', data });

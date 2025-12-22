@@ -134,8 +134,8 @@ const goToCreate = () => {
 };
 
 const handleRegister = (match: any) => {
-  // 跳转到赛事报名页面
-  uni.navigateTo({ url: `/pages/match/register?id=${match.id}` });
+  // 跳转到签表页面（在签表页面点击报名按钮进行报名）
+  uni.navigateTo({ url: `/pages/match/draw?id=${match.id}` });
 };
 
 const handleViewDraw = (match: any) => {

@@ -218,8 +218,9 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
     const participants = await prisma.playerApplication.findMany({
       where: {
         tournamentId: Number(id),
-        status: 'APPROVED'
+        status: { in: ['APPROVED', 'WAITLIST'] }
       },
+      orderBy: { createdAt: 'asc' },
       include: {
         player: {
           select: {
@@ -237,7 +238,8 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
       name: p.realName, // Use realName from application
       nickname: p.player.name, // Nickname from Player profile
       gender: p.player.gender, // Gender from Player profile
-      avatarUrl: p.player.avatar // Map to avatarUrl to match frontend
+      avatarUrl: p.player.avatar, // Map to avatarUrl to match frontend
+      status: p.status // Return status for display
     }));
     res.json(result);
   } catch (error) {

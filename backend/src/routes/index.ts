@@ -3,6 +3,7 @@ import { login, updateProfile } from '../controllers/authController';
 import { getMatches, createMatch, updateMatch, deleteMatch, submitResult, getRankings, getMatchParticipants, getReferees, addReferee, removeReferee } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs, promotePlayerToAdmin } from '../controllers/adminController';
 import { submitApplication, getApplications, auditApplication, getUserApplications, cancelApplication } from '../controllers/applicationController';
+import { createGame, getGames, updateGameScore } from '../controllers/gameController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -29,6 +30,13 @@ router.get('/matches/:id/participants', getMatchParticipants);
 router.get('/matches/:id/referees', authenticateToken, requireAdmin, getReferees);
 router.post('/matches/:id/referees', authenticateToken, requireSuperAdmin, addReferee);
 router.delete('/matches/:id/referees/:playerId', authenticateToken, requireSuperAdmin, removeReferee);
+
+// Games / Draw (Referee or Admin)
+// Note: In real app, we should check if user is referee for this specific match.
+// For now, allow any admin or referee (we check role in controller or here)
+router.post('/matches/:tournamentId/games', authenticateToken, createGame); 
+router.get('/matches/:tournamentId/games', getGames);
+router.put('/games/:gameId/score', authenticateToken, updateGameScore);
 
 // Player Application
 router.post('/application/submit', authenticateToken, submitApplication);
