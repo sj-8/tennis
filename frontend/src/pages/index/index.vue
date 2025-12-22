@@ -51,9 +51,9 @@
             <button class="btn-register" @click.stop="handleRegister(match)" v-else-if="match.status === 'PENDING'">报名</button>
             <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
           </view>
-          <view class="action-row" v-if="isAdmin">
+          <view class="action-row" v-if="isAdmin || isReferee(match)">
             <button class="btn-score" @click.stop="handleScore(match)">录分</button>
-            <button class="btn-edit" @click.stop="handleEdit(match)">编辑</button>
+            <button class="btn-edit" v-if="isAdmin" @click.stop="handleEdit(match)">编辑</button>
           </view>
           <view class="action-row" v-if="isAdmin">
             <button class="btn-referee" @click.stop="handleManageReferees(match)">裁判</button>
@@ -114,6 +114,12 @@ const fetchMatches = async () => {
 const isRegistered = (matchId: number) => {
   if (!myApplications.value) return false;
   return myApplications.value.some((app: any) => app.tournamentId === matchId && ['APPROVED', 'WAITLIST', 'PENDING'].includes(app.status));
+};
+
+const isReferee = (match: any) => {
+  const userInfo = uni.getStorageSync('userInfo');
+  if (!userInfo || !match.referees) return false;
+  return match.referees.some((r: any) => r.playerId === userInfo.id);
 };
 
 const getApplicationStatus = (matchId: number) => {

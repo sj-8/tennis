@@ -8,7 +8,8 @@ export const getMatches = async (req: Request, res: Response) => {
       include: {
         _count: {
           select: { applications: { where: { status: { in: ['APPROVED', 'PENDING', 'WAITLIST'] } } } } // Count valid applications
-        }
+        },
+        referees: true
       }
     });
     res.json(matches);

@@ -31,6 +31,12 @@
       }
     },
     {
+      "path": "pages/match/referees",
+      "style": {
+        "navigationBarTitleText": "裁判管理"
+      }
+    },
+    {
       "path": "pages/rank/rank",
       "style": {
         "navigationBarTitleText": "排行榜"
