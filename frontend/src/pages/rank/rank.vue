@@ -1,5 +1,10 @@
 <template>
-  <view class="container">
+  <view class="container rank-container">
+    <!-- Confetti Background -->
+    <view class="confetti-container">
+      <view v-for="i in 20" :key="i" class="confetti" :style="getConfettiStyle(i)"></view>
+    </view>
+
     <view class="header tennis-court-bg">
       <view class="header-content">
         <TennisBall :size="24" />
@@ -80,6 +85,15 @@ const restPlayers = computed(() => {
   return players.value.slice(3);
 });
 
+const getConfettiStyle = (i: number) => {
+  const left = Math.random() * 100;
+  const delay = Math.random() * 5;
+  const duration = 3 + Math.random() * 2;
+  const colors = ['#FFD700', '#C0C0C0', '#CD7F32', '#3A5F0B', '#ff6b6b', '#4ecdc4'];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  return `left: ${left}%; animation-delay: ${delay}s; animation-duration: ${duration}s; background-color: ${color};`;
+};
+
 const getAvatarText = (player: any) => {
   // 获取头像占位文字（取名字第一个字）
   if (player && player.name) {
@@ -107,7 +121,36 @@ onMounted(() => {
 </script>
 
 <style>
-.container { padding: 0; background-color: #f5f5f5; min-height: 100vh; }
+.rank-container {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Confetti Animation */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.confetti {
+  position: absolute;
+  top: -10px;
+  width: 10px;
+  height: 10px;
+  background-color: #f00;
+  animation: confetti-fall linear infinite;
+  border-radius: 2px;
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
 .header { 
   margin-bottom: 20px; 
   padding: 20px 20px 30px; /* 底部留空间给领奖台 */
@@ -115,6 +158,8 @@ onMounted(() => {
   border-bottom-right-radius: 30px; 
   box-shadow: 0 4px 10px rgba(58, 95, 11, 0.3);
   color: white;
+  position: relative;
+  z-index: 1;
 }
 .header-content {
   display: flex;

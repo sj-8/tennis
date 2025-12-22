@@ -265,7 +265,7 @@ onShow(() => {
 .match-info { flex: 1; }
 .match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 140px; }
 .action-row { display: flex; gap: 8px; justify-content: flex-end; }
-.btn-register, .btn-draw, .btn-score, .btn-edit, .btn-delete { 
+.btn-register, .btn-registered, .btn-waitlist, .btn-cancel, .btn-draw, .btn-score, .btn-edit, .btn-referee, .btn-delete { 
   font-size: 12px; 
   padding: 0; 
   height: 28px; 
@@ -278,6 +278,8 @@ onShow(() => {
 }
 .btn-register { background-color: #3A5F0B; color: white; }
 .btn-registered { background-color: #ccc; color: #666; cursor: not-allowed; }
+.btn-waitlist { background-color: #f39c12; color: white; cursor: not-allowed; }
+.btn-cancel { background-color: #e74c3c; color: white; margin-left: 5px; }
 .btn-draw { background-color: #3C6382; color: white; }
 .btn-score { background-color: #FFD700; color: #3A5F0B; }
 .btn-edit { background-color: #2e86de; color: white; }
