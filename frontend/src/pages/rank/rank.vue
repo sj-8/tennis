@@ -142,19 +142,40 @@ onMounted(() => {
 .confetti {
   position: absolute;
   top: -20px;
-  width: 8px;
-  height: 25px; /* Ribbon shape */
+  width: 10px;
+  height: 20px;
   background-color: #f00;
   animation: confetti-fall linear infinite;
-  border-radius: 4px;
   opacity: 0.8;
 }
+/* Style variations for irregular shapes */
+.confetti:nth-child(2n) {
+  border-radius: 50%; /* Circle/Oval */
+  width: 12px;
+  height: 12px;
+}
+.confetti:nth-child(3n) {
+  width: 8px;
+  height: 25px; /* Long Ribbon */
+  transform: skew(15deg);
+}
+.confetti:nth-child(4n) {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 12px solid #f00; /* Triangle */
+  background-color: transparent !important; /* Use border color for triangle */
+  /* Note: Triangle color needs dynamic binding, simpler to skip or use mask */
+}
+/* Simplify to 3 main shapes: Rect, Ribbon, Circle */
+
 @keyframes confetti-fall {
-  0% { transform: translateY(-10vh) rotate(0deg) translateX(0); opacity: 1; }
-  25% { transform: translateY(25vh) rotate(90deg) translateX(20px); }
-  50% { transform: translateY(50vh) rotate(180deg) translateX(-20px); }
-  75% { transform: translateY(75vh) rotate(270deg) translateX(20px); }
-  100% { transform: translateY(110vh) rotate(360deg) translateX(0); opacity: 0; }
+  0% { transform: translateY(-10vh) rotateX(0) rotateY(0) rotateZ(0); opacity: 1; }
+  25% { transform: translateY(25vh) rotateX(90deg) rotateY(45deg) rotateZ(90deg) translateX(20px); }
+  50% { transform: translateY(50vh) rotateX(180deg) rotateY(90deg) rotateZ(180deg) translateX(-20px); }
+  75% { transform: translateY(75vh) rotateX(270deg) rotateY(135deg) rotateZ(270deg) translateX(20px); }
+  100% { transform: translateY(110vh) rotateX(360deg) rotateY(180deg) rotateZ(360deg) translateX(0); opacity: 0; }
 }
 
 .header { 
