@@ -112,7 +112,7 @@ export const cancelApplication = async (req: Request, res: Response) => {
         const diffHours = (start.getTime() - now.getTime()) / (1000 * 60 * 60);
         
         if (diffHours < 24) {
-            return res.status(400).json({ error: 'Cannot cancel within 24 hours of start' });
+            return res.status(400).json({ error: '开赛前24h不能取消' });
         }
 
         // Transaction: Cancel self -> Promote waitlist
