@@ -70,6 +70,7 @@ model Tournament {
   registrationStart DateTime? // 报名开始时间
   registrationEnd   DateTime? // 报名截止时间
   drawSize          Int?      // 签位数量
+  matchType         String?   // '男单','男双','女单','女双','混双','不限'
   description String?
   rules       String?
   status      String   @default("PENDING") // PENDING, ONGOING, COMPLETED
