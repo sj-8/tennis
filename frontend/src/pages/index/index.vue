@@ -72,7 +72,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { getMatches, deleteMatch, getUserApplications } from '../../api';
+import { getMatches, deleteMatch, getUserApplications, cancelApplication } from '../../api';
 import TennisBall from '../../components/TennisBall.vue';
 
 const matches = ref<any[]>([]);
@@ -114,6 +114,12 @@ const fetchMatches = async () => {
 const isRegistered = (matchId: number) => {
   if (!myApplications.value) return false;
   return myApplications.value.some((app: any) => app.tournamentId === matchId && ['APPROVED', 'WAITLIST', 'PENDING'].includes(app.status));
+};
+
+const getApplicationStatus = (matchId: number) => {
+  if (!myApplications.value) return null;
+  const app = myApplications.value.find((app: any) => app.tournamentId === matchId);
+  return app ? app.status : null;
 };
 
 const goToCreate = () => {
