@@ -147,6 +147,28 @@ const handleEdit = (match: any) => {
   uni.navigateTo({ url: `/pages/match/create?id=${match.id}` });
 };
 
+const handleCancel = async (match: any) => {
+  uni.showModal({
+    title: '取消报名',
+    content: '确定要取消报名吗？',
+    success: async (res: any) => {
+      if (res.confirm) {
+        try {
+          await cancelApplication(match.id);
+          uni.showToast({ title: '取消成功' });
+          fetchMatches();
+        } catch (err: any) {
+          uni.showToast({ title: err.message || '取消失败', icon: 'none' });
+        }
+      }
+    }
+  });
+};
+
+const handleManageReferees = (match: any) => {
+  uni.navigateTo({ url: `/pages/match/referees?id=${match.id}` });
+};
+
 const handleDelete = async (match: any) => {
   uni.showModal({
     title: '确认删除',

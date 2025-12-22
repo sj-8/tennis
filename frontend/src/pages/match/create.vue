@@ -1,5 +1,5 @@
 <template>
-  <view class="container tennis-court-bg">
+  <view class="container">
     <view class="form-card">
       <view class="form-item">
         <text class="label">赛事名称</text>
@@ -220,7 +220,7 @@ const submit = async () => {
 </script>
 
 <style>
-.container { padding: 20px; }
+.container { padding: 20px; background-color: #fff; min-height: 100vh; }
 .form-group { margin-bottom: 15px; }
 .label { display: block; margin-bottom: 5px; font-weight: bold; }
 .input { width: 100%; height: 44px; padding: 0 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }

@@ -53,6 +53,7 @@ const fetchParticipants = async (id: number) => {
 .participant-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #f5f5f5; }
 .participant-item:last-child { border-bottom: none; }
 .index { width: 30px; color: #999; font-weight: bold; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; background-color: #f0f0f0; }
 .avatar-placeholder { width: 40px; height: 40px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: #666; font-size: 16px; font-weight: bold; }
 .name { font-size: 16px; color: #333; }
 .empty-tip { text-align: center; padding: 40px; color: #999; }
