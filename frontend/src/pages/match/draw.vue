@@ -11,8 +11,14 @@
     <view class="participant-list">
       <view v-for="(p, index) in participants" :key="p.id" class="participant-item">
         <text class="index">{{ index + 1 }}</text>
-        <view class="avatar-placeholder">{{ p.name[0] }}</view>
-        <text class="name">{{ p.name }}</text>
+        <image v-if="p.avatarUrl" :src="p.avatarUrl" class="avatar" mode="aspectFill"></image>
+        <view v-else class="avatar-placeholder">{{ (p.nickname || p.name || 'U')[0] }}</view>
+        <view class="name-container">
+          <text class="gender-icon" :class="{ 'male': p.gender === '男', 'female': p.gender === '女' }" v-if="p.gender">
+            {{ p.gender === '男' ? '♂' : (p.gender === '女' ? '♀' : '') }}
+          </text>
+          <text class="name">{{ p.nickname || p.name }}</text>
+        </view>
       </view>
     </view>
   </view>
@@ -56,5 +62,9 @@ const fetchParticipants = async (id: number) => {
 .avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; background-color: #f0f0f0; }
 .avatar-placeholder { width: 40px; height: 40px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: #666; font-size: 16px; font-weight: bold; }
 .name { font-size: 16px; color: #333; }
+.name-container { display: flex; align-items: center; }
+.gender-icon { font-size: 14px; margin-right: 4px; font-weight: bold; }
+.gender-icon.male { color: #2196F3; }
+.gender-icon.female { color: #E91E63; }
 .empty-tip { text-align: center; padding: 40px; color: #999; }
 </style>

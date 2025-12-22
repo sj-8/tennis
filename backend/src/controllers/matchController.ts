@@ -224,7 +224,8 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
         player: {
           select: {
             name: true,
-            avatar: true
+            avatar: true,
+            gender: true
           }
         }
       }
@@ -235,6 +236,7 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
       playerId: p.playerId, // Add playerId
       name: p.realName, // Use realName from application
       nickname: p.player.name, // Nickname from Player profile
+      gender: p.player.gender, // Gender from Player profile
       avatarUrl: p.player.avatar // Map to avatarUrl to match frontend
     }));
     res.json(result);
