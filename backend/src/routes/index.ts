@@ -26,10 +26,10 @@ router.post('/matches/:id/results', authenticateToken, requireAdmin, submitResul
 router.get('/matches/rankings', getRankings);
 router.get('/matches/:id/participants', getMatchParticipants);
 
-// Match Referees (Super Admin Only)
+// Match Referees (Admin or Super Admin)
 router.get('/matches/:id/referees', authenticateToken, requireAdmin, getReferees);
-router.post('/matches/:id/referees', authenticateToken, requireSuperAdmin, addReferee);
-router.delete('/matches/:id/referees/:playerId', authenticateToken, requireSuperAdmin, removeReferee);
+router.post('/matches/:id/referees', authenticateToken, requireAdmin, addReferee);
+router.delete('/matches/:id/referees/:playerId', authenticateToken, requireAdmin, removeReferee);
 
 // Games / Draw (Referee or Admin)
 // Note: In real app, we should check if user is referee for this specific match.

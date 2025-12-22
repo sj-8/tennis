@@ -30,6 +30,23 @@ export const request = (options: any) => {
     console.log(`[API] Request: ${options.method || 'GET'} ${fullPath}`, { data: options.data });
 
     // #ifdef MP-WEIXIN
+    // 强制使用本地开发服务器进行调试
+    uni.request({
+      url: `http://localhost:3000/api${path}`,
+      method: options.method || 'GET',
+      data: options.data,
+      header,
+      success: (res: any) => {
+        resolve(res.data);
+      },
+      fail: (err: any) => {
+        console.error('Local Request Fail:', err);
+        // Fallback to cloud if local fails? No, better to fail explicitly if we intend to debug local.
+        reject(err);
+      }
+    });
+    return; // 提前返回，不执行下面的 wx.cloud.callContainer
+
     wx.cloud.callContainer({
       config: {
         env: 'prod-8g8j609ye88db758' // User provided env ID
