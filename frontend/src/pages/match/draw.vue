@@ -65,31 +65,36 @@
 
       <view class="game-list">
         <view class="game-card" v-for="game in games" :key="game.id">
-          <view class="player-block">
-            <text class="player-name">{{ game.player1.name || 'Player 1' }}</text>
+          <view class="player-block left">
+            <view class="name-wrapper">
+              <text class="player-name">{{ game.player1.name || 'Player 1' }}</text>
+              <text class="winner-text" v-if="game.score1 > game.score2">WINNER</text>
+            </view>
             <input 
-               class="score-input" 
-               type="number" 
-               :value="game.score1" 
-               :disabled="!isAdminOrReferee"
-               @blur="(e) => handleScoreBlur(game, 'score1', e)"
-             />
-           </view>
-           
-           <view class="vs-divider">
-             <image src="/static/vs-icon.png" class="vs-icon" v-if="false"></image>
-             <text class="vs-text">VS</text>
-           </view>
+              class="score-input" 
+              type="number" 
+              :value="game.score1" 
+              :disabled="!isAdminOrReferee"
+              @blur="(e) => handleScoreBlur(game, 'score1', e)"
+            />
+          </view>
+          
+          <view class="vs-divider">
+            <text class="vs-text-fancy">VS</text>
+          </view>
 
-           <view class="player-block right">
-             <input 
-               class="score-input" 
-               type="number" 
-               :value="game.score2" 
-               :disabled="!isAdminOrReferee"
-               @blur="(e) => handleScoreBlur(game, 'score2', e)"
-             />
-            <text class="player-name">{{ game.player2.name || 'Player 2' }}</text>
+          <view class="player-block right">
+            <input 
+              class="score-input" 
+              type="number" 
+              :value="game.score2" 
+              :disabled="!isAdminOrReferee"
+              @blur="(e) => handleScoreBlur(game, 'score2', e)"
+            />
+            <view class="name-wrapper right">
+              <text class="player-name">{{ game.player2.name || 'Player 2' }}</text>
+              <text class="winner-text" v-if="game.score2 > game.score1">WINNER</text>
+            </view>
           </view>
         </view>
       </view>
@@ -304,13 +309,51 @@ const handleScoreBlur = (game: any, field: 'score1' | 'score2', e: any) => {
 
 /* Game Card Styles */
 .game-list { padding: 0 20px; }
-.game-card { background: #fff; border-radius: 12px; margin-bottom: 15px; padding: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-.player-block { flex: 1; display: flex; align-items: center; gap: 10px; }
-.player-block.right { justify-content: flex-end; flex-direction: row-reverse; }
-.player-name { font-size: 14px; font-weight: bold; color: #333; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.score-input { width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; text-align: center; font-size: 18px; font-weight: bold; color: #3A5F0B; }
-.vs-divider { display: flex; flex-direction: column; align-items: center; padding: 0 10px; }
-.vs-text { font-size: 16px; font-weight: 900; color: #ddd; font-style: italic; }
+.game-card { background: #fff; border-radius: 12px; margin-bottom: 15px; padding: 20px 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.player-block { flex: 1; display: flex; align-items: center; gap: 10px; position: relative; }
+.player-block.left { justify-content: flex-end; }
+.player-block.right { justify-content: flex-start; }
+.name-wrapper { position: relative; display: flex; flex-direction: column; align-items: flex-end; }
+.name-wrapper.right { align-items: flex-start; }
+.player-name { font-size: 14px; font-weight: bold; color: #333; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.4; }
+.score-input { width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; text-align: center; font-size: 18px; font-weight: bold; color: #3A5F0B; z-index: 1; flex-shrink: 0; }
+.vs-divider { display: flex; flex-direction: column; align-items: center; padding: 0 20px; flex-shrink: 0; }
+.vs-text-fancy { 
+  font-size: 24px; 
+  font-weight: 900; 
+  color: transparent;
+  background: linear-gradient(45deg, #FFD700, #ff6b6b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  font-style: italic; 
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  letter-spacing: -2px;
+}
+.winner-text {
+  position: absolute;
+  top: -14px;
+  right: -5px;
+  font-size: 10px;
+  font-weight: 900;
+  font-style: italic;
+  background: linear-gradient(90deg, #FFD700, #ff6b6b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 1px;
+  transform: rotate(0deg);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  animation: fade-in 0.5s ease-out;
+  white-space: nowrap;
+}
+.name-wrapper.right .winner-text {
+  right: auto;
+  left: -5px;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* Modal Styles */
 .modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; justify-content: center; }

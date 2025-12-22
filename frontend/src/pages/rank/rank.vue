@@ -350,6 +350,6 @@ onMounted(() => {
 .rank-item { display: flex; padding: 15px 0; border-bottom: 1px solid #f5f5f5; align-items: center; }
 .col { flex: 1; }
 .col.rank { flex: 0 0 50px; font-weight: bold; color: #999; display: flex; align-items: center; justify-content: center; }
-.col.points { text-align: right; font-weight: bold; color: #2e7d32; }
+.col.points { text-align: right; padding-right: 30px; font-weight: bold; color: #2e7d32; }
 .empty-tip { text-align: center; color: #999; margin-top: 50px; }
 </style>
