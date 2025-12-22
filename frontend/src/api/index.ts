@@ -3,6 +3,20 @@ const BASE_URL = 'https://express-4y4r-199217-5-1386469492.sh.run.tcloudbase.com
 // Declare wx global for TypeScript
 declare const wx: any;
 
+const handleLoginError = () => {
+  uni.showModal({
+    title: '未登录',
+    content: '请先到“我的”页面重新登录',
+    showCancel: false,
+    confirmText: '去登录',
+    success: (res: any) => {
+      if (res.confirm) {
+        uni.switchTab({ url: '/pages/my/my' });
+      }
+    }
+  });
+};
+
 export const request = (options: any) => {
   /**
    * 封装请求方法
@@ -31,21 +45,25 @@ export const request = (options: any) => {
 
     // #ifdef MP-WEIXIN
     // 强制使用本地开发服务器进行调试
-    uni.request({
-      url: `http://localhost:3000/api${path}`,
-      method: options.method || 'GET',
-      data: options.data,
-      header,
-      success: (res: any) => {
-        resolve(res.data);
-      },
-      fail: (err: any) => {
-        console.error('Local Request Fail:', err);
-        // Fallback to cloud if local fails? No, better to fail explicitly if we intend to debug local.
-        reject(err);
-      }
-    });
-    return; // 提前返回，不执行下面的 wx.cloud.callContainer
+    // uni.request({
+    //   url: `http://localhost:3000/api${path}`,
+    //   method: options.method || 'GET',
+    //   data: options.data,
+    //   header,
+    //   success: (res: any) => {
+    //     if (res.statusCode === 401) {
+    //       handleLoginError();
+    //       reject(res.data);
+    //       return;
+    //     }
+    //     resolve(res.data);
+    //   },
+    //   fail: (err: any) => {
+    //     console.error('Local Request Fail:', err);
+    //     reject(err);
+    //   }
+    // });
+    // return; // 提前返回
 
     wx.cloud.callContainer({
       config: {
@@ -61,6 +79,11 @@ export const request = (options: any) => {
       success: (res: any) => {
         // wx.cloud.callContainer returns { data: ..., statusCode: ... }
         // Our backend returns the data directly in body
+        if (res.statusCode === 401) {
+           handleLoginError();
+           reject(res.data || 'Unauthorized');
+           return;
+        }
         if (res.statusCode >= 200 && res.statusCode < 300) {
            resolve(res.data);
         } else {
