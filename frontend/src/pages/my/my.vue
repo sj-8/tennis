@@ -45,7 +45,30 @@
       
       <view class="cell" v-if="userInfo">
         <text class="label">当前身份</text>
-        <text class="value highlight">{{ userInfo.role === 'ADMIN' ? '超级管理员' : '普通选手' }}</text>
+        <text class="value highlight">{{ getRoleText(userInfo.role) }}</text>
+      </view>
+
+      <view class="cell" v-if="userInfo">
+        <text class="label">性别</text>
+        <picker @change="handleGenderChange" :value="genderIndex" :range="genderOptions">
+          <view class="picker-value">
+            {{ userInfo.gender || '未设置' }} <text class="edit-arrow">></text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="cell" v-if="userInfo">
+        <text class="label">出生年月</text>
+        <picker mode="date" @change="handleBirthdayChange" :value="userInfo.birthday || '2000-01-01'">
+          <view class="picker-value">
+            {{ formatDate(userInfo.birthday) || '未设置' }} <text class="edit-arrow">></text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="cell" v-if="userInfo">
+        <text class="label">年龄</text>
+        <text class="value">{{ calculateAge(userInfo.birthday) }}</text>
       </view>
     </view>
 
@@ -66,16 +89,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { request, updateProfile } from '../../api';
 
 const userInfo = ref<any>(null);
 const isEditing = ref(false);
+const genderOptions = ['男', '女'];
 const editForm = ref({
   name: '',
   avatar: ''
 });
+
+const genderIndex = computed(() => {
+  if (!userInfo.value || !userInfo.value.gender) return 0;
+  return genderOptions.indexOf(userInfo.value.gender);
+});
+
+const getRoleText = (role: string) => {
+  if (role === 'SUPER_ADMIN') return '超级管理员';
+  if (role === 'ADMIN') return '管理员';
+  return '选手';
+};
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const calculateAge = (birthday: string) => {
+  if (!birthday) return '未知';
+  const birthDate = new Date(birthday);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age + '岁';
+};
 
 const checkLogin = () => {
   /**
@@ -190,7 +246,7 @@ const saveName = async () => {
 };
 
 const handleGenderChange = async (e: any) => {
-  const gender = ['男', '女'][e.detail.value];
+  const gender = genderOptions[e.detail.value];
   try {
     const res = await updateProfile(userInfo.value.id, { gender });
     userInfo.value = res;
