@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { onShow } from '@dcloudio/uni-app';
+import { onShow, onPullDownRefresh } from '@dcloudio/uni-app';
 import { getMatches, deleteMatch, getUserApplications, cancelApplication } from '../../api';
 import TennisBall from '../../components/TennisBall.vue';
 
@@ -85,8 +85,7 @@ const fetchMatches = async () => {
    * 调用 API 获取最新赛事数据并更新 matches
    */
   try {
-    // Clear matches first to force UI refresh and show loading state if needed
-    matches.value = [];
+    uni.showLoading({ title: '加载赛事中...' });
     
     // Fetch matches separately to ensure list is shown even if applications fail
     try {
@@ -94,8 +93,8 @@ const fetchMatches = async () => {
         matches.value = matchesRes as any[];
     } catch (e) {
         console.error('Failed to fetch matches:', e);
-        uni.showToast({ title: '获取赛事失败', icon: 'none' });
-        return;
+        // Don't show toast immediately on first load to avoid scaring user during cold start
+        // uni.showToast({ title: '获取赛事失败', icon: 'none' }); 
     }
     
     // Try to fetch applications, but don't block UI if it fails (e.g. 404 or not logged in)
@@ -108,6 +107,9 @@ const fetchMatches = async () => {
     }
   } catch (err) {
     console.error(err);
+  } finally {
+    uni.hideLoading();
+    uni.stopPullDownRefresh();
   }
 };
 
@@ -235,6 +237,10 @@ onMounted(() => {
 });
 
 onShow(() => {
+  fetchMatches();
+});
+
+onPullDownRefresh(() => {
   fetchMatches();
 });
 </script>

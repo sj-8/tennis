@@ -57,6 +57,7 @@
     <view class="rank-list" v-if="restPlayers.length > 0">
       <view class="rank-header">
         <text class="col rank">排名</text>
+        <view class="col avatar"></view>
         <text class="col name">选手</text>
         <text class="col points">积分</text>
       </view>
@@ -64,6 +65,10 @@
       <view v-for="(player, index) in restPlayers" :key="player.id" class="rank-item">
         <view class="col rank">
           <text>{{ index + 4 }}</text>
+        </view>
+        <view class="col avatar">
+          <image class="list-avatar-img" v-if="player.avatar" :src="player.avatar" mode="aspectFill"></image>
+          <view class="list-avatar" v-else>{{ getAvatarText(player) }}</view>
         </view>
         <text class="col name">{{ player.name || '未知' }}</text>
         <text class="col points">{{ player.points }}</text>
@@ -78,6 +83,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { onPullDownRefresh } from '@dcloudio/uni-app';
 import { getRankings } from '../../api';
 import TennisBall from '../../components/TennisBall.vue';
 
@@ -110,14 +116,22 @@ const fetchRankings = async () => {
    * 调用 API 获取积分排名
    */
   try {
+    uni.showLoading({ title: '更新排名...' });
     const res = await getRankings();
     players.value = res as any[];
   } catch (err) {
     console.error(err);
+  } finally {
+    uni.hideLoading();
+    uni.stopPullDownRefresh();
   }
 };
 
 onMounted(() => {
+  fetchRankings();
+});
+
+onPullDownRefresh(() => {
   fetchRankings();
 });
 </script>
@@ -349,7 +363,11 @@ onMounted(() => {
 .rank-header { display: flex; font-weight: bold; border-bottom: 1px solid #eee; padding: 10px 0; color: #666; font-size: 14px; }
 .rank-item { display: flex; padding: 15px 0; border-bottom: 1px solid #f5f5f5; align-items: center; }
 .col { flex: 1; }
-.col.rank { flex: 0 0 50px; font-weight: bold; color: #999; display: flex; align-items: center; justify-content: center; }
+.col.rank { flex: 0 0 40px; font-weight: bold; color: #999; display: flex; align-items: center; justify-content: center; }
+.col.avatar { flex: 0 0 40px; display: flex; justify-content: center; align-items: center; margin-right: 10px; }
+.list-avatar { width: 36px; height: 36px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #666; font-weight: bold; }
+.list-avatar-img { width: 36px; height: 36px; border-radius: 50%; display: block; background: transparent; }
+.col.name { display: flex; align-items: center; }
 .col.points { text-align: right; padding-right: 30px; font-weight: bold; color: #2e7d32; }
 .empty-tip { text-align: center; color: #999; margin-top: 50px; }
 </style>
