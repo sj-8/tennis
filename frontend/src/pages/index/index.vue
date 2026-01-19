@@ -304,6 +304,13 @@ onPullDownRefresh(() => {
   box-shadow: 0 4px 10px rgba(58, 95, 11, 0.3);
   color: white;
 }
+
+/* Removed background image that caused 500 error */
+.tennis-court-bg {
+  background: linear-gradient(135deg, #3A5F0B 0%, #2e7d32 100%);
+  position: relative;
+  overflow: hidden;
+}
 .header-content {
   display: flex;
   align-items: center;

@@ -37,9 +37,13 @@
             <text class="action-icon">👮</text>
             <text>裁判管理</text>
          </view>
-         <view class="action-btn" @click="goToDraw">
+         <view class="action-btn" @click="goToScore">
             <text class="action-icon">📊</text>
             <text>录入比分</text>
+         </view>
+         <view class="action-btn" @click="goToDraw">
+            <text class="action-icon">📋</text>
+            <text>查看签表</text>
          </view>
          <view class="action-btn delete" @click="handleDelete">
             <text class="action-icon">🗑️</text>
@@ -73,8 +77,8 @@
     
     <button class="btn-submit" @click="submit" :loading="loading" v-if="!hasApplied">提交报名</button>
     <view class="applied-actions" v-else>
-        <button class="btn-submit btn-view-draw" @click="goToDraw">已报名 - 查看签表</button>
-        <button class="btn-submit btn-cancel" @click="handleCancelApplication">取消报名</button>
+        <button class="btn-action btn-view-draw" @click="goToDraw">已报名 - 查看签表</button>
+        <button class="btn-action btn-cancel" @click="handleCancelApplication">取消报名</button>
     </view>
   </view>
 </template>
@@ -159,6 +163,10 @@ const goToReferee = () => {
 
 const goToDraw = () => {
   uni.navigateTo({ url: `/pages/match/draw?id=${tournamentId.value}` });
+};
+
+const goToScore = () => {
+  uni.navigateTo({ url: `/pages/match/score?id=${tournamentId.value}` });
 };
 
 const handleDelete = () => {
@@ -364,7 +372,8 @@ const submit = async () => {
 .input { width: 100%; height: 44px; padding: 0 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fff; }
 .textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fff; }
 .btn-submit { background: #2e7d32; color: white; padding: 12px; border-radius: 4px; text-align: center; margin-top: 30px; font-size: 16px; }
-.btn-view-draw { background: #1976d2; margin-top: 10px; }
-.btn-cancel { background: #d32f2f; margin-top: 10px; }
-.applied-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.btn-action { color: white; padding: 12px; border-radius: 4px; text-align: center; font-size: 16px; flex: 1; }
+.btn-view-draw { background: #1976d2; }
+.btn-cancel { background: #d32f2f; }
+.applied-actions { display: flex; gap: 10px; margin-top: 30px; }
 </style>
