@@ -39,9 +39,10 @@ export const request = (options: any) => {
 
     // Validate path
     const path = options.url.startsWith('/') ? options.url : `/${options.url}`;
-    if (!/^[a-zA-Z0-9\/\-_]+$/.test(path)) {
-       return reject({ code: 'INVALID_PATH_FORMAT', message: '请求路径包含非法字符' });
-    }
+    // Relaxed validation to allow query parameters
+    // if (!/^[a-zA-Z0-9\/\-_]+$/.test(path)) {
+    //    return reject({ code: 'INVALID_PATH_FORMAT', message: '请求路径包含非法字符' });
+    // }
 
     const fullPath = path.startsWith('/api') ? path : `/api${path}`;
     
