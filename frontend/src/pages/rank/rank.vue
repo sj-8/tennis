@@ -25,11 +25,12 @@
           </view>
         </picker>
         
-        <picker @change="onMatchTypeChange" :value="matchTypeIndex" :range="matchTypeOptions" class="filter-item">
+        <!-- Temporarily removed MatchType filter as requested by user -->
+        <!-- <picker @change="onMatchTypeChange" :value="matchTypeIndex" :range="matchTypeOptions" class="filter-item">
           <view class="picker-label">
             {{ matchTypeFilter }} <text class="arrow">▼</text>
           </view>
-        </picker>
+        </picker> -->
       </view>
     </view>
     
@@ -119,15 +120,15 @@ const loading = ref(false);
 // Filter States
 const regionFilter = ref('全部');
 const genderFilter = ref('全性别');
-const matchTypeFilter = ref('全部'); // Default to All as requested
+// const matchTypeFilter = ref('全部'); // Temporarily removed
 
 const regionOptions = ['全部', '南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const genderOptions = ['全性别', '男', '女'];
-const matchTypeOptions = ['全部', '单打', '双打', '混双'];
+// const matchTypeOptions = ['全部', '单打', '双打', '混双'];
 
 const regionIndex = computed(() => regionOptions.indexOf(regionFilter.value));
 const genderIndex = computed(() => genderOptions.indexOf(genderFilter.value));
-const matchTypeIndex = computed(() => matchTypeOptions.indexOf(matchTypeFilter.value));
+// const matchTypeIndex = computed(() => matchTypeOptions.indexOf(matchTypeFilter.value));
 
 const onRegionChange = (e: any) => {
   regionFilter.value = regionOptions[e.detail.value];
@@ -139,10 +140,10 @@ const onGenderChange = (e: any) => {
   refresh();
 };
 
-const onMatchTypeChange = (e: any) => {
+/* const onMatchTypeChange = (e: any) => {
   matchTypeFilter.value = matchTypeOptions[e.detail.value];
   refresh();
-};
+}; */
 
 const restPlayers = computed(() => {
   return players.value.slice(3);
@@ -184,7 +185,7 @@ const fetchRankings = async () => {
     const res: any = await getRankings({
       region: regionFilter.value,
       gender: genderFilter.value,
-      matchType: matchTypeFilter.value,
+      matchType: '全部', // Hardcode to All since filter is removed
       page: page.value,
       pageSize: 20
     });
