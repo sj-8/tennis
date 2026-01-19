@@ -86,6 +86,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { createMatch, updateMatch, getMatches } from '../../api';
 
 const isEdit = ref(false);
+const loading = ref(false);
 const matchId = ref(0);
 const matchTypes = ['男单', '男双', '女单', '女双', '混双', '不限'];
 const matchTypeIndex = ref(-1);
@@ -211,34 +212,33 @@ const submit = async () => {
     return;
   }
 
+  const data = {
+    ...form.value,
+    startTime: `${form.value.date} ${form.value.time}`.replace(/-/g, '/'), // Fix for iOS/Safari
+    registrationStart: (form.value.regStartDate && form.value.regStartTime) ? `${form.value.regStartDate} ${form.value.regStartTime}`.replace(/-/g, '/') : null,
+    registrationEnd: (form.value.regEndDate && form.value.regEndTime) ? `${form.value.regEndDate} ${form.value.regEndTime}`.replace(/-/g, '/') : null,
+    drawSize: form.value.drawSize ? Number(form.value.drawSize) : null
+  };
+
+  loading.value = true;
   try {
-    const startTime = `${form.value.date}T${form.value.time}:00`;
-    const registrationStart = form.value.regStartDate && form.value.regStartTime ? `${form.value.regStartDate}T${form.value.regStartTime}:00` : undefined;
-    const registrationEnd = form.value.regEndDate && form.value.regEndTime ? `${form.value.regEndDate}T${form.value.regEndTime}:00` : undefined;
-    
-    const data = { ...form.value, startTime, registrationStart, registrationEnd };
-    
-    if (isEdit.value) {
+    if (isEdit.value && matchId.value) {
       await updateMatch(matchId.value, data);
-      uni.showToast({ title: '赛事已更新' });
+      uni.showToast({ title: '修改成功' });
     } else {
       await createMatch(data);
-      uni.showToast({ title: '赛事已创建' });
+      uni.showToast({ title: '创建成功' });
     }
-    
     setTimeout(() => {
-      // Check page stack to prevent navigateBack failure
-      const pages = getCurrentPages();
-      if (pages.length > 1) {
-        uni.navigateBack();
-      } else {
-        // Fallback if no history (e.g. entered directly or cleared stack)
-        uni.switchTab({ url: '/pages/index/index' });
-      }
+      uni.navigateBack();
     }, 1500);
   } catch (err: any) {
     console.error('Submit match error:', err);
-    uni.showToast({ title: err.message || '操作失败', icon: 'none' });
+    // Extract error message safely
+    const msg = (err.data && err.data.error) || err.message || '提交失败';
+    uni.showToast({ title: msg, icon: 'none' });
+  } finally {
+    loading.value = false;
   }
 };
 </script>

@@ -161,10 +161,10 @@ export const getUserApplications = async (req: Request, res: Response) => {
   try {
     const applications = await prisma.playerApplication.findMany({
       where: { playerId: Number(userId) },
-      select: {
-        tournamentId: true,
-        status: true
-      }
+      include: {
+        tournament: true // Include full tournament details
+      },
+      orderBy: { createdAt: 'desc' }
     });
     res.json(applications);
   } catch (error) {
