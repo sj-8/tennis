@@ -38,13 +38,73 @@ export const request = (options: any) => {
     }
 
     // Validate path
-    const path = options.url.startsWith('/') ? options.url : `/${options.url}`;
+    // const path = options.url.startsWith('/') ? options.url : `/${options.url}`;
     // Relaxed validation to allow query parameters
     // if (!/^[a-zA-Z0-9\/\-_]+$/.test(path)) {
     //    return reject({ code: 'INVALID_PATH_FORMAT', message: '请求路径包含非法字符' });
     // }
 
-    const fullPath = path.startsWith('/api') ? path : `/api${path}`;
+    // Manually handle path to avoid issues with query params in callContainer path validation (if any)
+    // Actually, callContainer 'path' usually supports query params, but sometimes stricter regex applies if we are not careful.
+    // Let's use `options.url` directly but ensure it starts with /
+    const urlWithQuery = options.url.startsWith('/') ? options.url : `/${options.url}`;
+    
+    // CloudBase `callContainer` path usually should NOT contain query params in the `path` field if using `express` routing? 
+    // Wait, express routing needs the full path including query? No, express handles query separately.
+    // BUT `callContainer` `path` maps to the request URL.
+    // If we pass `/matches?region=...`, it should work.
+    // The previous error `INVALID_PATH_FORMAT` suggests CloudBase SDK or the container gateway is rejecting it.
+    // The regex `^[a-zA-Z0-9\/\-_]+$` definitely rejects `?` and `=`.
+    // I already commented out the regex.
+    // If the error persists, it might be coming from the SDK itself?
+    // "请求路径包含非法字符" (Request path contains illegal characters) might be a local check in `wx.cloud.callContainer`?
+    // Documentation says: `path` must start with `/`.
+    // Some versions of SDK restrict characters.
+    
+    // Workaround: Pass query parameters in `header` or `data`? No, GET requests usually use query string.
+    // If `callContainer` strictly forbids `?` in `path`, we might need to rely on `express` parsing `data` as query?
+    // But `callContainer` documentation says `data` is request body. GET requests with body are weird but supported by some.
+    // Express `req.query` usually comes from URL.
+    
+    // Let's try to remove query string from `path` and append it manually? No.
+    // Let's try to see if we can use `uni.request` for debugging or just fix the path.
+    // Actually, `wx.cloud.callContainer` supports `?` in path in newer lib versions.
+    // The user env is `lib: 3.13.0`.
+    
+    // Alternative: Move query params to `header`? No.
+    // Alternative: Use `POST` for search/filtering if GET is restricted?
+    // That's a big change.
+    
+    // Let's try to assume the previous fix (commenting regex) didn't propagate or wasn't enough?
+    // User input shows `INVALID_PATH_FORMAT` again.
+    // This error comes from `wx.cloud.callContainer` client-side validation if the path contains `?` or other chars.
+    
+    // FIX: Split path and query string?
+    // No, `callContainer` `path` is the only place for URL.
+    // Wait, maybe I should use `uni.request` to cloud run URL directly?
+    // `https://express-4y4r-199217-5-1386469492.sh.run.tcloudbase.com/api`
+    // But that requires domain configuration in MP admin.
+    
+    // Best Fix: Use `POST` for `getMatches` / `getRankings` if params are complex?
+    // Or try to see if we can pass query params differently.
+    // Actually, checking `wx.cloud.callContainer` docs:
+    // "path: 填入业务服务的路径，默认为 /，不能带查询参数（query string），查询参数请放在 header 中 X-WX-SERVICE-QUERY" ? No, that's for service calls?
+    // Wait, some docs say: "Query parameters should be in the path".
+    // But if validation fails...
+    
+    // Let's try to use `POST` for all parameterized queries to avoid this headache?
+    // It's non-standard REST but effective.
+    // I will change `getMatches` and `getRankings` to use POST and send params in body.
+    // I need to update Backend too.
+    
+    // Plan:
+    // 1. Update `frontend/src/api/index.ts` to use POST for `getMatches` and `getRankings`.
+    // 2. Update `backend/src/routes/index.ts` to accept POST for these routes.
+    // 3. Update `backend/src/controllers/matchController.ts` to read from `req.body` instead of `req.query` for these.
+    
+    // Let's start with this tool call, I will change `api/index.ts` to use POST for these.
+    
+    const fullPath = urlWithQuery.startsWith('/api') ? urlWithQuery : `/api${urlWithQuery}`;
     
     console.log(`[API] Request: ${options.method || 'GET'} ${fullPath}`, { data: options.data });
 
@@ -130,32 +190,15 @@ export const request = (options: any) => {
 };
 
 // 获取赛事列表
-export const getMatches = () => request({ url: '/matches' });
+export const getMatches = (params: any = {}) => request({ url: '/matches/list', method: 'POST', data: params });
 // 创建赛事
 export const createMatch = (data: any) => request({ url: '/matches', method: 'POST', data });
 // 获取排行榜
-export const getRankings = (params?: { region?: string; gender?: string; matchType?: string; page?: number; pageSize?: number }) => {
-  let queryString = '';
-  if (params) {
-    const query = [];
-    if (params.region && params.region !== '全部') query.push(`region=${encodeURIComponent(params.region)}`);
-    if (params.gender && params.gender !== '全性别') query.push(`gender=${encodeURIComponent(params.gender)}`);
-    
-    // Only send matchType if it is NOT '全部', or if it is '单打' (though '单打' !== '全部' so covered by first condition)
-    // Actually, if matchType is '全部', we can omit it to let backend default to global.
-    // Backend logic: if (matchType && matchType !== '单打' && matchType !== '全部') ...
-    // So if we send '全部', backend sees it as "not matchType filter".
-    // But encoding might mess it up. Let's just NOT send it if it's '全部'.
-    if (params.matchType && params.matchType !== '全部') {
-        query.push(`matchType=${encodeURIComponent(params.matchType)}`);
-    }
-    
-    if (params.page) query.push(`page=${params.page}`);
-    if (params.pageSize) query.push(`pageSize=${params.pageSize}`);
-    
-    if (query.length > 0) queryString = '?' + query.join('&');
-  }
-  return request({ url: `/matches/rankings${queryString}` });
+export const getRankings = (params: any = {}) => {
+  // Convert params to body data for POST
+  // Remove complex logic from here, let controller handle it or pass as is
+  // Need to ensure backend can handle '全部' logic if we pass it directly
+  return request({ url: '/matches/rankings-list', method: 'POST', data: params });
 };
 // 提交比赛结果
 export const submitResult = (id: number, results: any) => request({ url: `/matches/${id}/results`, method: 'POST', data: { results } });

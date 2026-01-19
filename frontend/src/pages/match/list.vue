@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { request } from '../../api';
+import { request, getMatches } from '../../api';
 
 const matches = ref<any[]>([]);
 const searchKeyword = ref('');
@@ -116,15 +116,7 @@ const fetchMatches = async () => {
     if (status.value !== '状态' && status.value !== '全部') params.status = status.value;
     if (searchKeyword.value) params.search = searchKeyword.value;
 
-    // Convert params to query string manually or use request helper
-    // Our request helper supports data, but for GET it usually appends to query?
-    // uni.request/wx.cloud.callContainer with GET data is usually query params.
-    // Let's pass as data.
-    
-    const queryString = Object.keys(params).map(key => `${key}=${encodeURIComponent(params[key])}`).join('&');
-    const url = `/matches${queryString ? '?' + queryString : ''}`;
-    
-    const res: any = await request({ url });
+    const res: any = await getMatches(params);
     matches.value = res;
   } catch (err) {
     console.error(err);
