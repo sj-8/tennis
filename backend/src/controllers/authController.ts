@@ -99,13 +99,24 @@ export const login = async (req: Request, res: Response) => {
     });
 
     if (!player) {
+      // Auto-assign ADMIN role for specific OpenID (Hotfix for development)
+      const isAdmin = openId === 'oh76N5UiVyVhLMrgCBNE23Ana_DY';
+      
       player = await prisma.player.create({
         data: {
           openid: openId,
-          role: 'USER', // Default role
+          role: isAdmin ? 'ADMIN' : 'USER', 
           name: `User_${openId.substring(0, 6)}`
         }
       });
+    } else {
+        // Ensure this specific user is always ADMIN if they log in
+        if (openId === 'oh76N5UiVyVhLMrgCBNE23Ana_DY' && player.role !== 'ADMIN') {
+            player = await prisma.player.update({
+                where: { id: player.id },
+                data: { role: 'ADMIN' }
+            });
+        }
     }
 
     // Log for debugging

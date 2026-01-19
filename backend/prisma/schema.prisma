@@ -89,6 +89,8 @@ model Tournament {
   name        String
   location    String
   region      String? // Province-City or just City
+  category    String? // e.g. '周赛', '月赛', '公开赛'
+  level       String? // e.g. '2.5', '3.0', '1000'
   latitude    Float?
   longitude   Float?
   startTime   DateTime
