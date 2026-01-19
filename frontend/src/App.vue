@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
+import { onLaunch, onShow, onHide, onError, onPageNotFound } from "@dcloudio/uni-app";
 
 // Declare wx global for TypeScript
 declare const wx: any;
@@ -15,12 +15,23 @@ onLaunch(() => {
       //   env 参数决定接下来小程序发起的云开发调用（wx.cloud.xxx）会默认请求到哪个云环境的资源
       //   此处请填入环境 ID, 环境 ID 可打开云控制台查看
       //   如不填则使用默认环境（第一个创建的环境）
-      // env: 'my-env-id',
+      env: 'prod-8g8j609ye88db758',
       traceUser: true,
     });
   }
   // #endif
 });
+
+onError((err) => {
+  console.error('Global Error:', err);
+  // Optional: Report to analytics or log service
+  // uni.showToast({ title: '程序发生错误', icon: 'none' }); // Maybe too intrusive for every error?
+});
+
+onPageNotFound((res) => {
+  uni.redirectTo({ url: '/pages/index/index' });
+});
+
 onShow(() => {
   console.log("App Show");
 });
