@@ -159,10 +159,8 @@ const goToCreate = () => {
 };
 
 const goToMatchList = () => {
-  // Currently we are on the match list page, maybe scroll to list or refresh?
-  // Or navigate to a dedicated full list page if index is just "Recent".
-  // For now, just scroll to match list.
-  uni.pageScrollTo({ selector: '.match-list', duration: 300 });
+  // Navigate to the new Match List page
+  uni.navigateTo({ url: '/pages/match/list' });
 };
 
 const goToMyMatches = () => {

@@ -7,6 +7,14 @@
       }
     },
     {
+      "path": "pages/match/list",
+      "style": {
+        "navigationBarTitleText": "比赛报名",
+        "navigationBarBackgroundColor": "#9c27b0",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/match/create",
       "style": {
         "navigationBarTitleText": "创建赛事"

@@ -16,14 +16,14 @@ export const updateProfile = async (req: Request, res: Response) => {
     const player = await prisma.player.update({
       where: { id: Number(id) },
       data: {
-        name: name || undefined,
-        avatar: avatar || undefined,
-        gender: gender || undefined,
-        birthday: birthday ? new Date(birthday) : undefined,
-        region: region || undefined,
-        realName: realName || undefined,
-        idCard: idCard || undefined,
-        phone: phone || undefined
+        name: name === undefined ? undefined : name,
+        avatar: avatar === undefined ? undefined : avatar,
+        gender: gender === undefined ? undefined : gender,
+        birthday: birthday ? new Date(birthday) : (birthday === null ? null : undefined),
+        region: region === undefined ? undefined : region,
+        realName: realName === undefined ? undefined : realName,
+        idCard: idCard === undefined ? undefined : idCard,
+        phone: phone === undefined ? undefined : phone
       }
     });
     res.json(player);
