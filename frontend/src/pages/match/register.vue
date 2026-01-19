@@ -13,11 +13,19 @@
           <view class="placeholder-right" v-else></view>
         </view>
         <view class="meta-row">
-          <text class="meta-icon left">🕒</text>
-          <text class="meta-text center">{{ formatDate(matchInfo.startTime) }}</text>
-          <view class="placeholder-right"></view>
+            <text class="meta-icon left">🕒</text>
+            <text class="meta-text center">{{ formatDate(matchInfo.startTime) }}</text>
+            <view class="placeholder-right"></view>
+          </view>
+          <view class="meta-row" v-if="matchInfo.contact">
+             <text class="meta-icon left">📞</text>
+             <text class="meta-text center">{{ matchInfo.contact }}</text>
+             <view class="nav-btn right" @click.stop="makeCall">
+                <text class="nav-icon">📞</text>
+                <text>致电</text>
+             </view>
+          </view>
         </view>
-      </view>
 
       <!-- Action Grid for Admin/Referee -->
       <view class="admin-actions" v-if="isAdmin">
@@ -258,6 +266,14 @@ const openLocation = () => {
       });
   } else {
       uni.showToast({ title: '暂无定位信息', icon: 'none' });
+  }
+};
+
+const makeCall = () => {
+  if (matchInfo.value.contact) {
+    uni.makePhoneCall({
+      phoneNumber: matchInfo.value.contact
+    });
   }
 };
 

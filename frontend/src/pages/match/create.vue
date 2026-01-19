@@ -89,6 +89,11 @@
       <textarea class="textarea" v-model="form.withdrawalNotice" placeholder="例如：开赛前96小时外可免费退赛..." />
     </view>
 
+    <view class="form-group">
+      <text class="label">联系方式</text>
+      <input class="input" v-model="form.contact" placeholder="请输入举办方联系方式（如手机号）" />
+    </view>
+
     <button class="btn-submit" @click="submit" :loading="loading">{{ isEdit ? '保存赛事' : '创建赛事' }}</button>
   </view>
   </view>
@@ -123,7 +128,8 @@ const form = ref({
   drawSize: '',
   rules: '',
   description: '',
-  withdrawalNotice: ''
+  withdrawalNotice: '',
+  contact: ''
 });
 
 const regionIndex = computed(() => {
@@ -156,6 +162,7 @@ onLoad(async (options: any) => {
       form.value.description = match.description || '';
       form.value.rules = match.rules || '';
       form.value.withdrawalNotice = match.withdrawalNotice || '';
+      form.value.contact = match.contact || '';
       
       // Set picker index
       if (form.value.matchType) {

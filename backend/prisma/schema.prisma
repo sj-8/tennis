@@ -101,6 +101,7 @@ model Tournament {
   description String?
   rules       String?
   withdrawalNotice String? @db.Text // 退赛须知
+  contact     String?  // 联系方式
   status      String   @default("PENDING") // PENDING, ONGOING, COMPLETED
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -442,6 +442,7 @@ onPullDownRefresh(() => {
 .location-row { display: flex; align-items: center; margin-bottom: 4px; }
 .nav-btn { background: #3A5F0B; color: white; font-size: 10px; padding: 1px 6px; border-radius: 12px; margin-left: 8px; display: inline-flex; align-items: center; }
 .nav-icon { margin-right: 2px; font-size: 10px; }
+.btn-register { background-color: #3A5F0B; color: white; }
 .btn-registered { background-color: #27ae60; color: white; cursor: pointer; }
 .btn-waitlist { background-color: #f39c12; color: white; cursor: not-allowed; }
 .btn-cancel { background-color: #e74c3c; color: white; margin-left: 5px; }
