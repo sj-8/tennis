@@ -273,7 +273,7 @@ export const getRankings = async (req: Request, res: Response) => {
        const rankedPlayers = await prisma.player.findMany({
          where: {
            id: { in: playerIds },
-           region: region ? { contains: region as string } : undefined,
+           region: (region && region !== '全部') ? { contains: region as string } : undefined,
            gender: (gender && gender !== '全性别') ? (gender as string) : undefined
          }
        });
@@ -321,11 +321,12 @@ export const getRankings = async (req: Request, res: Response) => {
         // "Classify all existing points as Single" logic:
         // Use global Player.points
         
+        const whereClause: any = {};
+        if (region && region !== '全部') whereClause.region = { contains: region as string };
+        if (gender && gender !== '全性别') whereClause.gender = gender as string;
+
         players = await prisma.player.findMany({
-            where: {
-                region: region ? { contains: region as string } : undefined,
-                gender: (gender && gender !== '全性别') ? (gender as string) : undefined
-            },
+            where: whereClause,
             orderBy: { points: 'desc' },
             take: size,
             skip: skip
@@ -334,7 +335,7 @@ export const getRankings = async (req: Request, res: Response) => {
     } else {
         // No matchType filter (or '全部'), use global points
         const whereClause: any = {};
-        if (region) whereClause.region = { contains: region as string };
+        if (region && region !== '全部') whereClause.region = { contains: region as string };
         if (gender && gender !== '全性别') whereClause.gender = gender as string;
 
         console.log('Fetching all rankings with where:', whereClause);
