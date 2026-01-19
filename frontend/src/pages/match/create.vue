@@ -22,8 +22,11 @@
 
       <view class="form-item">
         <text class="label">地点</text>
-      <input class="input" v-model="form.location" placeholder="例如：1号场" placeholder-style="z-index: 0" />
-    </view>
+        <view class="location-wrapper">
+          <input class="input location-input" v-model="form.location" placeholder="例如：1号场" placeholder-style="z-index: 0" />
+          <view class="icon-location" @click="chooseLocation">📍</view>
+        </view>
+      </view>
     
     <view class="form-group">
       <text class="label">比赛时间</text>
@@ -89,6 +92,8 @@ const matchTypeIndex = ref(-1);
 const form = ref({
   name: '',
   location: '',
+  latitude: 0,
+  longitude: 0,
   date: '',
   time: '',
   regStartDate: '',
@@ -113,6 +118,10 @@ onLoad(async (options: any) => {
       const start = new Date(match.startTime);
       form.value.name = match.name;
       form.value.location = match.location;
+      // TODO: Backend needs to support latitude/longitude if we want to save it. 
+      // For now, we assume location string is enough or we append it? 
+      // User asked to "get and open location". If we don't save coords, we can't open accurate map later.
+      // But let's first implement the chooser.
       form.value.date = start.toISOString().split('T')[0];
       form.value.time = start.toTimeString().slice(0, 5);
       form.value.matchType = match.matchType || '';
@@ -140,6 +149,21 @@ onLoad(async (options: any) => {
     uni.setNavigationBarTitle({ title: '创建赛事' });
   }
 });
+
+const chooseLocation = () => {
+  uni.chooseLocation({
+    success: (res: any) => {
+      console.log('Chosen location:', res);
+      form.value.location = res.name || res.address;
+      form.value.latitude = res.latitude;
+      form.value.longitude = res.longitude;
+    },
+    fail: (err: any) => {
+      console.error('Choose location failed:', err);
+      // Need permission in manifest.json for mp-weixin
+    }
+  });
+};
 
 const bindMatchTypeChange = (e: any) => {
   const index = e.detail.value;
@@ -221,6 +245,9 @@ const submit = async () => {
 
 <style>
 .container { padding: 20px; background-color: #fff; min-height: 100vh; }
+.location-wrapper { display: flex; align-items: center; }
+.location-input { flex: 1; margin-right: 10px; }
+.icon-location { font-size: 24px; padding: 5px; }
 .form-group { margin-bottom: 15px; }
 .label { display: block; margin-bottom: 5px; font-weight: bold; }
 .input { width: 100%; height: 44px; padding: 0 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }

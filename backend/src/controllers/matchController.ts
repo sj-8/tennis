@@ -208,13 +208,7 @@ export const getRankings = async (req: Request, res: Response) => {
     
     // 如果指定了比赛类型，我们需要从 TournamentResult 聚合积分
     if (matchType && matchType !== '单打' && matchType !== '全部') {
-       // Note: Currently DB stores total points in Player.points.
-       // If we want to filter by matchType, we must aggregate from TournamentResult
-       // where Tournament.matchType matches.
-       // This is a more complex query.
-       // Given the user requirement "Default Single", maybe they expect points to be separate?
-       // But Player model only has `points`.
-       // For now, let's assume `matchType` filter implies "Show me ranking based on points earned in this match type".
+       // ... (existing code for specific match type aggregation)
        
        const results = await prisma.tournamentResult.groupBy({
          by: ['playerId'],
@@ -234,35 +228,56 @@ export const getRankings = async (req: Request, res: Response) => {
          take: 50
        });
        
-       // Now fetch player details for these IDs
        const playerIds = results.map(r => r.playerId);
-       const playersDetails = await prisma.player.findMany({
+       const rankedPlayers = await prisma.player.findMany({
          where: {
            id: { in: playerIds },
-           region: region ? { contains: region as string } : undefined, // Filter by region if provided
-           gender: (gender && gender !== '全性别') ? (gender as string) : undefined // Filter by gender if provided
+           region: region ? { contains: region as string } : undefined,
+           gender: (gender && gender !== '全性别') ? (gender as string) : undefined
          }
        });
        
-       // Map back to preserve order and aggregated points
-       players = results.map(r => {
-         const p = playersDetails.find(pd => pd.id === r.playerId);
+       const rankedList = results.map(r => {
+         const p = rankedPlayers.find(pd => pd.id === r.playerId);
          if (!p) return null;
          return {
            ...p,
-           points: r._sum.pointsChange || 0 // Override total points with filtered points
+           points: r._sum.pointsChange || 0
          };
        }).filter(p => p !== null);
+
+       // Fill with zero-point players if needed
+       if (rankedList.length < 50) {
+           const remainingCount = 50 - rankedList.length;
+           const excludeIds = rankedList.map(p => p!.id);
+           
+           const otherPlayers = await prisma.player.findMany({
+               where: {
+                   id: { notIn: excludeIds },
+                   region: region ? { contains: region as string } : undefined,
+                   gender: (gender && gender !== '全性别') ? (gender as string) : undefined
+               },
+               take: remainingCount,
+               orderBy: { points: 'desc' }
+           });
+           
+           const zeroPointPlayers = otherPlayers.map(p => ({
+               ...p,
+               points: 0
+           }));
+           
+           players = [...rankedList, ...zeroPointPlayers];
+       } else {
+           players = rankedList;
+       }
        
     } else if (matchType === '单打') {
-        // Default logic for Singles if we want to separate?
-        // Or if '单打' is just one of the types.
-        // Let's apply the same logic as above for consistency if matchType is specified.
+        // Default logic for Singles
          const results = await prisma.tournamentResult.groupBy({
          by: ['playerId'],
          where: {
            tournament: {
-             matchType: { contains: '单' } // "男单", "女单" usually contain "单"
+             matchType: { contains: '单' }
            }
          },
          _sum: {
@@ -277,7 +292,9 @@ export const getRankings = async (req: Request, res: Response) => {
        });
        
        const playerIds = results.map(r => r.playerId);
-       const playersDetails = await prisma.player.findMany({
+       
+       // 1. Get players with points
+       const rankedPlayers = await prisma.player.findMany({
          where: {
            id: { in: playerIds },
            region: region ? { contains: region as string } : undefined,
@@ -285,14 +302,40 @@ export const getRankings = async (req: Request, res: Response) => {
          }
        });
        
-       players = results.map(r => {
-         const p = playersDetails.find(pd => pd.id === r.playerId);
+       const rankedList = results.map(r => {
+         const p = rankedPlayers.find(pd => pd.id === r.playerId);
          if (!p) return null;
          return {
            ...p,
            points: r._sum.pointsChange || 0
          };
        }).filter(p => p !== null);
+
+       // 2. If less than 50, fetch players with 0 points (who haven't played this match type)
+       if (rankedList.length < 50) {
+           const remainingCount = 50 - rankedList.length;
+           const excludeIds = rankedList.map(p => p!.id);
+           
+           const otherPlayers = await prisma.player.findMany({
+               where: {
+                   id: { notIn: excludeIds },
+                   region: region ? { contains: region as string } : undefined,
+                   gender: (gender && gender !== '全性别') ? (gender as string) : undefined
+               },
+               take: remainingCount,
+               orderBy: { points: 'desc' } // Or name? Usually total points or just random
+           });
+           
+           // Append with 0 points (for this specific match type view)
+           const zeroPointPlayers = otherPlayers.map(p => ({
+               ...p,
+               points: 0
+           }));
+           
+           players = [...rankedList, ...zeroPointPlayers];
+       } else {
+           players = rankedList;
+       }
 
     } else {
         // No matchType filter (or '全部'), use global points but filter by region/gender
