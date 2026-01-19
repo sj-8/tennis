@@ -84,7 +84,7 @@
       <textarea class="textarea" v-model="form.rules" placeholder="规则描述..." />
     </view>
 
-    <button class="btn-submit" @click="submit">创建赛事</button>
+    <button class="btn-submit" @click="submit" :loading="loading">{{ isEdit ? '保存赛事' : '创建赛事' }}</button>
   </view>
   </view>
 </template>

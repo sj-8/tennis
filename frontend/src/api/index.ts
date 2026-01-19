@@ -4,9 +4,13 @@ const BASE_URL = 'https://express-4y4r-199217-5-1386469492.sh.run.tcloudbase.com
 declare const wx: any;
 
 const handleLoginError = () => {
+  // Clear session to force re-login state
+  uni.removeStorageSync('userInfo');
+  uni.removeStorageSync('token');
+  
   uni.showModal({
-    title: '未登录',
-    content: '请先到“我的”页面重新登录',
+    title: '未登录或会话过期',
+    content: '请重新登录以获取权限',
     showCancel: false,
     confirmText: '去登录',
     success: (res: any) => {
@@ -80,9 +84,9 @@ export const request = (options: any) => {
       success: (res: any) => {
         // wx.cloud.callContainer returns { data: ..., statusCode: ... }
         // Our backend returns the data directly in body
-        if (res.statusCode === 401) {
+        if (res.statusCode === 401 || res.statusCode === 403) {
            handleLoginError();
-           reject(res.data || 'Unauthorized');
+           reject(res.data || 'Unauthorized/Forbidden');
            return;
         }
         if (res.statusCode >= 200 && res.statusCode < 300) {
