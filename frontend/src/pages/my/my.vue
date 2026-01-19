@@ -74,7 +74,10 @@
             <text class="menu-icon">🛡️</text>
             <text class="menu-text">实名认证</text>
           </view>
-          <text class="arrow">></text>
+          <view class="menu-right">
+             <text class="status-verified" v-if="userInfo && (userInfo.isVerified || userInfo.idCard)">已实名</text>
+             <text class="arrow" v-else>></text>
+          </view>
         </view>
         
         <view class="menu-item" @click="handleLogout" v-if="userInfo">
@@ -298,5 +301,7 @@ onShow(() => {
 .menu-left { display: flex; align-items: center; gap: 10px; }
 .menu-icon { font-size: 18px; width: 24px; text-align: center; }
 .menu-text { font-size: 14px; color: #333; }
+.menu-right { display: flex; align-items: center; }
+.status-verified { color: #3A5F0B; font-size: 14px; font-weight: bold; margin-right: 5px; }
 .arrow { color: #ccc; font-family: monospace; font-size: 14px; }
 </style>

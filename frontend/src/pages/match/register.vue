@@ -17,17 +17,17 @@
 
     <view class="form-group">
       <text class="label">真实姓名</text>
-      <input class="input" v-model="form.realName" placeholder="请输入真实姓名" />
+      <input class="input" v-model="form.realName" placeholder="请输入真实姓名" :disabled="isVerified" />
     </view>
 
     <view class="form-group">
       <text class="label">身份证号</text>
-      <input class="input" v-model="form.idCard" type="idcard" placeholder="请输入身份证号" />
+      <input class="input" v-model="form.idCard" type="idcard" placeholder="请输入身份证号" :disabled="isVerified" />
     </view>
 
     <view class="form-group">
       <text class="label">手机号码</text>
-      <input class="input" v-model="form.phone" type="number" placeholder="请输入手机号码" />
+      <input class="input" v-model="form.phone" type="number" placeholder="请输入手机号码" :disabled="isVerified" />
     </view>
 
     <view class="form-group">
@@ -41,17 +41,44 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { onLoad, onShow } from '@dcloudio/uni-app';
 import { submitApplication, getMatches } from '../../api';
 
 const loading = ref(false);
 const tournamentId = ref<number | null>(null);
 const matchInfo = ref<any>({});
+const isVerified = ref(false);
 const form = ref({
   realName: '',
   idCard: '',
   phone: '',
   bio: ''
+});
+
+onShow(() => {
+  const userInfo = uni.getStorageSync('userInfo');
+  if (userInfo && (userInfo.isVerified || userInfo.idCard)) {
+    isVerified.value = true;
+    form.value.realName = userInfo.realName || '';
+    form.value.idCard = userInfo.idCard || '';
+    form.value.phone = userInfo.phone || '';
+  } else {
+    isVerified.value = false;
+    // Prompt user to verify
+    uni.showModal({
+      title: '提示',
+      content: '报名比赛需先完成实名认证',
+      confirmText: '去认证',
+      showCancel: true,
+      success: (res: any) => {
+        if (res.confirm) {
+          uni.navigateTo({ url: '/pages/my/auth' });
+        } else {
+          uni.navigateBack();
+        }
+      }
+    });
+  }
 });
 
 onLoad(async (options: any) => {
