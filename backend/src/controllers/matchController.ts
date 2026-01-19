@@ -39,8 +39,8 @@ export const createMatch = async (req: Request, res: Response) => {
       data: {
         name,
         location,
-        latitude,
-        longitude,
+        latitude: latitude ? Number(latitude) : null,
+        longitude: longitude ? Number(longitude) : null,
         startTime: start,
         description,
         rules,
@@ -95,8 +95,8 @@ export const updateMatch = async (req: Request, res: Response) => {
       data: {
         name: data.name,
         location: data.location,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        latitude: data.latitude ? Number(data.latitude) : null,
+        longitude: data.longitude ? Number(data.longitude) : null,
         description: data.description,
         rules: data.rules,
         startTime: startTime,
@@ -297,15 +297,19 @@ export const getRankings = async (req: Request, res: Response) => {
 
     } else {
         // No matchType filter (or '全部'), use global points
+        const whereClause: any = {};
+        if (region) whereClause.region = { contains: region as string };
+        if (gender && gender !== '全性别') whereClause.gender = gender as string;
+
+        console.log('Fetching all rankings with where:', whereClause);
+        
         players = await prisma.player.findMany({
-            where: {
-                region: region ? { contains: region as string } : undefined,
-                gender: (gender && gender !== '全性别') ? (gender as string) : undefined
-            },
+            where: whereClause,
             orderBy: { points: 'desc' },
             take: size,
             skip: skip
         });
+        console.log(`Found ${players.length} players`);
     }
 
     res.json(players);
