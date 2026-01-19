@@ -14,6 +14,7 @@ model Player {
   avatar    String?  @db.LongText
   gender    String?  // '男' or '女'
   birthday  DateTime?
+  region    String?  // Province-City-District string or just City
   points    Int      @default(0)
   role      String   @default("USER") // USER, ADMIN
   createdAt DateTime @default(now())
