@@ -8,10 +8,10 @@
     <view class="section">
       <view class="section-title">添加裁判员</view>
       <view class="add-form">
-        <input class="input" v-model="newRefereeOpenId" placeholder="请输入用户 OpenID" />
+        <input class="input" v-model="newRefereeOpenId" placeholder="请输入用户 OpenID 或 身份证号" />
         <button class="btn-add" @click="handleAdd">添加</button>
       </view>
-      <text class="hint">提示：请让用户在“我的”页面复制 OpenID 发送给您。</text>
+      <text class="hint">提示：请输入用户的身份证号，或让用户在“我的”页面复制 OpenID 发送给您。</text>
     </view>
 
     <view class="section">
@@ -65,7 +65,7 @@ const fetchReferees = async () => {
 
 const handleAdd = async () => {
   if (!newRefereeOpenId.value) {
-    uni.showToast({ title: '请输入 OpenID', icon: 'none' });
+    uni.showToast({ title: '请输入 OpenID 或 身份证号', icon: 'none' });
     return;
   }
   
@@ -77,7 +77,7 @@ const handleAdd = async () => {
     fetchReferees();
   } catch (err: any) {
     console.error(err);
-    uni.showToast({ title: err.error || '添加失败，请检查 OpenID 是否正确', icon: 'none' });
+    uni.showToast({ title: err.error || '添加失败，请检查输入是否正确', icon: 'none' });
   } finally {
     uni.hideLoading();
   }
@@ -87,7 +87,7 @@ const handleRemove = async (referee: any) => {
   uni.showModal({
     title: '确认移除',
     content: `确定要移除裁判员 ${referee.name} 吗？`,
-    success: async (res) => {
+    success: async (res: any) => {
       if (res.confirm) {
         try {
           await removeReferee(matchId.value, referee.id);

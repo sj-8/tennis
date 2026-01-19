@@ -146,7 +146,7 @@ const goToEdit = () => {
 };
 
 const goToReferee = () => {
-  uni.navigateTo({ url: `/pages/match/referee?id=${tournamentId.value}` });
+  uni.navigateTo({ url: `/pages/match/referees?id=${tournamentId.value}` });
 };
 
 const goToDraw = () => {
