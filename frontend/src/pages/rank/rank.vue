@@ -96,8 +96,11 @@
       </view>
     </view>
     
-    <view v-if="players.length === 0" class="empty-tip">
+    <view v-if="players.length === 0 && !loading" class="empty-tip">
       <text>暂无排名数据</text>
+    </view>
+    <view v-if="loading && page > 1" class="loading-tip">
+      <text>加载中...</text>
     </view>
   </view>
 </template>
@@ -109,11 +112,14 @@ import { getRankings } from '../../api';
 import TennisBall from '../../components/TennisBall.vue';
 
 const players = ref<any[]>([]);
+const page = ref(1);
+const hasMore = ref(true);
+const loading = ref(false);
 
 // Filter States
 const regionFilter = ref('全部');
 const genderFilter = ref('全性别');
-const matchTypeFilter = ref('单打');
+const matchTypeFilter = ref('全部'); // Default to All as requested
 
 const regionOptions = ['全部', '南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const genderOptions = ['全性别', '男', '女'];
@@ -125,17 +131,17 @@ const matchTypeIndex = computed(() => matchTypeOptions.indexOf(matchTypeFilter.v
 
 const onRegionChange = (e: any) => {
   regionFilter.value = regionOptions[e.detail.value];
-  fetchRankings();
+  refresh();
 };
 
 const onGenderChange = (e: any) => {
   genderFilter.value = genderOptions[e.detail.value];
-  fetchRankings();
+  refresh();
 };
 
 const onMatchTypeChange = (e: any) => {
   matchTypeFilter.value = matchTypeOptions[e.detail.value];
-  fetchRankings();
+  refresh();
 };
 
 const restPlayers = computed(() => {
@@ -159,32 +165,64 @@ const getAvatarText = (player: any) => {
   return '?';
 };
 
+const refresh = () => {
+  page.value = 1;
+  hasMore.value = true;
+  players.value = [];
+  fetchRankings();
+};
+
 const fetchRankings = async () => {
-  /**
-   * 获取排行榜数据
-   * 调用 API 获取积分排名
-   */
+  if (!hasMore.value || loading.value) return;
+  loading.value = true;
+  
+  if (page.value === 1) {
+    uni.showLoading({ title: '加载中...' });
+  }
+
   try {
-    uni.showLoading({ title: '更新排名...' });
-    const res = await getRankings({
+    const res: any = await getRankings({
       region: regionFilter.value,
       gender: genderFilter.value,
-      matchType: matchTypeFilter.value
+      matchType: matchTypeFilter.value,
+      page: page.value,
+      pageSize: 20
     });
-    players.value = res as any[];
+    
+    if (res && res.length > 0) {
+      if (page.value === 1) {
+        players.value = res;
+      } else {
+        players.value = [...players.value, ...res];
+      }
+      
+      if (res.length < 20) {
+        hasMore.value = false;
+      } else {
+        page.value++;
+      }
+    } else {
+      hasMore.value = false;
+    }
   } catch (err) {
     console.error(err);
   } finally {
+    loading.value = false;
     uni.hideLoading();
     uni.stopPullDownRefresh();
   }
 };
 
 onMounted(() => {
-  fetchRankings();
+  refresh();
 });
 
 onPullDownRefresh(() => {
+  refresh();
+});
+
+import { onReachBottom } from '@dcloudio/uni-app';
+onReachBottom(() => {
   fetchRankings();
 });
 </script>
@@ -451,4 +489,5 @@ onPullDownRefresh(() => {
 .col.name { display: flex; align-items: center; font-weight: bold; color: #333; }
 .col.points { text-align: right; padding-right: 30px; font-weight: bold; color: #2e7d32; }
 .empty-tip { text-align: center; color: #999; margin-top: 50px; }
+.loading-tip { text-align: center; color: #999; padding: 20px; font-size: 12px; }
 </style>

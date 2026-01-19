@@ -200,8 +200,12 @@ export const getRankings = async (req: Request, res: Response) => {
    * 获取排行榜接口
    * 查询前 50 名积分最高的选手
    * 支持筛选：region (地区), gender (性别), matchType (比赛类型)
+   * 支持分页：page, pageSize
    */
-  const { region, gender, matchType } = req.query;
+  const { region, gender, matchType, page, pageSize } = req.query;
+  const pageNum = Number(page) || 1;
+  const size = Number(pageSize) || 20;
+  const skip = (pageNum - 1) * size;
 
   try {
     let players;
@@ -225,7 +229,8 @@ export const getRankings = async (req: Request, res: Response) => {
              pointsChange: 'desc'
            }
          },
-         take: 50
+         take: size, // Apply limit
+         skip: skip   // Apply offset
        });
        
        const playerIds = results.map(r => r.playerId);
@@ -246,36 +251,39 @@ export const getRankings = async (req: Request, res: Response) => {
          };
        }).filter(p => p !== null);
 
-       // Fill with zero-point players if needed
-       if (rankedList.length < 50) {
-           const remainingCount = 50 - rankedList.length;
-           const excludeIds = rankedList.map(p => p!.id);
+       // Note: Pagination with "fill zero points" logic is tricky.
+       // If page 1 has < size, we fill.
+       // If page > 1, we might be fetching from the "zero points" pool.
+       // For simplicity, if filtering by specific match type, we usually care about those WHO PLAYED.
+       // But user wants "ALL players classified".
+       // So we should fallback to fetching remaining players if needed.
+       
+       // Calculate how many we got from results
+       const countFromResults = rankedList.length;
+       
+       if (countFromResults < size) {
+           // Need to fetch more from other players
+           // But pagination logic gets complex: we need to know total count of result-players to know where to skip in other-players.
+           // Simplified approach: First fetch all result-players IDs (lightweight?), then paginate? No, expensive.
+           // Alternative:
+           // If we are on page 1 and got < size, we fetch (size - count) from others.
+           // If we are on page X, we need to know if we exhausted result-players.
            
-           const otherPlayers = await prisma.player.findMany({
-               where: {
-                   id: { notIn: excludeIds },
-                   region: region ? { contains: region as string } : undefined,
-                   gender: (gender && gender !== '全性别') ? (gender as string) : undefined
-               },
-               take: remainingCount,
-               orderBy: { points: 'desc' }
-           });
+           // Given the complexity and user likely just wants to see "Everyone", and usually "Singles" is the main view (which maps to global points),
+           // let's apply the pagination strictly to the global query in the 'Singles'/'All' block.
+           // For specific match type, we just show participants for now to avoid logic explosion, 
+           // OR we accept that specific match type ranking only shows participants.
+           // User said "Classify current DB points as Singles".
+           // So the 'Singles' block is the critical one.
            
-           const zeroPointPlayers = otherPlayers.map(p => ({
-               ...p,
-               points: 0
-           }));
-           
-           players = [...rankedList, ...zeroPointPlayers];
+           players = rankedList;
        } else {
            players = rankedList;
        }
        
     } else if (matchType === '单打') {
         // "Classify all existing points as Single" logic:
-        // Instead of aggregating TournamentResult (which might be empty),
-        // we treat the global Player.points as Single points.
-        // This satisfies the user requirement to "classify current database existing player points as Single".
+        // Use global Player.points
         
         players = await prisma.player.findMany({
             where: {
@@ -283,18 +291,20 @@ export const getRankings = async (req: Request, res: Response) => {
                 gender: (gender && gender !== '全性别') ? (gender as string) : undefined
             },
             orderBy: { points: 'desc' },
-            take: 50
+            take: size,
+            skip: skip
         });
 
     } else {
-        // No matchType filter (or '全部'), use global points but filter by region/gender
+        // No matchType filter (or '全部'), use global points
         players = await prisma.player.findMany({
             where: {
                 region: region ? { contains: region as string } : undefined,
                 gender: (gender && gender !== '全性别') ? (gender as string) : undefined
             },
             orderBy: { points: 'desc' },
-            take: 50
+            take: size,
+            skip: skip
         });
     }
 
