@@ -64,14 +64,17 @@
     <!-- Bio section removed as requested -->
     
     <button class="btn-submit" @click="submit" :loading="loading" v-if="!hasApplied">提交报名</button>
-    <button class="btn-submit btn-view-draw" @click="goToDraw" v-else>已报名 - 查看签表</button>
+    <view class="applied-actions" v-else>
+        <button class="btn-submit btn-view-draw" @click="goToDraw">已报名 - 查看签表</button>
+        <button class="btn-submit btn-cancel" @click="handleCancelApplication">取消报名</button>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { submitApplication, getMatches, deleteMatch, getMatchParticipants } from '../../api';
+import { submitApplication, getMatches, deleteMatch, getMatchParticipants, cancelApplication } from '../../api';
 
 const loading = ref(false);
 const tournamentId = ref<number | null>(null);
@@ -193,7 +196,32 @@ onLoad(async (options: any) => {
 const formatDate = (dateStr: string) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
-  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.toTimeString().slice(0, 5)}`;
+  const weekDay = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.toTimeString().slice(0, 5)} ${weekDay}`;
+};
+
+const handleCancelApplication = () => {
+  uni.showModal({
+    title: '确认取消',
+    content: '确定要取消报名吗？',
+    success: async (res: any) => {
+      if (res.confirm) {
+        uni.showLoading({ title: '取消中...' });
+        try {
+          if (tournamentId.value) {
+            await cancelApplication(tournamentId.value);
+            uni.showToast({ title: '取消成功' });
+            hasApplied.value = false; // Reset state
+            // Optionally refresh participants or just let user re-apply
+          }
+        } catch (err) {
+          uni.showToast({ title: '取消失败', icon: 'none' });
+        } finally {
+          uni.hideLoading();
+        }
+      }
+    }
+  });
 };
 
 const openLocation = () => {
@@ -320,5 +348,7 @@ const submit = async () => {
 .input { width: 100%; height: 44px; padding: 0 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fff; }
 .textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fff; }
 .btn-submit { background: #2e7d32; color: white; padding: 12px; border-radius: 4px; text-align: center; margin-top: 30px; font-size: 16px; }
-.btn-view-draw { background: #1976d2; }
+.btn-view-draw { background: #1976d2; margin-top: 10px; }
+.btn-cancel { background: #d32f2f; margin-top: 10px; }
+.applied-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
 </style>

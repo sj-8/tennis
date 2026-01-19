@@ -69,18 +69,18 @@
           <text class="match-detail" v-if="match.drawSize">👥 {{ match._count?.applications || 0 }}/{{ match.drawSize }}</text>
           <text class="match-status" :class="match.status">{{ getStatusText(match.status) }}</text>
         </view>
-        <view class="match-action">
-          <view class="action-column">
-            <template v-if="isRegistered(match.id)">
-                <button class="btn-registered" v-if="getApplicationStatus(match.id) === 'APPROVED'" @click.stop="handleViewDraw(match)">已报名</button>
-                <button class="btn-waitlist" v-else-if="getApplicationStatus(match.id) === 'WAITLIST'" @click.stop="handleViewDraw(match)">候补中</button>
-                <button class="btn-registered" v-else>审核中</button>
-                <button class="btn-cancel" @click.stop="handleCancel(match)">取消</button>
-            </template>
-            <button class="btn-register" @click.stop="handleRegister(match)" v-else-if="match.status === 'PENDING'">报名</button>
-            <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
+          <view class="match-action">
+            <view class="action-column">
+              <template v-if="isRegistered(match.id)">
+                  <button class="btn-registered" v-if="getApplicationStatus(match.id) === 'APPROVED'" @click.stop="handleViewDraw(match)">已报名</button>
+                  <button class="btn-waitlist" v-else-if="getApplicationStatus(match.id) === 'WAITLIST'" @click.stop="handleViewDraw(match)">候补中</button>
+                  <button class="btn-registered" v-else>审核中</button>
+                  <!-- Cancel button removed and moved to details page -->
+              </template>
+              <button class="btn-register" @click.stop="handleRegister(match)" v-else-if="match.status === 'PENDING'">报名</button>
+              <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
+            </view>
           </view>
-        </view>
       </view>
     </view>
 
@@ -425,8 +425,8 @@ onPullDownRefresh(() => {
   border-left: 5px solid #FFD700; /* 网球黄装饰线 */
 }
 .match-info { flex: 1; }
-.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 80px; justify-content: center; }
-.action-column { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 80px; justify-content: center; align-items: center; }
+.action-column { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; }
 .btn-register, .btn-registered, .btn-waitlist, .btn-cancel, .btn-draw, .btn-score, .btn-edit, .btn-referee, .btn-delete { 
   font-size: 12px; 
   padding: 0; 
