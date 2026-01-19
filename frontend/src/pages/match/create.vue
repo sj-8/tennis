@@ -7,6 +7,15 @@
       </view>
 
       <view class="form-item">
+        <text class="label">地区</text>
+        <picker @change="bindRegionChange" :value="regionIndex" :range="jiangsuCities">
+          <view class="picker-view">
+            {{ form.region ? '江苏省 ' + form.region : '请选择地区' }}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
         <text class="label">比赛类型</text>
         <picker @change="bindMatchTypeChange" :value="matchTypeIndex" :range="matchTypes">
           <view class="picker-view">
@@ -81,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { createMatch, updateMatch, getMatches } from '../../api';
 
@@ -89,10 +98,12 @@ const isEdit = ref(false);
 const loading = ref(false);
 const matchId = ref(0);
 const matchTypes = ['男单', '男双', '女单', '女双', '混双', '不限'];
+const jiangsuCities = ['南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const matchTypeIndex = ref(-1);
 const form = ref({
   name: '',
   location: '',
+  region: '',
   latitude: 0,
   longitude: 0,
   date: '',
@@ -107,6 +118,14 @@ const form = ref({
   description: ''
 });
 
+const regionIndex = computed(() => {
+  return jiangsuCities.indexOf(form.value.region);
+});
+
+const bindRegionChange = (e: any) => {
+  form.value.region = jiangsuCities[e.detail.value];
+};
+
 onLoad(async (options: any) => {
   if (options.id) {
     isEdit.value = true;
@@ -119,10 +138,9 @@ onLoad(async (options: any) => {
       const start = new Date(match.startTime);
       form.value.name = match.name;
       form.value.location = match.location;
-      // TODO: Backend needs to support latitude/longitude if we want to save it. 
-      // For now, we assume location string is enough or we append it? 
-      // User asked to "get and open location". If we don't save coords, we can't open accurate map later.
-      // But let's first implement the chooser.
+      form.value.region = match.region || '';
+      form.value.latitude = match.latitude || 0;
+      form.value.longitude = match.longitude || 0;
       form.value.date = start.toISOString().split('T')[0];
       form.value.time = start.toTimeString().slice(0, 5);
       form.value.matchType = match.matchType || '';

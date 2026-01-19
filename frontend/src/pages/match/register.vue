@@ -13,6 +13,9 @@
           <text class="meta-text">{{ formatDate(matchInfo.startTime) }}</text>
         </view>
       </view>
+      <view class="admin-edit-btn" v-if="isAdmin" @click="goToEdit">
+        <text>编辑赛事</text>
+      </view>
     </view>
 
     <view class="form-group">
@@ -48,6 +51,7 @@ const loading = ref(false);
 const tournamentId = ref<number | null>(null);
 const matchInfo = ref<any>({});
 const isVerified = ref(false);
+const isAdmin = ref(false);
 const form = ref({
   realName: '',
   idCard: '',
@@ -57,6 +61,10 @@ const form = ref({
 
 onShow(() => {
   const userInfo = uni.getStorageSync('userInfo');
+  if (userInfo && (userInfo.role === 'ADMIN' || userInfo.role === 'SUPER_ADMIN')) {
+    isAdmin.value = true;
+  }
+
   if (userInfo && (userInfo.isVerified || userInfo.idCard)) {
     isVerified.value = true;
     form.value.realName = userInfo.realName || '';
@@ -80,6 +88,10 @@ onShow(() => {
     });
   }
 });
+
+const goToEdit = () => {
+  uni.navigateTo({ url: `/pages/match/create?id=${tournamentId.value}` });
+};
 
 onLoad(async (options: any) => {
   if (options.id) {
@@ -188,6 +200,15 @@ const submit = async () => {
 .meta-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .meta-arrow { color: rgba(255,255,255,0.7); font-family: monospace; }
 .header { margin-bottom: 20px; text-align: center; background: #3A5F0B; padding: 30px 20px; color: white; border-radius: 0 0 20px 20px; margin-top: -20px; margin-left: -20px; margin-right: -20px; }
+.admin-edit-btn {
+  margin-top: 15px;
+  background: rgba(255,255,255,0.2);
+  padding: 8px 15px;
+  border-radius: 20px;
+  display: inline-block;
+  font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.5);
+}
 .title { font-size: 22px; font-weight: bold; display: block; }
 .form-group { margin-bottom: 15px; }
 .label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; }

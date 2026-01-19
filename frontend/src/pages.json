@@ -19,6 +19,12 @@
       }
     },
     {
+      "path": "pages/match/my-matches",
+      "style": {
+        "navigationBarTitleText": "我的比赛"
+      }
+    },
+    {
       "path": "pages/match/draw",
       "style": {
         "navigationBarTitleText": "参赛名单"

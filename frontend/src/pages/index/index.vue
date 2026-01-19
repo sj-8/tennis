@@ -21,11 +21,34 @@
       </view>
     </view>
     
+    <!-- Quick Entry Buttons -->
+    <view class="quick-entry">
+      <view class="entry-card" @click="goToMatchList">
+        <view class="entry-text">
+          <text class="entry-title">比赛报名</text>
+          <text class="entry-sub">查询比赛并报名</text>
+        </view>
+        <view class="entry-icon-bg">🏆</view>
+      </view>
+      <view class="entry-card" @click="goToMyMatches">
+        <view class="entry-text">
+          <text class="entry-title">我的比赛</text>
+          <text class="entry-sub">已报名中签比赛</text>
+        </view>
+        <view class="entry-icon-bg purple">🏅</view>
+      </view>
+    </view>
+
+    <view class="section-title-row">
+      <view class="title-bar"></view>
+      <text class="section-title">热门比赛</text>
+    </view>
+    
     <view class="match-list">
       <view class="match-card" 
             v-for="match in matches" 
             :key="match.id" 
-            @click="handleEdit(match)"
+            @click="handleCardClick(match)"
             :class="getMatchCardClass(match.matchType)">
         <view class="match-info">
           <text class="match-name">
@@ -133,6 +156,23 @@ const getApplicationStatus = (matchId: number) => {
 const goToCreate = () => {
   // 跳转到创建赛事页面
   uni.navigateTo({ url: '/pages/match/create' });
+};
+
+const goToMatchList = () => {
+  // Currently we are on the match list page, maybe scroll to list or refresh?
+  // Or navigate to a dedicated full list page if index is just "Recent".
+  // For now, just scroll to match list.
+  uni.pageScrollTo({ selector: '.match-list', duration: 300 });
+};
+
+const goToMyMatches = () => {
+  uni.navigateTo({ url: '/pages/match/my-matches' });
+};
+
+const handleCardClick = (match: any) => {
+  // Admin or User, clicking the card goes to Detail Page (Register/Preview)
+  // Edit button is inside Detail page for Admin
+  uni.navigateTo({ url: `/pages/match/register?id=${match.id}` });
 };
 
 const handleRegister = (match: any) => {
@@ -295,6 +335,74 @@ onPullDownRefresh(() => {
   50% { text-shadow: 0 0 4px #ff0000, 0 -3px 5px #ff9900, -2px -6px 8px #ff5500; transform: scale(1.05); }
   100% { text-shadow: 0 0 4px #ff0000, 0 -2px 4px #ff9900, 2px -5px 6px #ff5500; transform: scale(1); }
 }
+/* Quick Entry Styles */
+.quick-entry {
+  display: flex;
+  gap: 15px;
+  padding: 0 20px;
+  margin-top: -30px;
+  margin-bottom: 25px;
+  position: relative;
+  z-index: 10;
+}
+.entry-card {
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  padding: 20px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.entry-text {
+  display: flex;
+  flex-direction: column;
+}
+.entry-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+}
+.entry-sub {
+  font-size: 12px;
+  color: #999;
+}
+.entry-icon-bg {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
+}
+.entry-icon-bg.purple {
+  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  margin-bottom: 15px;
+}
+.title-bar {
+  width: 4px;
+  height: 16px;
+  background: #3A5F0B; /* Primary Green */
+  margin-right: 8px;
+  border-radius: 2px;
+}
+.section-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
 .match-list { padding: 0 20px; }
 .match-card { 
   background: #fff; 
