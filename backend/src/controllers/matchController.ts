@@ -2,8 +2,35 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 
 export const getMatches = async (req: Request, res: Response) => {
+  const { region, category, level, matchType, status, search } = req.query;
+  
   try {
+    const whereClause: any = {};
+    
+    if (region && region !== '全部') whereClause.region = { contains: region as string };
+    if (category && category !== '全部') whereClause.category = category as string;
+    if (level && level !== '全部') whereClause.level = level as string;
+    if (matchType && matchType !== '全部') whereClause.matchType = matchType as string;
+    if (status && status !== '全部') {
+        // Status logic needs mapping if using '待开始' etc.
+        // Or assume status matches DB enum 'PENDING', 'ONGOING', 'COMPLETED'
+        // Frontend sends: '待开始' -> we map to 'PENDING'?
+        // Let's handle simplified mapping
+        if (status === '待开始') whereClause.status = 'PENDING';
+        else if (status === '进行中') whereClause.status = 'ONGOING';
+        else if (status === '已结束') whereClause.status = 'COMPLETED';
+        else whereClause.status = status as string;
+    }
+    
+    if (search) {
+        whereClause.OR = [
+            { name: { contains: search as string } },
+            { location: { contains: search as string } }
+        ];
+    }
+
     const matches = await prisma.tournament.findMany({
+      where: whereClause,
       orderBy: { startTime: 'desc' },
       include: {
         _count: {
@@ -14,6 +41,7 @@ export const getMatches = async (req: Request, res: Response) => {
     });
     res.json(matches);
   } catch (error) {
+    console.error('Get matches error:', error);
     res.status(500).json({ error: 'Failed to fetch matches' });
   }
 };
