@@ -59,11 +59,8 @@
       <input class="input" v-model="form.phone" type="number" placeholder="请输入手机号码" :disabled="isVerified" />
     </view>
 
-    <view class="form-group">
-      <text class="label">个人简介</text>
-      <textarea class="textarea" v-model="form.bio" placeholder="选填：球龄、水平等级等" />
-    </view>
-
+    <!-- Bio section removed as requested -->
+    
     <button class="btn-submit" @click="submit" :loading="loading">提交报名</button>
   </view>
 </template>
@@ -81,8 +78,7 @@ const isAdmin = ref(false);
 const form = ref({
   realName: '',
   idCard: '',
-  phone: '',
-  bio: ''
+  phone: ''
 });
 
 onShow(() => {

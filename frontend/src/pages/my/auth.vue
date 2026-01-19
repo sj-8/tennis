@@ -8,19 +8,19 @@
     <view class="form-card">
       <view class="form-item">
         <text class="label">姓名</text>
-        <input class="input" v-model="form.realName" placeholder="请输入真实姓名" />
+        <input class="input" v-model="form.realName" placeholder="请输入真实姓名" :disabled="isVerified" :class="{ 'is-disabled': isVerified }" />
       </view>
       
       <view class="form-item">
         <text class="label">身份证号</text>
-        <input class="input" v-model="form.idCard" type="idcard" maxlength="18" placeholder="请输入身份证号" />
+        <input class="input" v-model="form.idCard" type="idcard" maxlength="18" placeholder="请输入身份证号" :disabled="isVerified" :class="{ 'is-disabled': isVerified }" />
       </view>
       
       <view class="form-item">
         <text class="label">手机号</text>
         <view class="phone-wrapper">
-          <input class="input phone-input" v-model="form.phone" type="number" maxlength="11" placeholder="请输入手机号" />
-          <button class="btn-get-phone" open-type="getPhoneNumber" @getphonenumber="handleGetPhoneNumber">
+          <input class="input phone-input" v-model="form.phone" type="number" maxlength="11" placeholder="请输入手机号" :disabled="isVerified" :class="{ 'is-disabled': isVerified }" />
+          <button class="btn-get-phone" open-type="getPhoneNumber" @getphonenumber="handleGetPhoneNumber" v-if="!isVerified">
             <text class="icon-wechat">📱</text> 授权
           </button>
         </view>
@@ -158,6 +158,25 @@ const handleSubmit = async () => {
 </script>
 
 <style>
-/* ... existing styles ... */
+.container { padding: 0; background-color: #f5f5f5; min-height: 100vh; }
+.header { padding: 40px 20px; color: white; background: #3A5F0B; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; text-align: center; }
+.title { font-size: 24px; font-weight: bold; display: block; margin-bottom: 5px; }
+.subtitle { font-size: 14px; opacity: 0.9; }
+
+.form-card { margin: -20px 20px 0; background: white; border-radius: 12px; padding: 10px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.form-item { display: flex; align-items: center; padding: 20px 0; border-bottom: 1px solid #f0f0f0; }
+.form-item:last-child { border-bottom: none; }
+.label { width: 80px; font-size: 16px; color: #333; font-weight: bold; }
+.input { flex: 1; font-size: 16px; color: #333; text-align: right; }
+.phone-wrapper { flex: 1; display: flex; align-items: center; justify-content: flex-end; }
+.phone-input { flex: 1; text-align: right; margin-right: 10px; }
+.btn-get-phone { font-size: 12px; color: #3A5F0B; background: #f0f9eb; padding: 4px 10px; border-radius: 12px; margin: 0; line-height: 1.5; border: 1px solid #3A5F0B; display: flex; align-items: center; }
+.btn-get-phone::after { border: none; }
+.icon-wechat { margin-right: 2px; font-size: 12px; }
+
+.btn-submit { margin: 40px 20px; background-color: #3A5F0B; color: white; border-radius: 25px; font-size: 16px; font-weight: bold; }
+.btn-submit[disabled] { background-color: #ccc; color: #fff; }
 .btn-unbind { background-color: #ff3b30; }
+
+.is-disabled { color: #999; background: #fff; } /* Keep background white for cleaner look, just gray text */
 </style>
