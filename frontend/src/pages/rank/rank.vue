@@ -108,7 +108,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { onPullDownRefresh } from '@dcloudio/uni-app';
+import { onPullDownRefresh, onShow } from '@dcloudio/uni-app';
 import { getRankings } from '../../api';
 import TennisBall from '../../components/TennisBall.vue';
 
@@ -181,14 +181,22 @@ const fetchRankings = async () => {
     uni.showLoading({ title: '加载中...' });
   }
 
+  console.log('Fetching rankings with:', {
+      region: regionFilter.value,
+      gender: genderFilter.value,
+      page: page.value
+  });
+
   try {
     const res: any = await getRankings({
       region: regionFilter.value,
       gender: genderFilter.value,
-      matchType: '全部', // Hardcode to All since filter is removed
+      matchType: '全部', 
       page: page.value,
       pageSize: 20
     });
+    
+    console.log('Rankings result:', res);
     
     if (res && res.length > 0) {
       if (page.value === 1) {
@@ -214,8 +222,15 @@ const fetchRankings = async () => {
   }
 };
 
+onShow(() => {
+  // Refresh on show to ensure data is loaded when switching tabs
+  if (players.value.length === 0) {
+      refresh();
+  }
+});
+
 onMounted(() => {
-  refresh();
+  // Optional, onShow usually covers it for pages
 });
 
 onPullDownRefresh(() => {

@@ -139,8 +139,15 @@ export const getRankings = (params?: { region?: string; gender?: string; matchTy
     const query = [];
     if (params.region && params.region !== '全部') query.push(`region=${encodeURIComponent(params.region)}`);
     if (params.gender && params.gender !== '全性别') query.push(`gender=${encodeURIComponent(params.gender)}`);
-    if (params.matchType && params.matchType !== '单打') query.push(`matchType=${encodeURIComponent(params.matchType)}`);
-    else if (params.matchType === '单打') query.push(`matchType=单打`); 
+    
+    // Only send matchType if it is NOT '全部', or if it is '单打' (though '单打' !== '全部' so covered by first condition)
+    // Actually, if matchType is '全部', we can omit it to let backend default to global.
+    // Backend logic: if (matchType && matchType !== '单打' && matchType !== '全部') ...
+    // So if we send '全部', backend sees it as "not matchType filter".
+    // But encoding might mess it up. Let's just NOT send it if it's '全部'.
+    if (params.matchType && params.matchType !== '全部') {
+        query.push(`matchType=${encodeURIComponent(params.matchType)}`);
+    }
     
     if (params.page) query.push(`page=${params.page}`);
     if (params.pageSize) query.push(`pageSize=${params.pageSize}`);
