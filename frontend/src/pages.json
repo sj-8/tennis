@@ -98,20 +98,20 @@
       {
         "pagePath": "pages/index/index",
         "text": "首页",
-        "iconPath": "static/tabbar/match.svg",
-        "selectedIconPath": "static/tabbar/match-active.svg"
+        "iconPath": "static/tabbar/match.png",
+        "selectedIconPath": "static/tabbar/match-active.png"
       },
       {
         "pagePath": "pages/rank/rank",
         "text": "排行榜",
-        "iconPath": "static/tabbar/rank.svg",
-        "selectedIconPath": "static/tabbar/rank-active.svg"
+        "iconPath": "static/tabbar/rank.png",
+        "selectedIconPath": "static/tabbar/rank-active.png"
       },
       {
         "pagePath": "pages/my/my",
         "text": "我的",
-        "iconPath": "static/tabbar/my.svg",
-        "selectedIconPath": "static/tabbar/my-active.svg"
+        "iconPath": "static/tabbar/my.png",
+        "selectedIconPath": "static/tabbar/my-active.png"
       }
     ]
   }
