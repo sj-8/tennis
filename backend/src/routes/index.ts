@@ -19,11 +19,13 @@ router.post('/admin/promote/:id', authenticateToken, requireAdmin, promotePlayer
 
 // Matches
 router.get('/matches', getMatches);
+router.post('/matches/list', getMatches); // New endpoint for POST support
 router.post('/matches', authenticateToken, requireAdmin, createMatch);
 router.put('/matches/:id', authenticateToken, requireAdmin, updateMatch);
 router.delete('/matches/:id', authenticateToken, requireAdmin, deleteMatch); // Changed from requireSuperAdmin to requireAdmin for easier testing
 router.post('/matches/:id/results', authenticateToken, requireAdmin, submitResult); // Admin or Referee
 router.get('/matches/rankings', getRankings);
+router.post('/matches/rankings-list', getRankings); // New endpoint for POST support
 router.get('/matches/:id/participants', getMatchParticipants);
 
 // Match Referees (Admin or Super Admin)

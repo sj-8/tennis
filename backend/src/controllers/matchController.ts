@@ -2,7 +2,9 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 
 export const getMatches = async (req: Request, res: Response) => {
-  const { region, category, level, matchType, status, search } = req.query;
+  // Support both query params and body params (for POST)
+  const params = { ...req.query, ...req.body };
+  const { region, category, level, matchType, status, search } = params;
   
   try {
     const whereClause: any = {};
@@ -234,7 +236,9 @@ export const getRankings = async (req: Request, res: Response) => {
    * 支持筛选：region (地区), gender (性别), matchType (比赛类型)
    * 支持分页：page, pageSize
    */
-  const { region, gender, matchType, page, pageSize } = req.query;
+  // Support both query and body
+  const params = { ...req.query, ...req.body };
+  const { region, gender, matchType, page, pageSize } = params;
   const pageNum = Number(page) || 1;
   const size = Number(pageSize) || 20;
   const skip = (pageNum - 1) * size;
