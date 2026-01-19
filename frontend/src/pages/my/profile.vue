@@ -8,7 +8,7 @@
           <view class="avatar placeholder" v-else>
             <text class="placeholder-text">{{ (userInfo.name || 'U').charAt(0).toUpperCase() }}</text>
           </view>
-          <text class="arrow">></text>
+          <!-- <text class="arrow">></text> -->
         </view>
       </view>
 
@@ -22,7 +22,7 @@
         <picker @change="handleGenderChange" :value="genderIndex" :range="genderOptions">
           <view class="picker-value">
             {{ userInfo.gender || '未设置' }}
-            <text class="arrow">></text>
+            <!-- <text class="arrow">></text> -->
           </view>
         </picker>
       </view>
@@ -32,7 +32,7 @@
         <picker @change="handleRegionChange" :value="cityIndex" :range="jiangsuCities">
           <view class="picker-value">
             {{ userInfo.region ? '江苏省 ' + userInfo.region : '未设置' }}
-            <text class="arrow">></text>
+            <!-- <text class="arrow">></text> -->
           </view>
         </picker>
       </view>
@@ -42,7 +42,7 @@
         <picker mode="date" @change="handleBirthdayChange" :value="userInfo.birthday || '2000-01-01'">
           <view class="picker-value">
             {{ formatDate(userInfo.birthday) || '未设置' }}
-            <text class="arrow">></text>
+            <!-- <text class="arrow">></text> -->
           </view>
         </picker>
       </view>
