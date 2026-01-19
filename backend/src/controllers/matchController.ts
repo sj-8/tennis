@@ -51,7 +51,7 @@ export const createMatch = async (req: Request, res: Response) => {
    * 创建赛事接口
    * 接收赛事名称、地点、时间等信息，创建新的赛事记录
    */
-  const { name, location, region, startTime, description, rules, registrationStart, registrationEnd, latitude, longitude } = req.body;
+  const { name, location, region, startTime, description, rules, withdrawalNotice, registrationStart, registrationEnd, latitude, longitude } = req.body;
 
   if (!name || !location || !startTime) {
       return res.status(400).json({ error: '缺少必填字段：名称、地点、时间' });
@@ -73,6 +73,7 @@ export const createMatch = async (req: Request, res: Response) => {
         startTime: start,
         description,
         rules,
+        withdrawalNotice,
         registrationStart: registrationStart ? new Date(registrationStart) : null,
         registrationEnd: registrationEnd ? new Date(registrationEnd) : null,
       },
@@ -129,6 +130,7 @@ export const updateMatch = async (req: Request, res: Response) => {
         longitude: data.longitude ? Number(data.longitude) : null,
         description: data.description,
         rules: data.rules,
+        withdrawalNotice: data.withdrawalNotice,
         startTime: startTime,
         registrationStart: registrationStart,
         registrationEnd: registrationEnd,

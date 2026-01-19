@@ -3,17 +3,19 @@
     <view class="header">
       <text class="title">{{ matchInfo.name || '赛事报名' }}</text>
       <view class="match-meta" v-if="matchInfo.id">
-        <view class="meta-row" v-if="matchInfo.location">
-          <text class="meta-icon">📍</text>
-          <text class="meta-text">{{ matchInfo.location }}</text>
-          <view class="nav-btn" @click.stop="openLocation" v-if="matchInfo.latitude && matchInfo.longitude">
+        <view class="meta-row location-row">
+          <text class="meta-icon left">📍</text>
+          <text class="meta-text center">{{ matchInfo.location }}</text>
+          <view class="nav-btn right" @click.stop="openLocation" v-if="matchInfo.latitude && matchInfo.longitude">
              <text class="nav-icon">🧭</text>
              <text>导航</text>
           </view>
+          <view class="placeholder-right" v-else></view>
         </view>
         <view class="meta-row">
-          <text class="meta-icon">🕒</text>
-          <text class="meta-text">{{ formatDate(matchInfo.startTime) }}</text>
+          <text class="meta-icon left">🕒</text>
+          <text class="meta-text center">{{ formatDate(matchInfo.startTime) }}</text>
+          <view class="placeholder-right"></view>
         </view>
       </view>
 
@@ -40,7 +42,7 @@
       <!-- Withdrawal Notice -->
       <view class="notice-section">
          <text class="notice-title">退赛须知</text>
-         <text class="notice-content">开赛前96小时外可免费退赛，24小时内不可退赛。</text>
+         <text class="notice-content">{{ matchInfo.withdrawalNotice || '开赛前96小时外可免费退赛，24小时内不可退赛。' }}</text>
       </view>
     </view>
 
@@ -252,10 +254,14 @@ const submit = async () => {
 <style>
 .container { padding: 20px; }
 .match-meta { margin-top: 15px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; }
-.meta-row { display: flex; align-items: center; margin-bottom: 5px; color: white; font-size: 14px; }
+.meta-row { display: flex; align-items: center; margin-bottom: 5px; color: white; font-size: 14px; justify-content: space-between; }
 .meta-row:last-child { margin-bottom: 0; }
-.meta-icon { margin-right: 8px; font-size: 16px; }
+.meta-icon { width: 24px; text-align: center; font-size: 16px; }
 .meta-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.center { text-align: center; }
+.left { text-align: left; }
+.right { text-align: right; }
+.placeholder-right { width: 60px; /* Approximate width of nav button + margin to balance layout */ }
 .meta-arrow { color: rgba(255,255,255,0.7); font-family: monospace; }
 .header { margin-bottom: 20px; text-align: center; background: #3A5F0B; padding: 30px 20px; color: white; border-radius: 0 0 20px 20px; margin-top: -20px; margin-left: -20px; margin-right: -20px; }
 .admin-actions {

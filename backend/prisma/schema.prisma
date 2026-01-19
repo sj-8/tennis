@@ -100,6 +100,7 @@ model Tournament {
   matchType         String?   // '男单','男双','女单','女双','混双','不限'
   description String?
   rules       String?
+  withdrawalNotice String? @db.Text // 退赛须知
   status      String   @default("PENDING") // PENDING, ONGOING, COMPLETED
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
