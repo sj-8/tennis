@@ -2,26 +2,15 @@
   <view class="container">
     <view class="header tennis-court-bg">
       <view class="user-info" v-if="userInfo">
-        <view class="avatar-container" @click="handleAvatarClick">
+        <view class="avatar-container">
           <image class="avatar" v-if="userInfo.avatar" :src="userInfo.avatar" mode="aspectFill"></image>
           <view class="avatar placeholder" v-else>
             <text class="placeholder-text">{{ (userInfo.name || 'U').charAt(0).toUpperCase() }}</text>
           </view>
-          <view class="edit-badge" v-if="userInfo">
-            <text class="edit-icon">📷</text>
-          </view>
         </view>
         <view class="info-content">
           <view class="name-row">
-            <input 
-              v-if="isEditing" 
-              class="name-input" 
-              v-model="editForm.name" 
-              focus
-              @blur="saveName"
-              placeholder="请输入昵称"
-            />
-            <text v-else class="nickname" @click="startEditName">{{ userInfo.name || '微信用户' }} <text class="edit-hint">✎</text></text>
+            <text class="nickname">{{ userInfo.name || '微信用户' }}</text>
           </view>
           <view class="role-badge" v-if="userInfo.role === 'ADMIN'">
             <text class="role-text">管理员</text>
@@ -36,55 +25,76 @@
       </view>
     </view>
 
-    <view class="section">
-      <view class="cell" @click="copyOpenId" v-if="userInfo && userInfo.openid">
+    <!-- My Orders Section -->
+    <view class="section order-section">
+      <view class="section-header">
+        <text class="section-title">我的订单</text>
+      </view>
+      <view class="order-grid">
+        <view class="order-item">
+          <text class="order-icon">🛒</text>
+          <text class="order-label">待支付</text>
+        </view>
+        <view class="order-item">
+          <text class="order-icon">🎫</text>
+          <text class="order-label">已支付</text>
+        </view>
+        <view class="order-item">
+          <text class="order-icon">📦</text>
+          <text class="order-label">全部</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Basic Functions List -->
+    <view class="section menu-section">
+      <view class="section-header">
+        <text class="section-title">基础功能</text>
+      </view>
+      
+      <view class="menu-list">
+        <view class="menu-item" @click="navigateTo('/pages/my/profile')">
+          <view class="menu-left">
+            <text class="menu-icon">👤</text>
+            <text class="menu-text">个人信息</text>
+          </view>
+          <text class="arrow">></text>
+        </view>
+        
+        <view class="menu-item" @click="navigateTo('/pages/my/records')">
+          <view class="menu-left">
+            <text class="menu-icon">📋</text>
+            <text class="menu-text">参赛记录</text>
+          </view>
+          <text class="arrow">></text>
+        </view>
+        
+        <view class="menu-item" @click="navigateTo('/pages/my/auth')">
+          <view class="menu-left">
+            <text class="menu-icon">🛡️</text>
+            <text class="menu-text">实名认证</text>
+          </view>
+          <text class="arrow">></text>
+        </view>
+        
+        <view class="menu-item" @click="handleLogout" v-if="userInfo">
+          <view class="menu-left">
+            <text class="menu-icon">🔴</text>
+            <text class="menu-text">退出登录</text>
+          </view>
+          <text class="arrow">></text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section tips-section" v-if="userInfo">
+      <text class="tips-title">💡 管理员通道</text>
+      <view class="cell" @click="copyOpenId">
         <text class="label">我的 OpenID</text>
         <text class="value">{{ truncateString(userInfo.openid) }}</text>
         <text class="action">复制</text>
       </view>
-      
-      <view class="cell" v-if="userInfo">
-        <text class="label">当前身份</text>
-        <text class="value highlight">{{ getRoleText(userInfo.role) }}</text>
-      </view>
-
-      <view class="cell" v-if="userInfo">
-        <text class="label">性别</text>
-        <picker @change="handleGenderChange" :value="genderIndex" :range="genderOptions">
-          <view class="picker-value">
-            {{ userInfo.gender || '未设置' }}
-          </view>
-        </picker>
-      </view>
-
-      <view class="cell" v-if="userInfo">
-        <text class="label">出生年月</text>
-        <picker mode="date" @change="handleBirthdayChange" :value="userInfo.birthday || '2000-01-01'">
-          <view class="picker-value">
-            {{ formatDate(userInfo.birthday) || '未设置' }}
-          </view>
-        </picker>
-      </view>
-
-      <view class="cell" v-if="userInfo">
-        <text class="label">年龄</text>
-        <text class="value">{{ calculateAge(userInfo.birthday) }}</text>
-      </view>
     </view>
-
-    <view class="section tips-section">
-      <text class="tips-title">💡 如何成为管理员？</text>
-      <text class="tips-content">
-        1. 复制上方的 OpenID。
-        2. 登录微信云托管控制台 -> MySQL 数据库。
-        3. 执行以下 SQL 命令：
-      </text>
-      <view class="code-block">
-        <text user-select>UPDATE Player SET role = 'ADMIN' WHERE openid = '{{ userInfo?.openid || "你的OpenID" }}';</text>
-      </view>
-    </view>
-    
-    <button class="btn-logout" @click="handleLogout" v-if="userInfo">退出登录</button>
   </view>
 </template>
 
@@ -94,44 +104,6 @@ import { onShow } from '@dcloudio/uni-app';
 import { request, updateProfile } from '../../api';
 
 const userInfo = ref<any>(null);
-const isEditing = ref(false);
-const genderOptions = ['男', '女'];
-const editForm = ref({
-  name: '',
-  avatar: ''
-});
-
-const genderIndex = computed(() => {
-  if (!userInfo.value || !userInfo.value.gender) return 0;
-  return genderOptions.indexOf(userInfo.value.gender);
-});
-
-const getRoleText = (role: string) => {
-  if (role === 'SUPER_ADMIN') return '超级管理员';
-  if (role === 'ADMIN') return '管理员';
-  return '选手';
-};
-
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const calculateAge = (birthday: string) => {
-  if (!birthday) return '未知';
-  const birthDate = new Date(birthday);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const m = today.getMonth() - birthDate.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age + '岁';
-};
 
 const checkLogin = () => {
   /**
@@ -201,6 +173,10 @@ const handleLogout = () => {
   uni.showToast({ title: '已退出' });
 };
 
+const navigateTo = (url: string) => {
+  uni.navigateTo({ url });
+};
+
 const copyOpenId = () => {
   // 复制 OpenID 到剪贴板，方便用户设置管理员
   if (userInfo.value?.openid) {
@@ -220,108 +196,9 @@ const truncateString = (str: string) => {
   return str.substring(0, 6) + '...' + str.substring(str.length - 4);
 };
 
-const startEditName = () => {
-  if (!userInfo.value) return;
-  editForm.value.name = userInfo.value.name || '';
-  isEditing.value = true;
-};
-
-const saveName = async () => {
-  if (!editForm.value.name || editForm.value.name === userInfo.value.name) {
-    isEditing.value = false;
-    return;
-  }
-  
-  try {
-    const res = await updateProfile(userInfo.value.id, { name: editForm.value.name });
-    userInfo.value = res;
-    uni.setStorageSync('userInfo', res);
-    uni.showToast({ title: '昵称已更新' });
-  } catch (err) {
-    console.error(err);
-    uni.showToast({ title: '更新失败', icon: 'none' });
-  } finally {
-    isEditing.value = false;
-  }
-};
-
-const handleGenderChange = async (e: any) => {
-  const gender = genderOptions[e.detail.value];
-  try {
-    const res = await updateProfile(userInfo.value.id, { gender });
-    userInfo.value = res;
-    uni.setStorageSync('userInfo', res);
-    uni.showToast({ title: '性别已更新' });
-  } catch (err) {
-    console.error(err);
-    uni.showToast({ title: '更新失败', icon: 'none' });
-  }
-};
-
-const handleBirthdayChange = async (e: any) => {
-  const birthday = e.detail.value; // YYYY-MM-DD
-  try {
-    const res = await updateProfile(userInfo.value.id, { birthday });
-    userInfo.value = res;
-    uni.setStorageSync('userInfo', res);
-    uni.showToast({ title: '生日已更新' });
-  } catch (err) {
-    console.error(err);
-    uni.showToast({ title: '更新失败', icon: 'none' });
-  }
-};
-
 const handleAvatarClick = () => {
-  if (!userInfo.value) return;
-  
-  uni.chooseImage({
-    count: 1,
-    sizeType: ['compressed'],
-    sourceType: ['album', 'camera'],
-    success: (res: any) => {
-      const tempFilePath = res.tempFilePaths[0];
-      
-      // Check size (limit to 10MB)
-      const size = res.tempFiles[0].size;
-      if (size > 10 * 1024 * 1024) {
-        uni.showToast({ title: '图片不能超过10MB', icon: 'none' });
-        return;
-      }
-      
-      uni.showLoading({ title: '上传中...' });
-      
-      // Use wx.cloud.uploadFile instead of callContainer for better performance and stability
-      // Generate a unique file path: avatars/{openid}_{timestamp}.ext
-      const ext = tempFilePath.split('.').pop() || 'jpg';
-      const cloudPath = `avatars/${userInfo.value.openid}_${Date.now()}.${ext}`;
-      
-      // @ts-ignore
-      wx.cloud.uploadFile({
-        cloudPath,
-        filePath: tempFilePath,
-        success: async (uploadRes: any) => {
-          console.log('Upload success, fileID:', uploadRes.fileID);
-          try {
-             // Save fileID to database instead of base64
-             const updateRes = await updateProfile(userInfo.value.id, { avatar: uploadRes.fileID });
-             userInfo.value = updateRes;
-             uni.setStorageSync('userInfo', updateRes);
-             uni.showToast({ title: '头像已更新' });
-          } catch (err) {
-             console.error('Update profile error:', err);
-             uni.showToast({ title: '保存头像失败', icon: 'none' });
-          }
-        },
-        fail: (err: any) => {
-          console.error('wx.cloud.uploadFile fail:', err);
-          uni.showToast({ title: '上传失败: ' + (err.errMsg || '未知错误'), icon: 'none' });
-        },
-        complete: () => {
-          uni.hideLoading();
-        }
-      });
-    }
-  });
+  // 以前是点击上传，现在点击跳转到个人信息页面
+  navigateTo('/pages/my/profile');
 };
 
 onShow(() => {
@@ -405,4 +282,21 @@ onShow(() => {
 .code-block { background: #333; color: #FFD700; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 12px; word-break: break-all; }
 
 .btn-logout { margin: 30px 20px; background: white; color: #ff3b30; font-size: 14px; }
+
+/* New Styles for Refactored Layout */
+.order-section { margin-top: -20px; position: relative; z-index: 10; }
+.section-header { padding: 15px; border-bottom: 1px solid #f0f0f0; }
+.section-title { font-size: 14px; font-weight: bold; color: #333; }
+.order-grid { display: flex; padding: 20px 0; }
+.order-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.order-icon { font-size: 24px; }
+.order-label { font-size: 12px; color: #666; }
+
+.menu-list { display: flex; flex-direction: column; }
+.menu-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #f0f0f0; }
+.menu-item:last-child { border-bottom: none; }
+.menu-left { display: flex; align-items: center; gap: 10px; }
+.menu-icon { font-size: 18px; width: 24px; text-align: center; }
+.menu-text { font-size: 14px; color: #333; }
+.arrow { color: #ccc; font-family: monospace; font-size: 14px; }
 </style>

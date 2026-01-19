@@ -57,7 +57,7 @@
     <view class="rank-list" v-if="restPlayers.length > 0">
       <view class="rank-header">
         <text class="col rank">排名</text>
-        <view class="col avatar"></view>
+        <view class="col avatar-header"></view>
         <text class="col name">选手</text>
         <text class="col points">积分</text>
       </view>
@@ -365,9 +365,10 @@ onPullDownRefresh(() => {
 .col { flex: 1; }
 .col.rank { flex: 0 0 40px; font-weight: bold; color: #999; display: flex; align-items: center; justify-content: center; }
 .col.avatar { flex: 0 0 40px; display: flex; justify-content: center; align-items: center; margin-right: 10px; }
-.list-avatar { width: 36px; height: 36px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #666; font-weight: bold; }
+.col.avatar-header { flex: 0 0 40px; margin-right: 10px; }
+.list-avatar { width: 36px; height: 36px; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #666; font-weight: bold; }
 .list-avatar-img { width: 36px; height: 36px; border-radius: 50%; display: block; background: transparent; }
-.col.name { display: flex; align-items: center; }
+.col.name { display: flex; align-items: center; font-weight: bold; color: #333; }
 .col.points { text-align: right; padding-right: 30px; font-weight: bold; color: #2e7d32; }
 .empty-tip { text-align: center; color: #999; margin-top: 50px; }
 </style>
