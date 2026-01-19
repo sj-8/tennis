@@ -58,7 +58,7 @@
             <text class="menu-icon">👤</text>
             <text class="menu-text">个人信息</text>
           </view>
-          <text class="arrow">></text>
+          <!-- <text class="arrow">></text> Removed arrow -->
         </view>
         
         <view class="menu-item" @click="navigateTo('/pages/my/records')">
@@ -66,7 +66,7 @@
             <text class="menu-icon">📋</text>
             <text class="menu-text">参赛记录</text>
           </view>
-          <text class="arrow">></text>
+          <!-- <text class="arrow">></text> -->
         </view>
         
         <view class="menu-item" @click="navigateTo('/pages/my/auth')">
@@ -76,7 +76,7 @@
           </view>
           <view class="menu-right">
              <text class="status-verified" v-if="userInfo && (userInfo.isVerified || userInfo.idCard)">已实名</text>
-             <text class="arrow" v-else>></text>
+             <!-- <text class="arrow" v-else>></text> -->
           </view>
         </view>
         
@@ -85,7 +85,7 @@
             <text class="menu-icon">🔴</text>
             <text class="menu-text">退出登录</text>
           </view>
-          <text class="arrow">></text>
+          <!-- <text class="arrow">></text> -->
         </view>
       </view>
     </view>
