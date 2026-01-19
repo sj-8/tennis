@@ -103,11 +103,15 @@
       },
       {
         "pagePath": "pages/rank/rank",
-        "text": "排行榜"
+        "text": "排行榜",
+        "iconPath": "static/tabbar/rank.png",
+        "selectedIconPath": "static/tabbar/rank-active.png"
       },
       {
         "pagePath": "pages/my/my",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "static/tabbar/my.png",
+        "selectedIconPath": "static/tabbar/my-active.png"
       }
     ]
   }

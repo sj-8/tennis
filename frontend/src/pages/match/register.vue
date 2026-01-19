@@ -63,20 +63,22 @@
 
     <!-- Bio section removed as requested -->
     
-    <button class="btn-submit" @click="submit" :loading="loading">提交报名</button>
+    <button class="btn-submit" @click="submit" :loading="loading" v-if="!hasApplied">提交报名</button>
+    <button class="btn-submit btn-view-draw" @click="goToDraw" v-else>已报名 - 查看签表</button>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { submitApplication, getMatches, deleteMatch } from '../../api';
+import { submitApplication, getMatches, deleteMatch, getMatchParticipants } from '../../api';
 
 const loading = ref(false);
 const tournamentId = ref<number | null>(null);
 const matchInfo = ref<any>({});
 const isVerified = ref(false);
 const isAdmin = ref(false);
+const hasApplied = ref(false);
 const form = ref({
   realName: '',
   idCard: '',
@@ -94,6 +96,11 @@ onShow(() => {
     form.value.realName = userInfo.realName || '';
     form.value.idCard = userInfo.idCard || '';
     form.value.phone = userInfo.phone || '';
+    
+    // Check if user has applied for this match
+    if (tournamentId.value) {
+        checkApplicationStatus(userInfo.id, tournamentId.value);
+    }
   } else {
     isVerified.value = false;
     // Prompt user to verify
@@ -112,6 +119,20 @@ onShow(() => {
     });
   }
 });
+
+const checkApplicationStatus = async (userId: number, matchId: number) => {
+  try {
+    const participants: any = await getMatchParticipants(matchId);
+    // participants is array of applications? Check api/index.ts or backend
+    // backend getMatchParticipants returns PlayerApplication with Player include
+    const application = participants.find((p: any) => p.playerId === userId);
+    if (application) {
+        hasApplied.value = true;
+    }
+  } catch (err) {
+    console.error('Failed to check application status', err);
+  }
+};
 
 const showManageMenu = () => {
   // Logic moved to direct buttons
@@ -299,4 +320,5 @@ const submit = async () => {
 .input { width: 100%; height: 44px; padding: 0 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fff; }
 .textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fff; }
 .btn-submit { background: #2e7d32; color: white; padding: 12px; border-radius: 4px; text-align: center; margin-top: 30px; font-size: 16px; }
+.btn-view-draw { background: #1976d2; }
 </style>
