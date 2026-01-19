@@ -405,12 +405,34 @@ export const getReferees = async (req: Request, res: Response) => {
 
 export const addReferee = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { openid } = req.body;
+  const { openid, idCard } = req.body;
   
   try {
-    const player = await prisma.player.findUnique({ where: { openid } });
+    let player;
+    if (idCard) {
+        player = await prisma.player.findUnique({ where: { idCard } });
+    } else if (openid) {
+        player = await prisma.player.findUnique({ where: { openid } });
+    } else {
+        return res.status(400).json({ error: 'Provide openid or idCard' });
+    }
+
     if (!player) {
       return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if already exists
+    const existing = await prisma.tournamentReferee.findUnique({
+        where: {
+            tournamentId_playerId: {
+                tournamentId: Number(id),
+                playerId: player.id
+            }
+        }
+    });
+    
+    if (existing) {
+        return res.json({ message: 'Referee already added' });
     }
 
     await prisma.tournamentReferee.create({
@@ -419,7 +441,7 @@ export const addReferee = async (req: Request, res: Response) => {
         playerId: player.id
       }
     });
-    res.json({ message: 'Referee added' });
+    res.json({ message: 'Referee added', player });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to add referee' });

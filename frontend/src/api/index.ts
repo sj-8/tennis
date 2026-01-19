@@ -176,7 +176,16 @@ export const deleteMatch = (id: number) => request({ url: `/matches/${id}`, meth
 
 // 裁判员管理
 export const getReferees = (matchId: number) => request({ url: `/matches/${matchId}/referees` });
-export const addReferee = (matchId: number, openid: string) => request({ url: `/matches/${matchId}/referees`, method: 'POST', data: { openid } });
+export const addReferee = (matchId: number, identifier: string) => {
+    // Check if identifier looks like ID Card (18 digits) or OpenID
+    const data: any = {};
+    if (/^\d{17}[\dXx]$/.test(identifier)) {
+        data.idCard = identifier;
+    } else {
+        data.openid = identifier;
+    }
+    return request({ url: `/matches/${matchId}/referees`, method: 'POST', data });
+};
 export const removeReferee = (matchId: number, playerId: number) => request({ url: `/matches/${matchId}/referees/${playerId}`, method: 'DELETE' });
 
 // 比赛对战管理 (Game/Draw)

@@ -44,6 +44,9 @@
           <view class="info-row">
             <text class="icon">📍</text>
             <text>{{ match.location }}</text>
+            <view class="nav-btn" @click.stop="openLocation(match)" v-if="match.latitude && match.longitude">
+               <text>导航</text>
+            </view>
           </view>
           
           <view class="tags-row">
@@ -158,6 +161,15 @@ const goToDetail = (match: any) => {
   uni.navigateTo({ url: `/pages/match/register?id=${match.id}` });
 };
 
+const openLocation = (match: any) => {
+  uni.openLocation({
+    latitude: Number(match.latitude),
+    longitude: Number(match.longitude),
+    name: match.location,
+    address: match.location
+  });
+};
+
 onMounted(() => {
   fetchMatches();
 });
@@ -193,6 +205,8 @@ onMounted(() => {
 
 .footer-row { border-top: 1px solid #f0f0f0; padding-top: 10px; display: flex; justify-content: space-between; font-size: 12px; color: #999; }
 .participants { color: #9c27b0; font-weight: bold; }
+
+.nav-btn { background: #3A5F0B; color: white; font-size: 10px; padding: 1px 6px; border-radius: 8px; margin-left: 8px; display: inline-block; }
 
 .empty-tip { text-align: center; margin-top: 50px; color: #999; font-size: 14px; }
 .empty-img { width: 100px; height: 100px; margin-bottom: 10px; }

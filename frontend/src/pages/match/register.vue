@@ -3,18 +3,43 @@
     <view class="header">
       <text class="title">{{ matchInfo.name || '赛事报名' }}</text>
       <view class="match-meta" v-if="matchInfo.id">
-        <view class="meta-row" @click="openLocation" v-if="matchInfo.location">
+        <view class="meta-row" v-if="matchInfo.location">
           <text class="meta-icon">📍</text>
           <text class="meta-text">{{ matchInfo.location }}</text>
-          <text class="meta-arrow">></text>
+          <view class="nav-btn" @click.stop="openLocation" v-if="matchInfo.latitude && matchInfo.longitude">
+             <text>导航</text>
+          </view>
         </view>
         <view class="meta-row">
           <text class="meta-icon">🕒</text>
           <text class="meta-text">{{ formatDate(matchInfo.startTime) }}</text>
         </view>
       </view>
-      <view class="admin-edit-btn" v-if="isAdmin" @click="goToEdit">
-        <text>编辑赛事</text>
+
+      <!-- Action Grid for Admin/Referee -->
+      <view class="admin-actions" v-if="isAdmin">
+         <view class="action-btn" @click="goToEdit">
+            <text class="action-icon">📝</text>
+            <text>编辑赛事</text>
+         </view>
+         <view class="action-btn" @click="goToReferee">
+            <text class="action-icon">👮</text>
+            <text>裁判管理</text>
+         </view>
+         <view class="action-btn" @click="goToDraw">
+            <text class="action-icon">📊</text>
+            <text>录入比分</text>
+         </view>
+         <view class="action-btn delete" @click="handleDelete">
+            <text class="action-icon">🗑️</text>
+            <text>删除赛事</text>
+         </view>
+      </view>
+      
+      <!-- Withdrawal Notice -->
+      <view class="notice-section">
+         <text class="notice-title">退赛须知</text>
+         <text class="notice-content">开赛前96小时外可免费退赛，24小时内不可退赛。</text>
       </view>
     </view>
 
@@ -45,7 +70,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { submitApplication, getMatches } from '../../api';
+import { submitApplication, getMatches, deleteMatch } from '../../api';
 
 const loading = ref(false);
 const tournamentId = ref<number | null>(null);
@@ -91,6 +116,38 @@ onShow(() => {
 
 const goToEdit = () => {
   uni.navigateTo({ url: `/pages/match/create?id=${tournamentId.value}` });
+};
+
+const goToReferee = () => {
+  uni.navigateTo({ url: `/pages/match/referee?id=${tournamentId.value}` });
+};
+
+const goToDraw = () => {
+  uni.navigateTo({ url: `/pages/match/draw?id=${tournamentId.value}` });
+};
+
+const handleDelete = () => {
+  uni.showModal({
+    title: '确认删除',
+    content: '删除后无法恢复，确定要删除该赛事吗？',
+    confirmColor: '#ff3b30',
+    success: async (res: any) => {
+      if (res.confirm) {
+        uni.showLoading({ title: '删除中...' });
+        try {
+          await deleteMatch(Number(tournamentId.value));
+          uni.showToast({ title: '删除成功' });
+          setTimeout(() => {
+            uni.switchTab({ url: '/pages/index/index' });
+          }, 1500);
+        } catch (err) {
+          uni.showToast({ title: '删除失败', icon: 'none' });
+        } finally {
+          uni.hideLoading();
+        }
+      }
+    }
+  });
 };
 
 onLoad(async (options: any) => {
@@ -200,6 +257,31 @@ const submit = async () => {
 .meta-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .meta-arrow { color: rgba(255,255,255,0.7); font-family: monospace; }
 .header { margin-bottom: 20px; text-align: center; background: #3A5F0B; padding: 30px 20px; color: white; border-radius: 0 0 20px 20px; margin-top: -20px; margin-left: -20px; margin-right: -20px; }
+.admin-actions {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  color: white;
+  background: rgba(255,255,255,0.1);
+  padding: 10px 5px;
+  border-radius: 8px;
+}
+.action-btn.delete { background: rgba(255,59,48,0.2); color: #ffcccc; }
+.action-icon { font-size: 20px; margin-bottom: 5px; }
+
+.notice-section { margin-top: 20px; background: #fff0f0; padding: 15px; border-radius: 8px; border: 1px solid #ffcccc; }
+.notice-title { font-weight: bold; color: #d32f2f; font-size: 14px; display: block; margin-bottom: 5px; }
+.notice-content { font-size: 12px; color: #d32f2f; line-height: 1.5; }
+
+.nav-btn { background: white; color: #3A5F0B; font-size: 12px; padding: 2px 8px; border-radius: 10px; margin-left: 10px; font-weight: bold; }
+
 .admin-edit-btn {
   margin-top: 15px;
   background: rgba(255,255,255,0.2);
@@ -208,6 +290,7 @@ const submit = async () => {
   display: inline-block;
   font-size: 14px;
   border: 1px solid rgba(255,255,255,0.5);
+  display: none; /* Hide old button */
 }
 .title { font-size: 22px; font-weight: bold; display: block; }
 .form-group { margin-bottom: 15px; }
