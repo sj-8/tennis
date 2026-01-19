@@ -57,14 +57,20 @@
           </text>
           <view class="match-meta">
             <text class="match-type-tag" v-if="match.matchType">{{ match.matchType }}</text>
-            <text class="match-detail">📍 {{ match.location }}</text>
+            <view class="location-row">
+                <text class="match-detail">📍 {{ match.location }}</text>
+                <view class="nav-btn" @click.stop="openLocation(match)" v-if="match.latitude && match.longitude">
+                    <text class="nav-icon">🧭</text>
+                    <text>导航</text>
+                </view>
+            </view>
             <text class="match-detail">🕒 {{ formatDate(match.startTime) }}</text>
           </view>
           <text class="match-detail" v-if="match.drawSize">👥 {{ match._count?.applications || 0 }}/{{ match.drawSize }}</text>
           <text class="match-status" :class="match.status">{{ getStatusText(match.status) }}</text>
         </view>
         <view class="match-action">
-          <view class="action-row">
+          <view class="action-column">
             <template v-if="isRegistered(match.id)">
                 <button class="btn-registered" v-if="getApplicationStatus(match.id) === 'APPROVED'" @click.stop="handleViewDraw(match)">已报名</button>
                 <button class="btn-waitlist" v-else-if="getApplicationStatus(match.id) === 'WAITLIST'" @click.stop="handleViewDraw(match)">候补中</button>
@@ -240,7 +246,11 @@ const checkUserRole = () => {
 };
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleString('zh-CN');
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const weekDay = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
+  // Format: YYYY-MM-DD HH:mm 周X
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.toTimeString().slice(0, 5)} ${weekDay}`;
 };
 
 const getStatusText = (status: string) => {
@@ -259,6 +269,15 @@ const getMatchCardClass = (type: string) => {
   if (['女单', '女双'].includes(type)) return 'style-pink';
   if (['混双', '不限'].includes(type)) return 'style-mixed';
   return '';
+};
+
+const openLocation = (match: any) => {
+  uni.openLocation({
+    latitude: Number(match.latitude),
+    longitude: Number(match.longitude),
+    name: match.location,
+    address: match.location
+  });
 };
 
 onMounted(() => {
@@ -406,8 +425,8 @@ onPullDownRefresh(() => {
   border-left: 5px solid #FFD700; /* 网球黄装饰线 */
 }
 .match-info { flex: 1; }
-.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 140px; }
-.action-row { display: flex; gap: 8px; justify-content: flex-end; }
+.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 80px; justify-content: center; }
+.action-column { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .btn-register, .btn-registered, .btn-waitlist, .btn-cancel, .btn-draw, .btn-score, .btn-edit, .btn-referee, .btn-delete { 
   font-size: 12px; 
   padding: 0; 
@@ -415,11 +434,14 @@ onPullDownRefresh(() => {
   line-height: 28px; 
   border-radius: 14px; 
   font-weight: bold; 
-  flex: 1;
+  width: 100%; /* Full width in column */
   text-align: center;
-  min-width: 60px;
 }
-.btn-register { background-color: #3A5F0B; color: white; }
+.btn-cancel { margin-left: 0; margin-top: 5px; }
+
+.location-row { display: flex; align-items: center; margin-bottom: 4px; }
+.nav-btn { background: #3A5F0B; color: white; font-size: 10px; padding: 1px 6px; border-radius: 12px; margin-left: 8px; display: inline-flex; align-items: center; }
+.nav-icon { margin-right: 2px; font-size: 10px; }
 .btn-registered { background-color: #27ae60; color: white; cursor: pointer; }
 .btn-waitlist { background-color: #f39c12; color: white; cursor: not-allowed; }
 .btn-cancel { background-color: #e74c3c; color: white; margin-left: 5px; }

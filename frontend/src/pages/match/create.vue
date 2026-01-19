@@ -97,7 +97,9 @@ import { createMatch, updateMatch, getMatches } from '../../api';
 const isEdit = ref(false);
 const loading = ref(false);
 const matchId = ref(0);
-const matchTypes = ['男单', '男双', '女单', '女双', '混双', '不限'];
+const categories = ['周赛', '月赛', '公开赛', '大奖赛'];
+const levels = ['10', '25', '50', '100', '200', '400', '500', '1000'];
+const matchTypes = ['男单', '男双', '女单', '女双', '混双'];
 const jiangsuCities = ['南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const matchTypeIndex = ref(-1);
 const form = ref({

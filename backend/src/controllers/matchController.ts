@@ -360,7 +360,7 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
     const participants = await prisma.playerApplication.findMany({
       where: {
         tournamentId: Number(id),
-        status: { in: ['APPROVED', 'WAITLIST'] }
+        status: { in: ['APPROVED', 'WAITLIST', 'PENDING'] } // Include PENDING as requested to show ALL
       },
       orderBy: { createdAt: 'asc' },
       include: {

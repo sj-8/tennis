@@ -11,7 +11,10 @@
     <view class="player-list">
       <view v-for="(p, index) in participants" :key="p.id" class="player-item">
         <view class="info">
-          <text class="name">{{ p.name }}</text>
+          <text class="name">
+            {{ p.name }} 
+            <text class="status-tag" v-if="p.status !== 'APPROVED'">({{ getStatusText(p.status) }})</text>
+          </text>
         </view>
         <view class="action">
           <input class="rank-input" type="number" v-model="p.rank" placeholder="名次" />
@@ -58,6 +61,11 @@ const fetchParticipants = async (id: number) => {
   }
 };
 
+const getStatusText = (status: string) => {
+  const map: any = { 'PENDING': '待审核', 'WAITLIST': '候补' };
+  return map[status] || status;
+};
+
 const submit = async () => {
   /**
    * 提交比赛成绩
@@ -102,6 +110,7 @@ const submit = async () => {
 .player-list { margin-bottom: 20px; }
 .player-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: #fff; margin-bottom: 10px; border-radius: 8px; }
 .name { font-size: 16px; font-weight: bold; }
+.status-tag { font-size: 12px; color: #999; font-weight: normal; margin-left: 4px; }
 .action { display: flex; gap: 10px; }
 .rank-input, .score-input { width: 60px; height: 36px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 14px; }
 .btn-submit { background: #1976d2; color: white; margin-top: 20px; }
