@@ -272,70 +272,19 @@ export const getRankings = async (req: Request, res: Response) => {
        }
        
     } else if (matchType === '单打') {
-        // Default logic for Singles
-         const results = await prisma.tournamentResult.groupBy({
-         by: ['playerId'],
-         where: {
-           tournament: {
-             matchType: { contains: '单' }
-           }
-         },
-         _sum: {
-           pointsChange: true
-         },
-         orderBy: {
-           _sum: {
-             pointsChange: 'desc'
-           }
-         },
-         take: 50
-       });
-       
-       const playerIds = results.map(r => r.playerId);
-       
-       // 1. Get players with points
-       const rankedPlayers = await prisma.player.findMany({
-         where: {
-           id: { in: playerIds },
-           region: region ? { contains: region as string } : undefined,
-           gender: (gender && gender !== '全性别') ? (gender as string) : undefined
-         }
-       });
-       
-       const rankedList = results.map(r => {
-         const p = rankedPlayers.find(pd => pd.id === r.playerId);
-         if (!p) return null;
-         return {
-           ...p,
-           points: r._sum.pointsChange || 0
-         };
-       }).filter(p => p !== null);
-
-       // 2. If less than 50, fetch players with 0 points (who haven't played this match type)
-       if (rankedList.length < 50) {
-           const remainingCount = 50 - rankedList.length;
-           const excludeIds = rankedList.map(p => p!.id);
-           
-           const otherPlayers = await prisma.player.findMany({
-               where: {
-                   id: { notIn: excludeIds },
-                   region: region ? { contains: region as string } : undefined,
-                   gender: (gender && gender !== '全性别') ? (gender as string) : undefined
-               },
-               take: remainingCount,
-               orderBy: { points: 'desc' } // Or name? Usually total points or just random
-           });
-           
-           // Append with 0 points (for this specific match type view)
-           const zeroPointPlayers = otherPlayers.map(p => ({
-               ...p,
-               points: 0
-           }));
-           
-           players = [...rankedList, ...zeroPointPlayers];
-       } else {
-           players = rankedList;
-       }
+        // "Classify all existing points as Single" logic:
+        // Instead of aggregating TournamentResult (which might be empty),
+        // we treat the global Player.points as Single points.
+        // This satisfies the user requirement to "classify current database existing player points as Single".
+        
+        players = await prisma.player.findMany({
+            where: {
+                region: region ? { contains: region as string } : undefined,
+                gender: (gender && gender !== '全性别') ? (gender as string) : undefined
+            },
+            orderBy: { points: 'desc' },
+            take: 50
+        });
 
     } else {
         // No matchType filter (or '全部'), use global points but filter by region/gender
