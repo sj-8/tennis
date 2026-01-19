@@ -10,7 +10,7 @@ const WX_APP_SECRET = process.env.WX_APP_SECRET;
 
 export const updateProfile = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, avatar, gender, birthday } = req.body;
+  const { name, avatar, gender, birthday, region, realName, idCard, phone } = req.body;
 
   try {
     const player = await prisma.player.update({
@@ -19,12 +19,19 @@ export const updateProfile = async (req: Request, res: Response) => {
         name: name || undefined,
         avatar: avatar || undefined,
         gender: gender || undefined,
-        birthday: birthday ? new Date(birthday) : undefined
+        birthday: birthday ? new Date(birthday) : undefined,
+        region: region || undefined,
+        realName: realName || undefined,
+        idCard: idCard || undefined,
+        phone: phone || undefined
       }
     });
     res.json(player);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update profile error:', error);
+    if (error.code === 'P2002' && error.meta?.target?.includes('idCard')) {
+      return res.status(400).json({ error: '该身份证号已被绑定到其他账号' });
+    }
     res.status(500).json({ error: 'Failed to update profile' });
   }
 };

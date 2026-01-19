@@ -195,14 +195,116 @@ export const getRankings = async (req: Request, res: Response) => {
   /**
    * 获取排行榜接口
    * 查询前 50 名积分最高的选手
+   * 支持筛选：region (地区), gender (性别), matchType (比赛类型)
    */
+  const { region, gender, matchType } = req.query;
+
   try {
-    const players = await prisma.player.findMany({
-      orderBy: { points: 'desc' },
-      take: 50
-    });
+    let players;
+    
+    // 如果指定了比赛类型，我们需要从 TournamentResult 聚合积分
+    if (matchType && matchType !== '单打' && matchType !== '全部') {
+       // Note: Currently DB stores total points in Player.points.
+       // If we want to filter by matchType, we must aggregate from TournamentResult
+       // where Tournament.matchType matches.
+       // This is a more complex query.
+       // Given the user requirement "Default Single", maybe they expect points to be separate?
+       // But Player model only has `points`.
+       // For now, let's assume `matchType` filter implies "Show me ranking based on points earned in this match type".
+       
+       const results = await prisma.tournamentResult.groupBy({
+         by: ['playerId'],
+         where: {
+           tournament: {
+             matchType: matchType as string
+           }
+         },
+         _sum: {
+           pointsChange: true
+         },
+         orderBy: {
+           _sum: {
+             pointsChange: 'desc'
+           }
+         },
+         take: 50
+       });
+       
+       // Now fetch player details for these IDs
+       const playerIds = results.map(r => r.playerId);
+       const playersDetails = await prisma.player.findMany({
+         where: {
+           id: { in: playerIds },
+           region: region ? { contains: region as string } : undefined, // Filter by region if provided
+           gender: (gender && gender !== '全性别') ? (gender as string) : undefined // Filter by gender if provided
+         }
+       });
+       
+       // Map back to preserve order and aggregated points
+       players = results.map(r => {
+         const p = playersDetails.find(pd => pd.id === r.playerId);
+         if (!p) return null;
+         return {
+           ...p,
+           points: r._sum.pointsChange || 0 // Override total points with filtered points
+         };
+       }).filter(p => p !== null);
+       
+    } else if (matchType === '单打') {
+        // Default logic for Singles if we want to separate?
+        // Or if '单打' is just one of the types.
+        // Let's apply the same logic as above for consistency if matchType is specified.
+         const results = await prisma.tournamentResult.groupBy({
+         by: ['playerId'],
+         where: {
+           tournament: {
+             matchType: { contains: '单' } // "男单", "女单" usually contain "单"
+           }
+         },
+         _sum: {
+           pointsChange: true
+         },
+         orderBy: {
+           _sum: {
+             pointsChange: 'desc'
+           }
+         },
+         take: 50
+       });
+       
+       const playerIds = results.map(r => r.playerId);
+       const playersDetails = await prisma.player.findMany({
+         where: {
+           id: { in: playerIds },
+           region: region ? { contains: region as string } : undefined,
+           gender: (gender && gender !== '全性别') ? (gender as string) : undefined
+         }
+       });
+       
+       players = results.map(r => {
+         const p = playersDetails.find(pd => pd.id === r.playerId);
+         if (!p) return null;
+         return {
+           ...p,
+           points: r._sum.pointsChange || 0
+         };
+       }).filter(p => p !== null);
+
+    } else {
+        // No matchType filter (or '全部'), use global points but filter by region/gender
+        players = await prisma.player.findMany({
+            where: {
+                region: region ? { contains: region as string } : undefined,
+                gender: (gender && gender !== '全性别') ? (gender as string) : undefined
+            },
+            orderBy: { points: 'desc' },
+            take: 50
+        });
+    }
+
     res.json(players);
   } catch (error) {
+    console.error('Get rankings error:', error);
     res.status(500).json({ error: 'Failed to fetch rankings' });
   }
 };
