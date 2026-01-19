@@ -1,10 +1,6 @@
 <template>
   <view class="container">
     <view class="header">
-      <view class="manage-icon" v-if="isAdmin" @click="showManageMenu">
-        <text>⚙️</text>
-      </view>
-
       <text class="title">{{ matchInfo.name || '赛事报名' }}</text>
       <view class="match-meta" v-if="matchInfo.id">
         <view class="meta-row" v-if="matchInfo.location">
@@ -19,6 +15,26 @@
           <text class="meta-icon">🕒</text>
           <text class="meta-text">{{ formatDate(matchInfo.startTime) }}</text>
         </view>
+      </view>
+
+      <!-- Action Grid for Admin/Referee -->
+      <view class="admin-actions" v-if="isAdmin">
+         <view class="action-btn" @click="goToEdit">
+            <text class="action-icon">📝</text>
+            <text>编辑赛事</text>
+         </view>
+         <view class="action-btn" @click="goToReferee">
+            <text class="action-icon">👮</text>
+            <text>裁判管理</text>
+         </view>
+         <view class="action-btn" @click="goToDraw">
+            <text class="action-icon">📊</text>
+            <text>录入比分</text>
+         </view>
+         <view class="action-btn delete" @click="handleDelete">
+            <text class="action-icon">🗑️</text>
+            <text>删除赛事</text>
+         </view>
       </view>
 
       <!-- Withdrawal Notice -->
@@ -100,26 +116,7 @@ onShow(() => {
 });
 
 const showManageMenu = () => {
-  uni.showActionSheet({
-    itemList: ['编辑赛事', '裁判管理', '录入比分', '删除赛事'],
-    itemColor: '#3A5F0B',
-    success: (res: any) => {
-      switch (res.tapIndex) {
-        case 0:
-          goToEdit();
-          break;
-        case 1:
-          goToReferee();
-          break;
-        case 2:
-          goToDraw();
-          break;
-        case 3:
-          handleDelete();
-          break;
-      }
-    }
-  });
+  // Logic moved to direct buttons
 };
 
 const goToEdit = () => {
@@ -264,24 +261,25 @@ const submit = async () => {
 .meta-icon { margin-right: 8px; font-size: 16px; }
 .meta-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .meta-arrow { color: rgba(255,255,255,0.7); font-family: monospace; }
-.header { margin-bottom: 20px; text-align: center; background: #3A5F0B; padding: 30px 20px; color: white; border-radius: 0 0 20px 20px; margin-top: -20px; margin-left: -20px; margin-right: -20px; position: relative; }
-.manage-icon {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: rgba(255,255,255,0.2);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
+.header { margin-bottom: 20px; text-align: center; background: #3A5F0B; padding: 30px 20px; color: white; border-radius: 0 0 20px 20px; margin-top: -20px; margin-left: -20px; margin-right: -20px; }
 .admin-actions {
-  display: none; /* Removed */
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
 }
-/* .action-btn code removed */
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  color: white;
+  background: rgba(255,255,255,0.1);
+  padding: 10px 5px;
+  border-radius: 8px;
+}
+.action-btn.delete { background: rgba(255,59,48,0.2); color: #ffcccc; }
+.action-icon { font-size: 20px; margin-bottom: 5px; }
 
 .notice-section { margin-top: 20px; background: #fff0f0; padding: 15px; border-radius: 8px; border: 1px solid #ffcccc; }
 .notice-title { font-weight: bold; color: #d32f2f; font-size: 14px; display: block; margin-bottom: 5px; }
