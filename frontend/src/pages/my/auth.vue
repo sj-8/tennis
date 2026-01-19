@@ -72,7 +72,11 @@ const handleGetPhoneNumber = (e: any) => {
     });
   } else {
     console.error('getPhoneNumber fail:', e.detail);
-    uni.showToast({ title: '授权失败: ' + e.detail.errMsg, icon: 'none' });
+    if (e.detail.errMsg && e.detail.errMsg.includes('no permission')) {
+      uni.showToast({ title: '无权限获取，请手动输入', icon: 'none' });
+    } else {
+      uni.showToast({ title: '授权失败: ' + e.detail.errMsg, icon: 'none' });
+    }
   }
 };
 

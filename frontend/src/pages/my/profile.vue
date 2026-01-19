@@ -28,6 +28,16 @@
       </view>
 
       <view class="form-item">
+        <text class="label">地区</text>
+        <picker @change="handleRegionChange" :value="cityIndex" :range="jiangsuCities">
+          <view class="picker-value">
+            {{ userInfo.region ? '江苏省 ' + userInfo.region : '未设置' }}
+            <text class="arrow">></text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
         <text class="label">出生年月</text>
         <picker mode="date" @change="handleBirthdayChange" :value="userInfo.birthday || '2000-01-01'">
           <view class="picker-value">
@@ -57,11 +67,17 @@ import { request, updateProfile } from '../../api';
 
 const userInfo = ref<any>({});
 const genderOptions = ['男', '女'];
+const jiangsuCities = ['南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const editForm = ref({ name: '' });
 
 const genderIndex = computed(() => {
   if (!userInfo.value || !userInfo.value.gender) return 0;
   return genderOptions.indexOf(userInfo.value.gender);
+});
+
+const cityIndex = computed(() => {
+  if (!userInfo.value || !userInfo.value.region) return 0;
+  return jiangsuCities.indexOf(userInfo.value.region);
 });
 
 onMounted(() => {
@@ -123,6 +139,17 @@ const handleGenderChange = async (e: any) => {
   const gender = genderOptions[e.detail.value];
   try {
     const res = await updateProfile(userInfo.value.id, { gender });
+    userInfo.value = res;
+    uni.setStorageSync('userInfo', res);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const handleRegionChange = async (e: any) => {
+  const region = jiangsuCities[e.detail.value];
+  try {
+    const res = await updateProfile(userInfo.value.id, { region });
     userInfo.value = res;
     uni.setStorageSync('userInfo', res);
   } catch (err) {

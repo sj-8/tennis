@@ -129,7 +129,19 @@ export const getMatches = () => request({ url: '/matches' });
 // 创建赛事
 export const createMatch = (data: any) => request({ url: '/matches', method: 'POST', data });
 // 获取排行榜
-export const getRankings = () => request({ url: '/matches/rankings' });
+export const getRankings = (params?: { region?: string; gender?: string; matchType?: string }) => {
+  let queryString = '';
+  if (params) {
+    const query = [];
+    if (params.region && params.region !== '全部') query.push(`region=${encodeURIComponent(params.region)}`);
+    if (params.gender && params.gender !== '全性别') query.push(`gender=${encodeURIComponent(params.gender)}`);
+    if (params.matchType && params.matchType !== '单打') query.push(`matchType=${encodeURIComponent(params.matchType)}`);
+    else if (params.matchType === '单打') query.push(`matchType=单打`); // Explicitly send default '单打' if selected
+    
+    if (query.length > 0) queryString = '?' + query.join('&');
+  }
+  return request({ url: `/matches/rankings${queryString}` });
+};
 // 提交比赛结果
 export const submitResult = (id: number, results: any) => request({ url: `/matches/${id}/results`, method: 'POST', data: { results } });
 // 提交报名申请

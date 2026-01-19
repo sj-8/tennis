@@ -10,6 +10,27 @@
         <TennisBall :size="24" />
         <text class="title">选手排行榜</text>
       </view>
+      
+      <!-- Filters -->
+      <view class="filters-bar">
+        <picker @change="onRegionChange" :value="regionIndex" :range="regionOptions" class="filter-item">
+          <view class="picker-label">
+            {{ regionFilter }} <text class="arrow">▼</text>
+          </view>
+        </picker>
+        
+        <picker @change="onGenderChange" :value="genderIndex" :range="genderOptions" class="filter-item">
+          <view class="picker-label">
+            {{ genderFilter }} <text class="arrow">▼</text>
+          </view>
+        </picker>
+        
+        <picker @change="onMatchTypeChange" :value="matchTypeIndex" :range="matchTypeOptions" class="filter-item">
+          <view class="picker-label">
+            {{ matchTypeFilter }} <text class="arrow">▼</text>
+          </view>
+        </picker>
+      </view>
     </view>
     
     <!-- Podium for Top 3 (领奖台) -->
@@ -89,6 +110,34 @@ import TennisBall from '../../components/TennisBall.vue';
 
 const players = ref<any[]>([]);
 
+// Filter States
+const regionFilter = ref('全部');
+const genderFilter = ref('全性别');
+const matchTypeFilter = ref('单打');
+
+const regionOptions = ['全部', '南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
+const genderOptions = ['全性别', '男', '女'];
+const matchTypeOptions = ['全部', '单打', '双打', '混双'];
+
+const regionIndex = computed(() => regionOptions.indexOf(regionFilter.value));
+const genderIndex = computed(() => genderOptions.indexOf(genderFilter.value));
+const matchTypeIndex = computed(() => matchTypeOptions.indexOf(matchTypeFilter.value));
+
+const onRegionChange = (e: any) => {
+  regionFilter.value = regionOptions[e.detail.value];
+  fetchRankings();
+};
+
+const onGenderChange = (e: any) => {
+  genderFilter.value = genderOptions[e.detail.value];
+  fetchRankings();
+};
+
+const onMatchTypeChange = (e: any) => {
+  matchTypeFilter.value = matchTypeOptions[e.detail.value];
+  fetchRankings();
+};
+
 const restPlayers = computed(() => {
   return players.value.slice(3);
 });
@@ -117,7 +166,11 @@ const fetchRankings = async () => {
    */
   try {
     uni.showLoading({ title: '更新排名...' });
-    const res = await getRankings();
+    const res = await getRankings({
+      region: regionFilter.value,
+      gender: genderFilter.value,
+      matchType: matchTypeFilter.value
+    });
     players.value = res as any[];
   } catch (err) {
     console.error(err);
@@ -209,6 +262,33 @@ onPullDownRefresh(() => {
   gap: 10px;
 }
 .title { font-size: 24px; font-weight: bold; display: block; text-align: center; color: white; margin-bottom: 0; }
+
+/* Filters Bar */
+.filters-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 5px;
+}
+.filter-item {
+  flex: 1;
+  text-align: center;
+}
+.picker-label {
+  font-size: 13px;
+  color: white;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.arrow {
+  font-size: 10px;
+  margin-left: 4px;
+  opacity: 0.8;
+}
 
 /* Podium Styles */
 .podium-container {
