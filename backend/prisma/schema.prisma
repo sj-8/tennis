@@ -23,10 +23,14 @@ model Player {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   results   TournamentResult[]
-  applications PlayerApplication[]
+  // applications PlayerApplication[]  // Removed implicitly named relation
+  applicationsAsPlayer PlayerApplication[] @relation("Applicant")
+  applicationsAsPartner PlayerApplication[] @relation("Partner")
   refereeOf TournamentReferee[]
   gamesAsPlayer1 MatchGame[] @relation("Player1")
   gamesAsPlayer2 MatchGame[] @relation("Player2")
+  gamesAsPartner1 MatchGame[] @relation("Partner1")
+  gamesAsPartner2 MatchGame[] @relation("Partner2")
 }
 
 model MatchGame {
@@ -35,6 +39,8 @@ model MatchGame {
   groupId      Int?
   player1Id    Int
   player2Id    Int
+  partner1Id   Int?       // Partner for Player 1
+  partner2Id   Int?       // Partner for Player 2
   score1       String?    // Changed to String to support sets like "6-4" or just "6"
   score2       String?
   status       String     @default("PENDING") // PENDING, COMPLETED
@@ -45,6 +51,8 @@ model MatchGame {
   group        MatchGroup? @relation(fields: [groupId], references: [id])
   player1      Player     @relation("Player1", fields: [player1Id], references: [id])
   player2      Player     @relation("Player2", fields: [player2Id], references: [id])
+  partner1     Player?    @relation("Partner1", fields: [partner1Id], references: [id])
+  partner2     Player?    @relation("Partner2", fields: [partner2Id], references: [id])
 }
 
 model AdminUser {
@@ -60,6 +68,7 @@ model AdminUser {
 model PlayerApplication {
   id           Int        @id @default(autoincrement())
   playerId     Int
+  partnerId    Int?       // Optional partner for doubles
   tournamentId Int?       // Optional for now to avoid migration issues with existing data, but logic should enforce it
   realName     String
   phone        String
@@ -70,7 +79,8 @@ model PlayerApplication {
   status       String     @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  player       Player     @relation(fields: [playerId], references: [id])
+  player       Player     @relation("Applicant", fields: [playerId], references: [id])
+  partner      Player?    @relation("Partner", fields: [partnerId], references: [id])
   tournament   Tournament? @relation(fields: [tournamentId], references: [id])
   auditLogs    AuditLog[]
 }

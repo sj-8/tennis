@@ -3,7 +3,7 @@ import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 
 export const submitApplication = async (req: Request, res: Response) => {
-  const { tournamentId } = req.body;
+  const { tournamentId, partnerId } = req.body;
   // @ts-ignore
   const userId = req.user?.id;
 
@@ -56,13 +56,18 @@ export const submitApplication = async (req: Request, res: Response) => {
     if (existingApp) {
         application = await prisma.playerApplication.update({
             where: { id: existingApp.id },
-            data: { status, createdAt: new Date() } // Reset time for waitlist queue
+            data: { 
+                status, 
+                createdAt: new Date(),
+                partnerId: partnerId ? Number(partnerId) : null
+            } 
         });
     } else {
         application = await prisma.playerApplication.create({
             data: {
                 tournamentId: Number(tournamentId),
                 playerId: Number(userId),
+                partnerId: partnerId ? Number(partnerId) : null,
                 realName: '',
                 phone: '',
                 idCard: '',
@@ -160,9 +165,16 @@ export const getUserApplications = async (req: Request, res: Response) => {
   const userId = req.user?.id;
   try {
     const applications = await prisma.playerApplication.findMany({
-      where: { playerId: Number(userId) },
+      where: {
+        OR: [
+          { playerId: Number(userId) },
+          { partnerId: Number(userId) }
+        ]
+      },
       include: {
-        tournament: true // Include full tournament details
+        tournament: true, // Include full tournament details
+        partner: true,    // Include partner details
+        player: true      // Include player details (so if I am partner, I see who applied)
       },
       orderBy: { createdAt: 'desc' }
     });

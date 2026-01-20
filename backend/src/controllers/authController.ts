@@ -8,6 +8,37 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const WX_APP_ID = process.env.WX_APP_ID;
 const WX_APP_SECRET = process.env.WX_APP_SECRET;
 
+export const searchPlayers = async (req: Request, res: Response) => {
+  const { query } = req.query;
+  
+  if (!query || typeof query !== 'string') {
+    return res.status(400).json({ error: 'Query parameter is required' });
+  }
+
+  try {
+    const players = await prisma.player.findMany({
+      where: {
+        OR: [
+          { name: { contains: query } },
+          { realName: { contains: query } },
+          { phone: { contains: query } }
+        ]
+      },
+      take: 10,
+      select: {
+        id: true,
+        name: true,
+        realName: true,
+        avatar: true,
+        gender: true
+      }
+    });
+    res.json(players);
+  } catch (error) {
+    res.status(500).json({ error: 'Search failed' });
+  }
+};
+
 export const updateProfile = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name, avatar, gender, birthday, region, realName, idCard, phone } = req.body;

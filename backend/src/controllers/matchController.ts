@@ -379,6 +379,13 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
             avatar: true,
             gender: true
           }
+        },
+        partner: {
+          select: {
+            name: true,
+            avatar: true,
+            realName: true
+          }
         }
       }
     });
@@ -394,10 +401,13 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
       return {
         id: p.id,
         playerId: p.playerId, // Add playerId
+        partnerId: p.partnerId, // Add partnerId for frontend
         name: p.realName, // Use realName from application
         nickname: p.player.name, // Nickname from Player profile
         gender: p.player.gender, // Gender from Player profile
         avatarUrl: p.player.avatar, // Map to avatarUrl to match frontend
+        partnerName: p.partner?.realName || p.partner?.name, // Partner Name
+        partnerAvatar: p.partner?.avatar, // Partner Avatar
         status: p.status, // Return status for display
         rank: r?.rank || '', // Existing rank
         points: r?.pointsChange || '' // Existing points

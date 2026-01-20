@@ -17,8 +17,8 @@
             mode="aspectFill"
           />
           <view class="user-details">
-            <text class="name">{{ p.name || p.nickname || '选手' }}</text>
-            <text class="nickname" v-if="p.nickname && p.name !== p.nickname">({{ p.nickname }})</text>
+            <text class="name">{{ p.nickname || p.name || '选手' }}</text>
+            <text class="nickname" v-if="p.nickname && p.name && p.nickname !== p.name">({{ p.name }})</text>
             <text class="status-tag" v-if="p.status !== 'APPROVED'">{{ getStatusText(p.status) }}</text>
           </view>
         </view>
@@ -116,8 +116,10 @@ const submit = async () => {
 .player-list { margin-bottom: 20px; }
 .player-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: #fff; margin-bottom: 10px; border-radius: 8px; }
 .info { display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; }
-.avatar { width: 32px; height: 32px; border-radius: 50%; background: #f0f0f0; flex-shrink: 0; }
-.user-details { display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
+.avatar-group { position: relative; width: 40px; height: 32px; flex-shrink: 0; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: #f0f0f0; }
+.partner-avatar-overlap { position: absolute; left: 15px; top: 0; border: 1px solid white; }
+.user-details { display: flex; align-items: center; overflow: hidden; white-space: nowrap; margin-left: 15px; }
 .name { font-size: 15px; font-weight: bold; color: #333; }
 .nickname { font-size: 13px; color: #666; margin-left: 4px; }
 .status-tag { font-size: 12px; color: #ff9800; margin-left: 4px; background: #fff3e0; padding: 0 4px; border-radius: 4px; }

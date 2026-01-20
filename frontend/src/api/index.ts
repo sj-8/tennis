@@ -135,6 +135,8 @@ export const getUserApplications = () => request({ url: '/application/my' });
 export const cancelApplication = (matchId: number) => request({ url: `/application/${matchId}/cancel`, method: 'POST' });
 // 更新个人信息
 export const updateProfile = (id: number, data: any) => request({ url: `/auth/${id}/profile`, method: 'PUT', data });
+// 搜索用户
+export const searchPlayers = (query: string) => request({ url: `/users/search?query=${encodeURIComponent(query)}` });
 // 更新赛事信息
 export const updateMatch = (id: number, data: any) => request({ url: `/matches/${id}`, method: 'PUT', data });
 // 删除赛事

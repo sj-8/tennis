@@ -123,7 +123,7 @@ const matchTypeFilter = ref('全部');
 
 const regionOptions = ['全部', '南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const genderOptions = ['全性别', '男', '女'];
-const matchTypeOptions = ['全部', '单打', '双打', '混双'];
+const matchTypeOptions = ['全部', '单打', '双打'];
 
 const regionIndex = computed(() => regionOptions.indexOf(regionFilter.value));
 const genderIndex = computed(() => genderOptions.indexOf(genderFilter.value));

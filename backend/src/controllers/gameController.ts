@@ -3,7 +3,7 @@ import prisma from '../prisma';
 
 export const createGame = async (req: Request, res: Response) => {
   const { tournamentId } = req.params;
-  const { player1Id, player2Id, groupId } = req.body;
+  const { player1Id, player2Id, groupId, partner1Id, partner2Id } = req.body;
 
   if (!player1Id || !player2Id) {
     return res.status(400).json({ error: 'Missing players' });
@@ -15,11 +15,15 @@ export const createGame = async (req: Request, res: Response) => {
         tournamentId: Number(tournamentId),
         player1Id: Number(player1Id),
         player2Id: Number(player2Id),
+        partner1Id: partner1Id ? Number(partner1Id) : null,
+        partner2Id: partner2Id ? Number(partner2Id) : null,
         groupId: groupId ? Number(groupId) : null
       },
       include: {
         player1: true,
-        player2: true
+        player2: true,
+        partner1: true,
+        partner2: true
       }
     });
     res.json(game);
@@ -36,7 +40,9 @@ export const getGames = async (req: Request, res: Response) => {
       where: { tournamentId: Number(tournamentId) },
       include: {
         player1: { select: { name: true, avatar: true } },
-        player2: { select: { name: true, avatar: true } }
+        player2: { select: { name: true, avatar: true } },
+        partner1: { select: { name: true, avatar: true } },
+        partner2: { select: { name: true, avatar: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -55,7 +61,9 @@ export const getGroups = async (req: Request, res: Response) => {
         games: {
             include: {
                 player1: { select: { name: true, avatar: true } },
-                player2: { select: { name: true, avatar: true } }
+                player2: { select: { name: true, avatar: true } },
+                partner1: { select: { name: true, avatar: true } },
+                partner2: { select: { name: true, avatar: true } }
             },
             orderBy: { createdAt: 'asc' }
         }

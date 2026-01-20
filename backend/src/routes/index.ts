@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, updateProfile } from '../controllers/authController';
+import { login, updateProfile, searchPlayers } from '../controllers/authController';
 import { getMatches, createMatch, updateMatch, deleteMatch, submitResult, getRankings, getMatchParticipants, getReferees, addReferee, removeReferee } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs, promotePlayerToAdmin } from '../controllers/adminController';
 import { submitApplication, getApplications, auditApplication, getUserApplications, cancelApplication } from '../controllers/applicationController';
@@ -8,7 +8,10 @@ import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middlewar
 
 const router = Router();
 
-// ... (Auth routes omitted for brevity in search/replace, but keeping context)
+// Auth
+router.post('/auth/login', login);
+router.put('/auth/:id/profile', authenticateToken, updateProfile);
+router.get('/users/search', authenticateToken, searchPlayers);
 
 // Matches
 router.get('/matches', getMatches);

@@ -27,7 +27,10 @@
               <text class="gender-icon" :class="{ 'male': p.gender === '男', 'female': p.gender === '女' }" v-if="p.gender">
                 {{ p.gender === '男' ? '♂' : (p.gender === '女' ? '♀' : '') }}
               </text>
-              <text class="name">{{ p.nickname || p.name }}</text>
+              <text class="name">
+                  {{ p.nickname || p.name }}
+                  <text v-if="p.partnerName" class="partner-text"> / {{ p.partnerName }}</text>
+              </text>
             </view>
           </view>
         </view>
@@ -44,7 +47,10 @@
               <text class="gender-icon" :class="{ 'male': p.gender === '男', 'female': p.gender === '女' }" v-if="p.gender">
                 {{ p.gender === '男' ? '♂' : (p.gender === '女' ? '♀' : '') }}
               </text>
-              <text class="name">{{ p.nickname || p.name }}</text>
+              <text class="name">
+                  {{ p.nickname || p.name }}
+                  <text v-if="p.partnerName" class="partner-text"> / {{ p.partnerName }}</text>
+              </text>
               <text class="status-tag">候补</text>
             </view>
           </view>
@@ -77,7 +83,7 @@
                 <view class="game-card" v-for="game in group.games" :key="game.id">
                     <view class="player-block left">
                         <view class="name-wrapper">
-                        <text class="player-name">{{ game.player1.name || 'Player 1' }}</text>
+                        <text class="player-name">{{ game.player1.name || 'Player 1' }}{{ game.partner1 ? ' / ' + game.partner1.name : '' }}</text>
                         <text class="winner-text" v-if="game.score1 > game.score2">WINNER</text>
                         </view>
                         <input 
@@ -102,7 +108,7 @@
                         @blur="(e) => handleScoreBlur(game, 'score2', e)"
                         />
                         <view class="name-wrapper right">
-                        <text class="player-name">{{ game.player2.name || 'Player 2' }}</text>
+                        <text class="player-name">{{ game.player2.name || 'Player 2' }}{{ game.partner2 ? ' / ' + game.partner2.name : '' }}</text>
                         <text class="winner-text" v-if="game.score2 > game.score1">WINNER</text>
                         </view>
                     </view>
@@ -180,7 +186,7 @@
             @click="toggleSelection(p)"
             :class="{ selected: selectedPlayers.includes(p.playerId) }"
           >
-            <text>{{ p.nickname || p.name }}</text>
+            <text>{{ p.nickname || p.name }}{{ p.partnerName ? ' / ' + p.partnerName : '' }}</text>
             <text v-if="selectedPlayers.includes(p.playerId)" class="check-mark">✓</text>
           </view>
         </scroll-view>
@@ -195,7 +201,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { onLoad, onShow } from '@dcloudio/uni-app';
+import { onLoad, onShow, onShareAppMessage } from '@dcloudio/uni-app';
 import { getMatchParticipants, getGames, createGame, updateGameScore, getUserApplications, getMatches, getGroups, createGroup, updateGroup, deleteGroup } from '../../api';
 
 const currentTab = ref(0);
@@ -337,7 +343,7 @@ const handleDeleteGroup = async (group: any) => {
     uni.showModal({
         title: '确认删除',
         content: '删除分组将同时删除组内所有对战，确定吗？',
-        success: async (res) => {
+        success: async (res: any) => {
             if (res.confirm) {
                 try {
                     await deleteGroup(group.id);

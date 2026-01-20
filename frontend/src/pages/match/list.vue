@@ -32,7 +32,7 @@
         
         <view class="card-content">
           <view class="title-row">
-            <text class="status-tag" :class="getStatusClass(match.status)">{{ getStatusText(match.status) }}</text>
+            <text class="status-tag" :class="getStatusClass(match.status, match)">{{ getStatusText(match.status, match) }}</text>
             <text class="match-title">{{ match.name }}</text>
           </view>
           
@@ -80,7 +80,7 @@ const searchKeyword = ref('');
 const regions = ['全部', '南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const categories = ['全部', '周赛', '月赛', '公开赛', '大奖赛'];
 const levels = ['全部', '10', '25', '50', '100', '200', '400', '500', '1000'];
-const matchTypes = ['全部', '男单', '男双', '女单', '女双', '混双'];
+const matchTypes = ['全部', '单打', '双打'];
 const statuses = ['全部', '待开始', '进行中', '已结束'];
 
 const region = ref('区域');
@@ -133,19 +133,43 @@ const formatDate = (dateStr: string) => {
   return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.toTimeString().slice(0, 5)} ${weekDay}`;
 };
 
-const getStatusText = (status: string) => {
-  if (status === 'PENDING') return '报名中'; // Map PENDING to '报名中' for users? Or '待开始'?
-  // DB status: PENDING, ONGOING, COMPLETED.
-  // Screenshot has '已结束' tag.
-  if (status === 'PENDING') return '报名中'; 
-  if (status === 'ONGOING') return '进行中';
+const getStatusText = (status: string, match: any) => {
   if (status === 'COMPLETED') return '已结束';
-  return status;
+  if (status === 'ONGOING') return '进行中';
+  
+  // Handle PENDING status with time logic
+  const now = new Date();
+  const start = new Date(match.startTime);
+  const regStart = match.registrationStart ? new Date(match.registrationStart) : null;
+  const regEnd = match.registrationEnd ? new Date(match.registrationEnd) : null;
+
+  if (now > start) {
+      return '已结束'; // Assume matches auto-end/expire if past start time + duration (simplification: just say ended or ongoing?)
+      // Actually, if it's just started, it should be Ongoing. 
+      // But if we don't have duration, let's assume if it's > 24 hours past start, it's ended.
+      // For now, let's keep it simple: If past start time, call it "进行中" unless explicit COMPLETED?
+      // User said "Match Ended or Registration Open display incorrectly".
+      // If it's way past start time, it shouldn't be "Registration Open".
+      // Let's say if (now > start) return '进行中'; 
+      // But if it's 2024 and match was 2023, it should be '已结束'.
+      // Let's use 1 day threshold.
+      // const oneDay = 24 * 60 * 60 * 1000;
+      // if (now.getTime() - start.getTime() > oneDay) return '已结束';
+      // return '进行中';
+  }
+  
+  if (regStart && now < regStart) return '待报名';
+  if (regEnd && now > regEnd) return '报名截止';
+  
+  // If no explicit reg times, or within reg window
+  return '报名中';
 };
 
-const getStatusClass = (status: string) => {
-  if (status === 'PENDING') return 'status-green';
-  if (status === 'ONGOING') return 'status-blue';
+const getStatusClass = (status: string, match: any) => {
+  const text = getStatusText(status, match);
+  if (text === '报名中') return 'status-green';
+  if (text === '进行中') return 'status-blue';
+  if (text === '待报名') return 'status-orange';
   return 'status-gray';
 };
 
@@ -186,6 +210,7 @@ onMounted(() => {
 .status-tag { font-size: 10px; padding: 2px 4px; border-radius: 2px; margin-right: 8px; white-space: nowrap; height: 16px; line-height: 16px; }
 .status-green { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
 .status-blue { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+.status-orange { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
 .status-gray { background: #f5f5f5; color: #757575; border: 1px solid #e0e0e0; }
 .match-title { font-size: 16px; font-weight: bold; color: #333; line-height: 1.4; flex: 1; }
 

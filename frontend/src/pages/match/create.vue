@@ -30,6 +30,15 @@
       </view>
 
       <view class="form-item">
+        <text class="label">比赛级别</text>
+        <picker @change="bindLevelChange" :value="levelIndex" :range="levels">
+          <view class="picker-view">
+            {{ form.level || '请选择比赛级别' }}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
         <text class="label">地点</text>
         <view class="location-wrapper">
           <input class="input location-input" v-model="form.location" placeholder="例如：1号场" placeholder-style="z-index: 0" />
@@ -100,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { createMatch, updateMatch, getMatches } from '../../api';
 
@@ -109,9 +118,10 @@ const loading = ref(false);
 const matchId = ref(0);
 const categories = ['周赛', '月赛', '公开赛', '大奖赛'];
 const levels = ['10', '25', '50', '100', '200', '400', '500', '1000'];
-const matchTypes = ['男单', '男双', '女单', '女双', '混双'];
+const matchTypes = ['单打', '双打'];
 const jiangsuCities = ['南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const matchTypeIndex = ref(-1);
+const levelIndex = ref(-1);
 const form = ref({
   name: '',
   location: '',
@@ -125,6 +135,7 @@ const form = ref({
   regEndDate: '',
   regEndTime: '',
   matchType: '',
+  level: '',
   drawSize: '',
   rules: '',
   description: '',
@@ -204,6 +215,12 @@ const bindMatchTypeChange = (e: any) => {
   const index = e.detail.value;
   matchTypeIndex.value = index;
   form.value.matchType = matchTypes[index];
+};
+
+const bindLevelChange = (e: any) => {
+  const index = e.detail.value;
+  levelIndex.value = index;
+  form.value.level = levels[index];
 };
 
 const bindDateChange = (e: any) => {

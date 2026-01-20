@@ -73,7 +73,29 @@
       <input class="input" v-model="form.phone" type="number" placeholder="请输入手机号码" :disabled="isVerified" />
     </view>
 
-    <!-- Bio section removed as requested -->
+    <!-- Partner Selection for Doubles -->
+    <view class="form-group" v-if="isDoubles">
+        <text class="label">双打搭档</text>
+        <view v-if="partner" class="selected-partner">
+            <image :src="partner.avatar || '/static/default-avatar.png'" class="partner-avatar" mode="aspectFill" />
+            <view class="partner-info">
+                <text class="partner-name">{{ partner.realName || partner.name }}</text>
+            </view>
+            <view class="btn-remove" @click="removePartner">✕</view>
+        </view>
+        <view v-else>
+            <view class="search-box">
+                <input class="input search-input" v-model="partnerQuery" placeholder="搜索搭档(姓名/手机号)" @confirm="onSearchPartner" />
+                <view class="btn-search" @click="onSearchPartner">搜索</view>
+            </view>
+            <view class="search-results" v-if="partnerSearchResults.length > 0">
+                <view class="result-item" v-for="p in partnerSearchResults" :key="p.id" @click="selectPartner(p)">
+                    <image :src="p.avatar || '/static/default-avatar.png'" class="result-avatar" mode="aspectFill" />
+                    <text class="result-name">{{ p.realName || p.name }}</text>
+                </view>
+            </view>
+        </view>
+    </view>
     
     <button class="btn-submit" @click="submit" :loading="loading" v-if="!hasApplied">提交报名</button>
     <view class="applied-actions" v-else>
@@ -84,9 +106,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { submitApplication, getMatches, deleteMatch, getMatchParticipants, cancelApplication } from '../../api';
+import { submitApplication, getMatches, deleteMatch, getMatchParticipants, cancelApplication, searchPlayers } from '../../api';
 
 const loading = ref(false);
 const tournamentId = ref<number | null>(null);
@@ -99,6 +121,37 @@ const form = ref({
   idCard: '',
   phone: ''
 });
+
+// Partner Selection State
+const isDoubles = computed(() => {
+    return matchInfo.value.matchType && matchInfo.value.matchType.includes('双');
+});
+const partner = ref<any>(null);
+const partnerQuery = ref('');
+const partnerSearchResults = ref<any[]>([]);
+const showPartnerSearch = ref(false);
+
+const onSearchPartner = async () => {
+    if (!partnerQuery.value) return;
+    try {
+        const res: any = await searchPlayers(partnerQuery.value);
+        partnerSearchResults.value = res;
+    } catch (err) {
+        uni.showToast({ title: '搜索失败', icon: 'none' });
+    }
+};
+
+const selectPartner = (p: any) => {
+    partner.value = p;
+    partnerSearchResults.value = [];
+    partnerQuery.value = '';
+    showPartnerSearch.value = false;
+};
+
+const removePartner = () => {
+    partner.value = null;
+};
+
 
 onShow(() => {
   const userInfo = uni.getStorageSync('userInfo');
@@ -306,9 +359,15 @@ const submit = async () => {
         return;
     }
 
+    if (isDoubles.value && !partner.value) {
+        uni.showToast({ title: '双打比赛请选择搭档', icon: 'none' });
+        return;
+    }
+
     await submitApplication({
       playerId: userInfo.id,
       tournamentId: tournamentId.value,
+      partnerId: partner.value ? partner.value.id : null,
       ...form.value
     });
     
@@ -376,4 +435,19 @@ const submit = async () => {
 .btn-view-draw { background: #1976d2; }
 .btn-cancel { background: #d32f2f; }
 .applied-actions { display: flex; gap: 10px; margin-top: 30px; }
+
+/* Partner Search Styles */
+.search-box { display: flex; gap: 10px; }
+.search-input { flex: 1; }
+.btn-search { background: #3A5F0B; color: white; padding: 0 15px; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+.search-results { margin-top: 10px; background: white; border: 1px solid #eee; border-radius: 4px; max-height: 200px; overflow-y: auto; }
+.result-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+.result-avatar { width: 30px; height: 30px; border-radius: 50%; margin-right: 10px; background: #eee; }
+.result-name { font-size: 14px; }
+.selected-partner { display: flex; align-items: center; background: #f0f8ff; padding: 10px; border-radius: 8px; border: 1px solid #e3f2fd; }
+.partner-avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; background: #eee; }
+.partner-info { flex: 1; }
+.partner-name { font-weight: bold; font-size: 16px; }
+.btn-remove { color: #999; font-size: 18px; padding: 5px; }
+
 </style>
