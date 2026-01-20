@@ -1,12 +1,5 @@
 <template>
   <view class="container">
-    <!-- Draggable Tennis Ball Background -->
-    <movable-area class="bg-area">
-      <movable-view class="bg-ball" direction="all" :x="200" :y="100" scale="true">
-        <image src="/static/tennis-ball-bg.png" class="ball-img" mode="aspectFit"></image>
-      </movable-view>
-    </movable-area>
-
     <view class="header tennis-court-bg">
       <view class="header-content">
         <TennisBall :size="40" :animated="true" />
@@ -100,32 +93,48 @@ const matches = ref<any[]>([]);
 const isAdmin = ref(false); // 控制添加按钮显示
 const myApplications = ref<any[]>([]);
 
-const fetchMatches = async () => {
+const fetchMatches = async (isPullDown = false) => {
   /**
    * 获取赛事列表
-   * 调用 API 获取最新赛事数据并更新 matches
+   * 优化：缓存优先 + 并行请求
    */
-  try {
+  // 1. 尝试读取缓存
+  if (!isPullDown) {
+    const cachedMatches = uni.getStorageSync('cache_matches');
+    const cachedApps = uni.getStorageSync('cache_my_applications');
+    if (cachedMatches) matches.value = cachedMatches;
+    if (cachedApps) myApplications.value = cachedApps;
+  }
+
+  // 2. 仅在无数据且非下拉刷新时显示 Loading
+  if (matches.value.length === 0 && !isPullDown) {
     uni.showLoading({ title: '加载赛事中...' });
-    
-    // Fetch matches separately to ensure list is shown even if applications fail
-    try {
-        const matchesRes = await getMatches();
-        matches.value = matchesRes as any[];
-    } catch (e) {
-        console.error('Failed to fetch matches:', e);
-        // Don't show toast immediately on first load to avoid scaring user during cold start
-        // uni.showToast({ title: '获取赛事失败', icon: 'none' }); 
+  }
+
+  try {
+    // 3. 并行请求数据
+    const [matchesRes, appsRes] = await Promise.all([
+      getMatches().catch(e => ({ _err: e })), 
+      getUserApplications().catch(e => ({ _err: e }))
+    ]);
+
+    // 4. 处理赛事数据
+    if (!(matchesRes as any)._err) {
+      matches.value = matchesRes as any[];
+      uni.setStorageSync('cache_matches', matches.value);
+    } else {
+      console.error('Failed to fetch matches:', (matchesRes as any)._err);
     }
-    
-    // Try to fetch applications, but don't block UI if it fails (e.g. 404 or not logged in)
-    try {
-        const appsRes = await getUserApplications();
-        myApplications.value = appsRes as any[];
-    } catch (e: any) {
-        console.warn('Failed to fetch user applications (possibly not logged in or API missing):', e);
-        myApplications.value = [];
+
+    // 5. 处理报名数据
+    if (!(appsRes as any)._err) {
+      myApplications.value = appsRes as any[];
+      uni.setStorageSync('cache_my_applications', myApplications.value);
+    } else {
+      // 静默失败（可能未登录）
+      console.warn('Fetch apps failed:', (appsRes as any)._err);
     }
+
   } catch (err) {
     console.error(err);
   } finally {
@@ -281,16 +290,16 @@ const openLocation = (match: any) => {
 };
 
 onMounted(() => {
-  fetchMatches();
-  checkUserRole();
+  // Initial load handled by onShow
 });
 
 onShow(() => {
+  checkUserRole();
   fetchMatches();
 });
 
 onPullDownRefresh(() => {
-  fetchMatches();
+  fetchMatches(true);
 });
 </script>
 
