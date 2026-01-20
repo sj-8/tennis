@@ -222,22 +222,22 @@ const goToScore = () => {
   uni.navigateTo({ url: `/pages/match/score?id=${tournamentId.value}` });
 };
 
-const handleDelete = () => {
+const handleCancelMatch = () => {
   uni.showModal({
-    title: '确认删除',
-    content: '删除后无法恢复，确定要删除该赛事吗？',
+    title: '确认取消',
+    content: '取消后该赛事将不再显示在列表中，确定要取消吗？',
     confirmColor: '#ff3b30',
     success: async (res: any) => {
       if (res.confirm) {
-        uni.showLoading({ title: '删除中...' });
+        uni.showLoading({ title: '处理中...' });
         try {
-          await deleteMatch(Number(tournamentId.value));
-          uni.showToast({ title: '删除成功' });
+          await deleteMatch(Number(tournamentId.value)); // API name is deleteMatch but backend now cancels
+          uni.showToast({ title: '已取消赛事' });
           setTimeout(() => {
             uni.switchTab({ url: '/pages/index/index' });
           }, 1500);
         } catch (err) {
-          uni.showToast({ title: '删除失败', icon: 'none' });
+          uni.showToast({ title: '操作失败', icon: 'none' });
         } finally {
           uni.hideLoading();
         }

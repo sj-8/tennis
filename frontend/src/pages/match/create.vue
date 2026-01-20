@@ -179,6 +179,9 @@ onLoad(async (options: any) => {
       if (form.value.matchType) {
         matchTypeIndex.value = matchTypes.indexOf(form.value.matchType);
       }
+      if (form.value.level) {
+        levelIndex.value = levels.indexOf(form.value.level);
+      }
       
       if (match.registrationStart) {
          const rs = new Date(match.registrationStart);

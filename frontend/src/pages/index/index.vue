@@ -9,7 +9,7 @@
             <text class="hot-text">Hot</text>
             <text class="title-text">Land</text>
           </view>
-          <text class="sub-title">近期赛事</text>
+          <text class="sub-title">Let's Play Tennis</text>
         </view>
       </view>
     </view>

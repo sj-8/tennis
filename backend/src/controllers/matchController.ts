@@ -7,7 +7,9 @@ export const getMatches = async (req: Request, res: Response) => {
   const { region, category, level, matchType, status, search } = params;
   
   try {
-    const whereClause: any = {};
+    const whereClause: any = {
+        status: { not: 'CANCELLED' } // Default: Exclude cancelled matches
+    };
     
     if (region && region !== '全部') whereClause.region = { contains: region as string };
     if (category && category !== '全部') whereClause.category = category as string;
@@ -151,23 +153,20 @@ export const updateMatch = async (req: Request, res: Response) => {
 
 export const deleteMatch = async (req: Request, res: Response) => {
   /**
-   * 删除赛事接口
-   * 物理删除赛事记录
-   * 注意：如果有相关联的报名记录或结果，可能会因外键约束失败，需要先处理关联数据
+   * 取消赛事接口 (原删除接口)
+   * 逻辑改为软删除/取消：将状态设置为 'CANCELLED'
+   * 这样该比赛就不会出现在热门列表中
    */
   const { id } = req.params;
   try {
-    // Optional: Delete related data first if cascade delete is not configured in DB
-    // await prisma.playerApplication.deleteMany({ where: { tournamentId: Number(id) } });
-    // await prisma.tournamentResult.deleteMany({ where: { tournamentId: Number(id) } });
-
-    await prisma.tournament.delete({
-      where: { id: Number(id) }
+    await prisma.tournament.update({
+      where: { id: Number(id) },
+      data: { status: 'CANCELLED' }
     });
-    res.json({ message: 'Match deleted successfully' });
+    res.json({ message: 'Match cancelled successfully' });
   } catch (error) {
-    console.error('Delete match error:', error);
-    res.status(500).json({ error: 'Failed to delete match' });
+    console.error('Cancel match error:', error);
+    res.status(500).json({ error: 'Failed to cancel match' });
   }
 };
 
