@@ -362,7 +362,7 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
   /**
    * 获取赛事参赛人员接口
    * 查询指定赛事下状态为 'APPROVED' 的报名记录
-   * 返回包含选手 ID、真实姓名、头像等信息
+   * 返回包含选手 ID、真实姓名、头像等信息，以及已录入的成绩
    */
   const { id } = req.params;
   try {
@@ -382,16 +382,27 @@ export const getMatchParticipants = async (req: Request, res: Response) => {
         }
       }
     });
+
+    // Fetch existing results
+    const results = await prisma.tournamentResult.findMany({
+        where: { tournamentId: Number(id) }
+    });
+
     // Return only necessary info
-    const result = participants.map((p: any) => ({
-      id: p.id,
-      playerId: p.playerId, // Add playerId
-      name: p.realName, // Use realName from application
-      nickname: p.player.name, // Nickname from Player profile
-      gender: p.player.gender, // Gender from Player profile
-      avatarUrl: p.player.avatar, // Map to avatarUrl to match frontend
-      status: p.status // Return status for display
-    }));
+    const result = participants.map((p: any) => {
+      const r = results.find(res => res.playerId === p.playerId);
+      return {
+        id: p.id,
+        playerId: p.playerId, // Add playerId
+        name: p.realName, // Use realName from application
+        nickname: p.player.name, // Nickname from Player profile
+        gender: p.player.gender, // Gender from Player profile
+        avatarUrl: p.player.avatar, // Map to avatarUrl to match frontend
+        status: p.status, // Return status for display
+        rank: r?.rank || '', // Existing rank
+        points: r?.pointsChange || '' // Existing points
+      };
+    });
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch participants' });

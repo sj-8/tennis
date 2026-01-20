@@ -52,8 +52,8 @@ const fetchParticipants = async (id: number) => {
     const res = await getMatchParticipants(id);
     participants.value = (res as any[]).map(p => ({
       ...p,
-      rank: '',
-      points: ''
+      rank: p.rank || '',
+      points: p.points || ''
     }));
   } catch (err) {
     console.error(err);
