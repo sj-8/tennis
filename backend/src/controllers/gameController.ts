@@ -79,7 +79,25 @@ export const getGroups = async (req: Request, res: Response) => {
 export const createGroup = async (req: Request, res: Response) => {
   const { tournamentId } = req.params;
   const { title } = req.body;
+  // @ts-ignore
+  const { role, id: userId } = req.user || {};
   
+  // Verify Admin or Referee
+  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+      // Check if referee
+      const isReferee = await prisma.tournamentReferee.findUnique({
+          where: {
+              tournamentId_playerId: {
+                  tournamentId: Number(tournamentId),
+                  playerId: Number(userId)
+              }
+          }
+      });
+      if (!isReferee) {
+          return res.status(403).json({ error: 'Permission denied' });
+      }
+  }
+
   if (!title) return res.status(400).json({ error: 'Title required' });
 
   try {
@@ -98,12 +116,31 @@ export const createGroup = async (req: Request, res: Response) => {
 export const updateGroup = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { title } = req.body;
+    // @ts-ignore
+    const { role, id: userId } = req.user || {};
+
     try {
-        const group = await prisma.matchGroup.update({
+        const group = await prisma.matchGroup.findUnique({ where: { id: Number(id) } });
+        if (!group) return res.status(404).json({ error: 'Group not found' });
+
+        // Verify Admin or Referee
+        if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+            const isReferee = await prisma.tournamentReferee.findUnique({
+                where: {
+                    tournamentId_playerId: {
+                        tournamentId: group.tournamentId,
+                        playerId: Number(userId)
+                    }
+                }
+            });
+            if (!isReferee) return res.status(403).json({ error: 'Permission denied' });
+        }
+
+        const updated = await prisma.matchGroup.update({
             where: { id: Number(id) },
             data: { title }
         });
-        res.json(group);
+        res.json(updated);
     } catch (error) {
         res.status(500).json({ error: 'Failed to update group' });
     }
@@ -111,12 +148,27 @@ export const updateGroup = async (req: Request, res: Response) => {
 
 export const deleteGroup = async (req: Request, res: Response) => {
     const { id } = req.params;
+    // @ts-ignore
+    const { role, id: userId } = req.user || {};
+
     try {
-        // Option: Delete games or disconnect? 
-        // Cascade delete should be handled by DB or manually.
-        // Let's delete games in the group first
+        const group = await prisma.matchGroup.findUnique({ where: { id: Number(id) } });
+        if (!group) return res.status(404).json({ error: 'Group not found' });
+
+        // Verify Admin or Referee
+        if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+            const isReferee = await prisma.tournamentReferee.findUnique({
+                where: {
+                    tournamentId_playerId: {
+                        tournamentId: group.tournamentId,
+                        playerId: Number(userId)
+                    }
+                }
+            });
+            if (!isReferee) return res.status(403).json({ error: 'Permission denied' });
+        }
+
         await prisma.matchGame.deleteMany({ where: { groupId: Number(id) } });
-        
         await prisma.matchGroup.delete({ where: { id: Number(id) } });
         res.json({ message: 'Group deleted' });
     } catch (error) {
@@ -127,9 +179,27 @@ export const deleteGroup = async (req: Request, res: Response) => {
 export const updateGameScore = async (req: Request, res: Response) => {
   const { gameId } = req.params;
   const { score1, score2 } = req.body;
+  // @ts-ignore
+  const { role, id: userId } = req.user || {};
 
   try {
-    const game = await prisma.matchGame.update({
+    const game = await prisma.matchGame.findUnique({ where: { id: Number(gameId) } });
+    if (!game) return res.status(404).json({ error: 'Game not found' });
+
+    // Verify Admin or Referee
+    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+        const isReferee = await prisma.tournamentReferee.findUnique({
+            where: {
+                tournamentId_playerId: {
+                    tournamentId: game.tournamentId,
+                    playerId: Number(userId)
+                }
+            }
+        });
+        if (!isReferee) return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    const updated = await prisma.matchGame.update({
       where: { id: Number(gameId) },
       data: {
         score1: String(score1),
@@ -137,7 +207,7 @@ export const updateGameScore = async (req: Request, res: Response) => {
         status: 'COMPLETED'
       }
     });
-    res.json(game);
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update score' });
   }

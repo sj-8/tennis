@@ -278,12 +278,12 @@ const checkUserStatus = async () => {
   
   // Check if referee for this match
   try {
-     const matches = await getMatches();
-     const match = (matches as any[]).find(m => m.id === matchId.value);
-     if (match && match.referees) {
-        const isRef = match.referees.some((r: any) => r.playerId === currentUser.value.id);
-        if (isRef) isAdminOrReferee.value = true;
-     }
+    const matches = await getMatches();
+    const match = (matches as any[]).find(m => m.id === matchId.value);
+    if (match && match.referees) {
+      const isRef = match.referees.some((r: any) => r.playerId === currentUser.value.id);
+      if (isRef) isAdminOrReferee.value = true;
+    }
   } catch (e) { console.error(e); }
 };
 
