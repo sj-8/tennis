@@ -11,10 +11,18 @@
     <view class="player-list">
       <view v-for="(p, index) in participants" :key="p.id" class="player-item">
         <view class="info">
-          <text class="name">
-            {{ p.name }} 
-            <text class="status-tag" v-if="p.status !== 'APPROVED'">({{ getStatusText(p.status) }})</text>
-          </text>
+          <image 
+            class="avatar" 
+            :src="p.avatarUrl || '/static/avatar/default.png'" 
+            mode="aspectFill"
+          />
+          <view class="user-details">
+            <text class="name">
+              {{ p.name || p.nickname || '选手' }} 
+              <text class="status-tag" v-if="p.status !== 'APPROVED'">({{ getStatusText(p.status) }})</text>
+            </text>
+            <text class="nickname" v-if="p.nickname && p.name !== p.nickname">@{{ p.nickname }}</text>
+          </view>
         </view>
         <view class="action">
           <input class="rank-input" type="number" v-model="p.rank" placeholder="名次" />
