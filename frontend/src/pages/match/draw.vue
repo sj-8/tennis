@@ -56,15 +56,65 @@
     <view v-if="currentTab === 1">
       <view class="header">
         <text class="title">比赛对战</text>
-        <button class="btn-add-mini" @click="showAddMatchModal" v-if="isAdminOrReferee">添加对战</button>
+        <button class="btn-add-mini" @click="showAddGroupModal" v-if="isAdminOrReferee">添加比赛组</button>
       </view>
 
-      <view v-if="games.length === 0" class="empty-tip">
+      <view v-if="groups.length === 0 && ungroupedGames.length === 0" class="empty-tip">
         <text>暂无对战安排</text>
       </view>
 
-      <view class="game-list">
-        <view class="game-card" v-for="game in games" :key="game.id">
+      <!-- Groups List -->
+      <view class="group-list">
+        <view class="group-card" v-for="group in groups" :key="group.id">
+            <view class="group-header">
+                <text class="group-title" @click="isAdminOrReferee && showEditGroup(group)">{{ group.title }} <text class="edit-icon" v-if="isAdminOrReferee">✎</text></text>
+                <view class="group-actions" v-if="isAdminOrReferee">
+                    <button class="btn-add-match-mini" @click="showAddMatchModal(group.id)">+ 对战</button>
+                    <button class="btn-delete-mini" @click="handleDeleteGroup(group)">×</button>
+                </view>
+            </view>
+            <view class="game-list">
+                <view class="game-card" v-for="game in group.games" :key="game.id">
+                    <view class="player-block left">
+                        <view class="name-wrapper">
+                        <text class="player-name">{{ game.player1.name || 'Player 1' }}</text>
+                        <text class="winner-text" v-if="game.score1 > game.score2">WINNER</text>
+                        </view>
+                        <input 
+                        class="score-input" 
+                        type="number" 
+                        :value="game.score1" 
+                        :disabled="!isAdminOrReferee"
+                        @blur="(e) => handleScoreBlur(game, 'score1', e)"
+                        />
+                    </view>
+                    
+                    <view class="vs-divider">
+                        <text class="vs-text-fancy">VS</text>
+                    </view>
+
+                    <view class="player-block right">
+                        <input 
+                        class="score-input" 
+                        type="number" 
+                        :value="game.score2" 
+                        :disabled="!isAdminOrReferee"
+                        @blur="(e) => handleScoreBlur(game, 'score2', e)"
+                        />
+                        <view class="name-wrapper right">
+                        <text class="player-name">{{ game.player2.name || 'Player 2' }}</text>
+                        <text class="winner-text" v-if="game.score2 > game.score1">WINNER</text>
+                        </view>
+                    </view>
+                </view>
+            </view>
+        </view>
+      </view>
+
+      <!-- Ungrouped Games -->
+      <view class="game-list" v-if="ungroupedGames.length > 0">
+        <view class="section-title">未分组对战</view>
+        <view class="game-card" v-for="game in ungroupedGames" :key="game.id">
           <view class="player-block left">
             <view class="name-wrapper">
               <text class="player-name">{{ game.player1.name || 'Player 1' }}</text>
@@ -100,6 +150,22 @@
       </view>
     </view>
 
+    <!-- 添加分组弹窗 -->
+    <view class="modal-mask" v-if="showGroupModal" @click="showGroupModal = false">
+      <view class="modal-content small" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">{{ editingGroupId ? '编辑分组' : '新建分组' }}</text>
+        </view>
+        <view class="modal-body">
+            <input class="group-input" v-model="groupTitle" placeholder="请输入分组名称 (如：小组赛A组)" />
+        </view>
+        <view class="modal-footer">
+          <button class="btn-cancel" @click="showGroupModal = false">取消</button>
+          <button class="btn-confirm" @click="confirmGroup">确定</button>
+        </view>
+      </view>
+    </view>
+
     <!-- 添加对战弹窗 -->
     <view class="modal-mask" v-if="showModal" @click="showModal = false">
       <view class="modal-content" @click.stop>
@@ -130,11 +196,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { getMatchParticipants, getGames, createGame, updateGameScore, getUserApplications, getMatches } from '../../api';
+import { getMatchParticipants, getGames, createGame, updateGameScore, getUserApplications, getMatches, getGroups, createGroup, updateGroup, deleteGroup } from '../../api';
 
 const currentTab = ref(0);
 const participants = ref<any[]>([]);
 const games = ref<any[]>([]);
+const groups = ref<any[]>([]);
 const matchId = ref<number | null>(null);
 const currentUser = ref<any>(null);
 const isAdminOrReferee = ref(false);
@@ -143,9 +210,16 @@ const isRegistered = ref(false);
 // Modal state
 const showModal = ref(false);
 const selectedPlayers = ref<number[]>([]);
+const activeGroupId = ref<number | null>(null);
+
+// Group Edit State
+const showGroupModal = ref(false);
+const groupTitle = ref('');
+const editingGroupId = ref<number | null>(null);
 
 const mainDraw = computed(() => participants.value.filter(p => p.status !== 'WAITLIST'));
 const waitList = computed(() => participants.value.filter(p => p.status === 'WAITLIST'));
+const ungroupedGames = computed(() => games.value.filter(g => !g.groupId));
 
 onLoad((options: any) => {
   if (options.id) {
@@ -160,10 +234,23 @@ onLoad((options: any) => {
 onShow(() => {
   if (matchId.value) {
     fetchParticipants(matchId.value);
-    fetchGames(matchId.value);
+    fetchData(matchId.value);
     checkUserStatus();
   }
 });
+
+const fetchData = async (id: number) => {
+    await Promise.all([fetchGames(id), fetchGroups(id)]);
+};
+
+const fetchGroups = async (id: number) => {
+    try {
+        const res = await getGroups(id);
+        groups.value = res as any[];
+    } catch (err) {
+        console.error(err);
+    }
+};
 
 const checkUserStatus = async () => {
   if (!currentUser.value || !matchId.value) return;
@@ -184,8 +271,6 @@ const checkUserStatus = async () => {
   }
   
   // Check if referee for this match
-  // Ideally we call an API, but for now let's fetch match details or use existing logic if available
-  // Simulating check:
   try {
      const matches = await getMatches();
      const match = (matches as any[]).find(m => m.id === matchId.value);
@@ -220,8 +305,55 @@ const goToRegister = () => {
   }
 };
 
+// Group Management
+const showAddGroupModal = () => {
+    editingGroupId.value = null;
+    groupTitle.value = '';
+    showGroupModal.value = true;
+};
+
+const showEditGroup = (group: any) => {
+    editingGroupId.value = group.id;
+    groupTitle.value = group.title;
+    showGroupModal.value = true;
+};
+
+const confirmGroup = async () => {
+    if (!groupTitle.value) return;
+    try {
+        if (editingGroupId.value) {
+            await updateGroup(editingGroupId.value, groupTitle.value);
+        } else {
+            await createGroup(matchId.value!, groupTitle.value);
+        }
+        showGroupModal.value = false;
+        fetchGroups(matchId.value!);
+    } catch (err) {
+        uni.showToast({ title: '操作失败', icon: 'none' });
+    }
+};
+
+const handleDeleteGroup = async (group: any) => {
+    uni.showModal({
+        title: '确认删除',
+        content: '删除分组将同时删除组内所有对战，确定吗？',
+        success: async (res) => {
+            if (res.confirm) {
+                try {
+                    await deleteGroup(group.id);
+                    fetchGroups(matchId.value!);
+                    fetchGames(matchId.value!); // Also refresh games as they might be deleted
+                } catch (err) {
+                    uni.showToast({ title: '删除失败', icon: 'none' });
+                }
+            }
+        }
+    });
+};
+
 // Match Management
-const showAddMatchModal = () => {
+const showAddMatchModal = (groupId: number | null = null) => {
+  activeGroupId.value = groupId;
   selectedPlayers.value = [];
   showModal.value = true;
 };
@@ -245,10 +377,13 @@ const confirmMatch = async () => {
   try {
     await createGame(matchId.value!, {
       player1Id: selectedPlayers.value[0],
-      player2Id: selectedPlayers.value[1]
+      player2Id: selectedPlayers.value[1],
+      groupId: activeGroupId.value
     });
     showModal.value = false;
+    // Refresh both to be safe
     fetchGames(matchId.value!);
+    fetchGroups(matchId.value!);
     uni.showToast({ title: '添加成功' });
   } catch (err) {
     uni.showToast({ title: '添加失败', icon: 'none' });
@@ -289,6 +424,18 @@ const handleScoreBlur = (game: any, field: 'score1' | 'score2', e: any) => {
 .title { font-size: 18px; font-weight: bold; color: #333; }
 .btn-register-mini { font-size: 12px; background-color: #3A5F0B; color: white; padding: 0 15px; height: 30px; line-height: 30px; border-radius: 15px; margin: 0; }
 .btn-add-mini { font-size: 12px; background-color: #2e86de; color: white; padding: 0 15px; height: 30px; line-height: 30px; border-radius: 15px; margin: 0; }
+.btn-add-match-mini { font-size: 11px; background-color: #3A5F0B; color: white; padding: 0 10px; height: 24px; line-height: 24px; border-radius: 12px; margin: 0; }
+.btn-delete-mini { font-size: 14px; background-color: transparent; color: #999; padding: 0 10px; height: 24px; line-height: 24px; margin: 0; font-weight: bold; }
+
+.group-list { padding: 0 20px; }
+.group-card { background: #fff; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.group-header { background: #f9f9f9; padding: 10px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+.group-title { font-weight: bold; color: #333; font-size: 15px; display: flex; align-items: center; }
+.edit-icon { font-size: 12px; color: #999; margin-left: 5px; }
+.group-actions { display: flex; align-items: center; gap: 5px; }
+
+.modal-content.small { width: 70%; max-height: auto; }
+.group-input { width: 100%; height: 40px; border: 1px solid #eee; padding: 0 10px; border-radius: 4px; margin-top: 10px; background: #f9f9f9; }
 
 .list-section { margin-bottom: 20px; padding: 0 20px; }
 .section-title { font-size: 14px; color: #666; margin-bottom: 10px; font-weight: bold; padding-left: 5px; border-left: 3px solid #FFD700; }

@@ -17,11 +17,9 @@
             mode="aspectFill"
           />
           <view class="user-details">
-            <text class="name">
-              {{ p.name || p.nickname || '选手' }} 
-              <text class="status-tag" v-if="p.status !== 'APPROVED'">({{ getStatusText(p.status) }})</text>
-            </text>
-            <text class="nickname" v-if="p.nickname && p.name !== p.nickname">@{{ p.nickname }}</text>
+            <text class="name">{{ p.name || p.nickname || '选手' }}</text>
+            <text class="nickname" v-if="p.nickname && p.name !== p.nickname">({{ p.nickname }})</text>
+            <text class="status-tag" v-if="p.status !== 'APPROVED'">{{ getStatusText(p.status) }}</text>
           </view>
         </view>
         <view class="action">
@@ -117,10 +115,14 @@ const submit = async () => {
 .title { font-size: 20px; font-weight: bold; }
 .player-list { margin-bottom: 20px; }
 .player-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: #fff; margin-bottom: 10px; border-radius: 8px; }
-.name { font-size: 16px; font-weight: bold; }
-.status-tag { font-size: 12px; color: #999; font-weight: normal; margin-left: 4px; }
-.action { display: flex; gap: 10px; }
-.rank-input, .score-input { width: 60px; height: 36px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 14px; }
+.info { display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: #f0f0f0; flex-shrink: 0; }
+.user-details { display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
+.name { font-size: 15px; font-weight: bold; color: #333; }
+.nickname { font-size: 13px; color: #666; margin-left: 4px; }
+.status-tag { font-size: 12px; color: #ff9800; margin-left: 4px; background: #fff3e0; padding: 0 4px; border-radius: 4px; }
+.action { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.rank-input, .score-input { width: 50px; height: 32px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 14px; }
 .btn-submit { background: #1976d2; color: white; margin-top: 20px; }
 .empty-tip { text-align: center; color: #999; margin-top: 50px; }
 </style>

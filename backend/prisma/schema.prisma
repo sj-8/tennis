@@ -32,6 +32,7 @@ model Player {
 model MatchGame {
   id           Int        @id @default(autoincrement())
   tournamentId Int
+  groupId      Int?
   player1Id    Int
   player2Id    Int
   score1       String?    // Changed to String to support sets like "6-4" or just "6"
@@ -41,6 +42,7 @@ model MatchGame {
   updatedAt    DateTime   @updatedAt
 
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  group        MatchGroup? @relation(fields: [groupId], references: [id])
   player1      Player     @relation("Player1", fields: [player1Id], references: [id])
   player2      Player     @relation("Player2", fields: [player2Id], references: [id])
 }
@@ -109,6 +111,18 @@ model Tournament {
   applications PlayerApplication[]
   referees    TournamentReferee[]
   games       MatchGame[]
+  groups      MatchGroup[]
+}
+
+model MatchGroup {
+  id           Int        @id @default(autoincrement())
+  tournamentId Int
+  title        String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  games        MatchGame[]
 }
 
 model TournamentResult {

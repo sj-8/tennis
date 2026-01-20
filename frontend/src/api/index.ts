@@ -158,3 +158,9 @@ export const removeReferee = (matchId: number, playerId: number) => request({ ur
 export const getGames = (tournamentId: number) => request({ url: `/matches/${tournamentId}/games` });
 export const createGame = (tournamentId: number, data: any) => request({ url: `/matches/${tournamentId}/games`, method: 'POST', data });
 export const updateGameScore = (gameId: number, data: any) => request({ url: `/games/${gameId}/score`, method: 'PUT', data });
+
+// 比赛分组管理
+export const getGroups = (tournamentId: number) => request({ url: `/matches/${tournamentId}/groups` });
+export const createGroup = (tournamentId: number, title: string) => request({ url: `/matches/${tournamentId}/groups`, method: 'POST', data: { title } });
+export const updateGroup = (groupId: number, title: string) => request({ url: `/groups/${groupId}`, method: 'PUT', data: { title } });
+export const deleteGroup = (groupId: number) => request({ url: `/groups/${groupId}`, method: 'DELETE' });

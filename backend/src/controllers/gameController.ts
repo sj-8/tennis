@@ -3,7 +3,7 @@ import prisma from '../prisma';
 
 export const createGame = async (req: Request, res: Response) => {
   const { tournamentId } = req.params;
-  const { player1Id, player2Id } = req.body;
+  const { player1Id, player2Id, groupId } = req.body;
 
   if (!player1Id || !player2Id) {
     return res.status(400).json({ error: 'Missing players' });
@@ -14,7 +14,8 @@ export const createGame = async (req: Request, res: Response) => {
       data: {
         tournamentId: Number(tournamentId),
         player1Id: Number(player1Id),
-        player2Id: Number(player2Id)
+        player2Id: Number(player2Id),
+        groupId: groupId ? Number(groupId) : null
       },
       include: {
         player1: true,
@@ -43,6 +44,76 @@ export const getGames = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch games' });
   }
+};
+
+export const getGroups = async (req: Request, res: Response) => {
+  const { tournamentId } = req.params;
+  try {
+    const groups = await prisma.matchGroup.findMany({
+      where: { tournamentId: Number(tournamentId) },
+      include: {
+        games: {
+            include: {
+                player1: { select: { name: true, avatar: true } },
+                player2: { select: { name: true, avatar: true } }
+            },
+            orderBy: { createdAt: 'asc' }
+        }
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+    res.json(groups);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch groups' });
+  }
+};
+
+export const createGroup = async (req: Request, res: Response) => {
+  const { tournamentId } = req.params;
+  const { title } = req.body;
+  
+  if (!title) return res.status(400).json({ error: 'Title required' });
+
+  try {
+    const group = await prisma.matchGroup.create({
+        data: {
+            tournamentId: Number(tournamentId),
+            title
+        }
+    });
+    res.json(group);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create group' });
+  }
+};
+
+export const updateGroup = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { title } = req.body;
+    try {
+        const group = await prisma.matchGroup.update({
+            where: { id: Number(id) },
+            data: { title }
+        });
+        res.json(group);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update group' });
+    }
+};
+
+export const deleteGroup = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        // Option: Delete games or disconnect? 
+        // Cascade delete should be handled by DB or manually.
+        // Let's delete games in the group first
+        await prisma.matchGame.deleteMany({ where: { groupId: Number(id) } });
+        
+        await prisma.matchGroup.delete({ where: { id: Number(id) } });
+        res.json({ message: 'Group deleted' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete group' });
+    }
 };
 
 export const updateGameScore = async (req: Request, res: Response) => {
