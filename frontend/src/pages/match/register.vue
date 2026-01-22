@@ -491,8 +491,12 @@ const handlePaymentAndSubmit = async (userInfo: any) => {
             uni.navigateBack();
         }, 1500);
     } catch (err: any) {
-        console.error(err);
-        uni.showToast({ title: err.message || '支付失败', icon: 'none' });
+        if (err.message === 'PAYMENT_CANCELLED') {
+             uni.showToast({ title: '支付已取消', icon: 'none' });
+        } else {
+             console.error(err);
+             uni.showToast({ title: err.message || '支付失败', icon: 'none' });
+        }
     } finally {
         uni.hideLoading();
         loading.value = false;

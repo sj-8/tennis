@@ -100,6 +100,9 @@ export const request = (options: any) => {
           if (err?.statusCode === 404 || err?.message?.includes('404')) {
               err.message = '接口不存在或服务未启动';
           }
+          if (isTimeout) {
+               err.message = '服务器响应超时，请稍后重试';
+          }
           handleError(err);
         }
       });

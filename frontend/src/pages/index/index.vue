@@ -180,6 +180,14 @@ const handleCardClick = (match: any) => {
 };
 
 const handleRegister = (match: any) => {
+  const userInfo = uni.getStorageSync('userInfo');
+  if (!userInfo) {
+      uni.showToast({ title: '请先登录', icon: 'none' });
+      setTimeout(() => {
+          uni.switchTab({ url: '/pages/my/my' });
+      }, 1000);
+      return;
+  }
   // 跳转到签表页面（在签表页面点击报名按钮进行报名）
   uni.navigateTo({ url: `/pages/match/draw?id=${match.id}` });
 };

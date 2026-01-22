@@ -20,6 +20,15 @@ onLaunch(() => {
     });
   }
   // #endif
+
+  // Global Auth Check
+  const userInfo = uni.getStorageSync('userInfo');
+  const token = uni.getStorageSync('token');
+  if (!userInfo || !token) {
+      console.log('App Launch: No user info, redirecting to login logic if needed.');
+      // Do not force redirect here because "index" page might be public.
+      // But we can set a flag or just let pages handle it.
+  }
 });
 
 onError((err) => {
