@@ -136,3 +136,42 @@ export const verifyNotification = async (headers: any, body: any) => {
     
     return decrypted; // Contains out_trade_no, trade_state, etc.
 };
+
+export const refundOrder = async (orderNo: string, amount: number, refundReason: string) => {
+    if (!wxPay) throw new Error('WeChat Pay not initialized');
+
+    // Refund ID needs to be unique.
+    const outRefundNo = `REF${orderNo}`;
+
+    // Amount in cents
+    const amountCents = Math.round(amount * 100);
+
+    const params = {
+        out_trade_no: orderNo,
+        out_refund_no: outRefundNo,
+        reason: refundReason,
+        amount: {
+            refund: amountCents,
+            total: amountCents,
+            currency: 'CNY',
+        },
+    };
+
+    try {
+        const result: any = await wxPay.refunds(params);
+        console.log('WeChat Pay Refund Result:', JSON.stringify(result));
+        
+        // wechatpay-node-v3 returns the Axios response object by default
+        const responseData = result.data || result;
+
+        if (responseData.status && ['PROCESSING', 'SUCCESS'].includes(responseData.status)) {
+            return responseData;
+        } else {
+             // Sometimes it returns pending status which is fine
+             return responseData;
+        }
+    } catch (error: any) {
+        console.error('WeChat Pay Refund Error:', error);
+        throw new Error(`Refund failed: ${error.message}`);
+    }
+};

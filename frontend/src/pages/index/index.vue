@@ -74,6 +74,9 @@
                   <button class="btn-waitlist" v-else-if="getApplicationStatus(match.id) === 'WAITLIST'" @click.stop="handleViewDraw(match)">候补中</button>
                   <button class="btn-registered" v-else @click.stop="handleViewDraw(match)">已报名</button>
               </template>
+              <template v-else-if="getPendingOrder(match.id)">
+                  <button class="btn-pay" @click.stop="handlePayOrder(match)">待支付</button>
+              </template>
               <button class="btn-register" @click.stop="handleRegister(match)" v-else-if="match.status === 'PENDING'">报名</button>
               <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
             </view>
@@ -90,12 +93,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { onShow, onPullDownRefresh } from '@dcloudio/uni-app';
-import { getMatches, deleteMatch, getUserApplications, cancelApplication } from '../../api';
+import { getMatches, deleteMatch, getUserApplications, cancelApplication, getMyOrders } from '../../api';
 import TennisBall from '../../components/TennisBall.vue';
 
 const matches = ref<any[]>([]);
 const isAdmin = ref(false); // 控制添加按钮显示
 const myApplications = ref<any[]>([]);
+const myOrders = ref<any[]>([]);
 
 const fetchMatches = async (isPullDown = false) => {
   /**
@@ -106,8 +110,10 @@ const fetchMatches = async (isPullDown = false) => {
   if (!isPullDown) {
     const cachedMatches = uni.getStorageSync('cache_matches');
     const cachedApps = uni.getStorageSync('cache_my_applications');
+    const cachedOrders = uni.getStorageSync('cache_my_orders');
     if (cachedMatches) matches.value = cachedMatches;
     if (cachedApps) myApplications.value = cachedApps;
+    if (cachedOrders) myOrders.value = cachedOrders;
   }
 
   // 2. 仅在无数据且非下拉刷新时显示 Loading
@@ -117,9 +123,10 @@ const fetchMatches = async (isPullDown = false) => {
 
   try {
     // 3. 并行请求数据
-    const [matchesRes, appsRes] = await Promise.all([
+    const [matchesRes, appsRes, ordersRes] = await Promise.all([
       getMatches({ limit: 5 }).catch(e => ({ _err: e })), 
-      getUserApplications().catch(e => ({ _err: e }))
+      getUserApplications().catch(e => ({ _err: e })),
+      getMyOrders().catch(e => ({ _err: e }))
     ]);
 
     // 4. 处理赛事数据
@@ -134,9 +141,12 @@ const fetchMatches = async (isPullDown = false) => {
     if (!(appsRes as any)._err) {
       myApplications.value = appsRes as any[];
       uni.setStorageSync('cache_my_applications', myApplications.value);
-    } else {
-      // 静默失败（可能未登录）
-      console.warn('Fetch apps failed:', (appsRes as any)._err);
+    }
+
+    // 6. 处理订单数据
+    if (!(ordersRes as any)._err) {
+      myOrders.value = ordersRes as any[];
+      uni.setStorageSync('cache_my_orders', myOrders.value);
     }
 
   } catch (err) {
@@ -162,6 +172,18 @@ const getApplicationStatus = (matchId: number) => {
   if (!myApplications.value) return null;
   const app = myApplications.value.find((app: any) => app.tournamentId === matchId);
   return app ? app.status : null;
+};
+
+const getPendingOrder = (matchId: number) => {
+  if (!myOrders.value) return null;
+  return myOrders.value.find((o: any) => o.tournamentId === matchId && o.status === 'PENDING');
+};
+
+const handlePayOrder = (match: any) => {
+    const order = getPendingOrder(match.id);
+    if (order) {
+        uni.navigateTo({ url: `/pages/my/order-detail?data=${encodeURIComponent(JSON.stringify(order))}` });
+    }
 };
 
 const checkLogin = () => {
@@ -503,6 +525,7 @@ onPullDownRefresh(() => {
 .btn-score { background-color: #FFD700; color: #3A5F0B; }
 .btn-edit { background-color: #2e86de; color: white; }
 .btn-referee { background-color: #9b59b6; color: white; }
+.btn-pay { background-color: #ff9800; color: white; }
 .btn-delete { background-color: #e74c3c; color: white; }
 .btn-delete.full-width { width: 100%; flex: none; }
 .match-name { font-size: 18px; font-weight: bold; display: flex; align-items: center; margin-bottom: 8px; color: #333; }

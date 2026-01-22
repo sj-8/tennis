@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
-import { generatePaymentParams, getJsApiSignature, verifyNotification, getWxPay } from '../utils/wechatPay';
+import { generatePaymentParams, getJsApiSignature, verifyNotification, getWxPay, refundOrder } from '../utils/wechatPay';
 
 // Helper to generate unique order number
 const generateOrderNo = () => {
@@ -32,6 +32,20 @@ export const createOrder = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'This tournament is free, no order needed' });
         }
 
+        // Check for existing PENDING order
+        const existingOrder = await prisma.order.findFirst({
+            where: {
+                // @ts-ignore
+                playerId: Number(userId),
+                tournamentId: Number(tournamentId),
+                status: 'PENDING'
+            }
+        });
+
+        if (existingOrder) {
+            return res.json(existingOrder);
+        }
+
         // Create Order
         // @ts-ignore
         const order = await prisma.order.create({
@@ -49,6 +63,31 @@ export const createOrder = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Create order error:', error);
         res.status(500).json({ error: 'Failed to create order' });
+    }
+};
+
+export const cancelOrder = async (req: Request, res: Response) => {
+    const { orderNo } = req.params;
+    // @ts-ignore
+    const userId = req.user?.id;
+
+    try {
+        // @ts-ignore
+        const order = await prisma.order.findUnique({ where: { orderNo } });
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+        if (order.playerId !== userId) return res.status(403).json({ error: 'Not your order' });
+        if (order.status !== 'PENDING') return res.status(400).json({ error: 'Order cannot be cancelled' });
+
+        // @ts-ignore
+        const updatedOrder = await prisma.order.update({
+            where: { id: order.id },
+            data: { status: 'CANCELLED' }
+        });
+
+        res.json({ message: 'Order cancelled', order: updatedOrder });
+    } catch (error) {
+        console.error('Cancel order error:', error);
+        res.status(500).json({ error: 'Failed to cancel order' });
     }
 };
 
@@ -270,7 +309,7 @@ export const cancelApplication = async (req: Request, res: Response) => {
             return res.status(400).json({ error: '开赛前24h不能取消' });
         }
 
-        // Transaction: Cancel self -> Promote waitlist
+        // Transaction: Cancel self -> Refund -> Promote waitlist
         await prisma.$transaction(async (tx) => {
             // 1. Cancel Self
             const myApp = await tx.playerApplication.findFirst({
@@ -281,12 +320,49 @@ export const cancelApplication = async (req: Request, res: Response) => {
                 throw new Error('No active application found');
             }
             
+            // 2. Refund Check
+            // Find PAID order for this tournament
+            const paidOrder = await tx.order.findFirst({
+                where: {
+                    tournamentId: Number(id),
+                    playerId: Number(userId),
+                    status: 'PAID'
+                }
+            });
+
+            if (paidOrder) {
+                // Perform Refund
+                // Note: We do this inside transaction, but external API call cannot be rolled back.
+                // Ideally, we should use a job queue or ensure idempotency.
+                // For now, if refund fails, we throw error and rollback DB changes.
+                try {
+                    if (getWxPay()) {
+                         await refundOrder(paidOrder.orderNo, paidOrder.amount, '用户取消报名退款');
+                         console.log(`Refund initiated for order ${paidOrder.orderNo}`);
+                    } else {
+                         console.warn('Simulation: Refund skipped (No Wechat Pay Config)');
+                    }
+                    
+                    // Update Order Status
+                    await tx.order.update({
+                        where: { id: paidOrder.id },
+                        data: { status: 'REFUNDED' }
+                    });
+                } catch (refundError: any) {
+                    console.error('Refund failed:', refundError);
+                    // Decide: Fail the cancellation OR continue with manual refund required?
+                    // Let's fail it to be safe.
+                    throw new Error('退款失败，请联系客服处理');
+                }
+            }
+
+            // 3. Update Application Status
             await tx.playerApplication.update({
                 where: { id: myApp.id },
                 data: { status: 'CANCELLED' }
             });
             
-            // 2. If I was APPROVED, promote first WAITLIST
+            // 4. If I was APPROVED, promote first WAITLIST
             // @ts-ignore
             if (myApp.status === 'APPROVED' && tournament.drawSize) {
                 const firstWaitlist = await tx.playerApplication.findFirst({
@@ -303,7 +379,7 @@ export const cancelApplication = async (req: Request, res: Response) => {
             }
         });
         
-        res.json({ message: 'Application cancelled' });
+        res.json({ message: 'Application cancelled and refund initiated' });
     } catch (error: any) {
         console.error(error);
         res.status(500).json({ error: error.message || 'Failed to cancel' });
