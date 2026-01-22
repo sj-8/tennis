@@ -45,11 +45,20 @@ ENV NODE_ENV=production
 ENV PORT=80
 ENV TZ=Asia/Shanghai
 
+# WeChat Pay Config
+ENV WX_APP_ID=wx4dbdab88b6efe305
+ENV WX_API_V3_KEY=320282199305014456sj672651sj0825
+ENV WX_CERT_SERIAL=7CF5800A82F1430644A799175C5D85D3279E98EF
+ENV WX_MCH_ID=1738632811
+ENV WX_CERT_PATH=/app/certs/apiclient_cert.pem
+ENV WX_KEY_PATH=/app/certs/apiclient_key.pem
+
 # 复制依赖和构建产物
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY backend/certs ./certs
 
 # 复制启动脚本
 COPY backend/start.sh ./start.sh

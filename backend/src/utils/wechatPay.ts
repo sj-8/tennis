@@ -9,29 +9,38 @@ import crypto from 'crypto';
 const APPID = process.env.WX_APP_ID || '';
 const MCHID = process.env.WX_MCH_ID || '';
 const APIV3_KEY = process.env.WX_API_V3_KEY || ''; // API V3 Key
-const CERT_PATH = process.env.WX_CERT_PATH || ''; // Path to apiclient_cert.pem
-const KEY_PATH = process.env.WX_KEY_PATH || '';   // Path to apiclient_key.pem
+const CERT_PATH = process.env.WX_CERT_PATH || path.join(process.cwd(), 'certs', 'apiclient_cert.pem');
+const KEY_PATH = process.env.WX_KEY_PATH || path.join(process.cwd(), 'certs', 'apiclient_key.pem');
 
 // Initialize WxPay
 let wxPay: WxPay | null = null;
 let privateKeyContent: Buffer | string = '';
 
 try {
-    if (APPID && MCHID && APIV3_KEY && CERT_PATH && KEY_PATH) {
-        // Read cert/key files if they are paths
-        const publicKey = fs.readFileSync(CERT_PATH);
-        privateKeyContent = fs.readFileSync(KEY_PATH);
+    if (APPID && MCHID && APIV3_KEY) {
+        // Read cert/key files
+        if (fs.existsSync(CERT_PATH) && fs.existsSync(KEY_PATH)) {
+             const publicKey = fs.readFileSync(CERT_PATH);
+             privateKeyContent = fs.readFileSync(KEY_PATH);
 
-        wxPay = new WxPay({
-            appid: APPID,
-            mchid: MCHID,
-            publicKey: publicKey,
-            privateKey: privateKeyContent,
-            key: APIV3_KEY,
-        });
-        console.log('WeChat Pay initialized successfully');
+             // Check if placeholders
+             if (publicKey.toString().includes('PLACEHOLDER') || privateKeyContent.toString().includes('PLACEHOLDER')) {
+                 console.warn('WeChat Pay Certs are placeholders. Please upload real certificates.');
+             } else {
+                 wxPay = new WxPay({
+                     appid: APPID,
+                     mchid: MCHID,
+                     publicKey: publicKey,
+                     privateKey: privateKeyContent,
+                     key: APIV3_KEY,
+                 });
+                 console.log('WeChat Pay initialized successfully');
+             }
+        } else {
+             console.warn(`WeChat Pay Certs not found at ${CERT_PATH} or ${KEY_PATH}`);
+        }
     } else {
-        console.warn('WeChat Pay not initialized: Missing environment variables');
+        console.warn('WeChat Pay not initialized: Missing environment variables (MCHID, etc.)');
     }
 } catch (error) {
     console.error('Failed to initialize WeChat Pay:', error);

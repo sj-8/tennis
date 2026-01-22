@@ -63,14 +63,21 @@ onShow(() => {
 
 const filteredList = computed(() => {
   const now = new Date();
-  return applications.value.filter((app: any) => {
+  
+  // 1. Deduplicate by tournamentId (Keep the latest one because API sorts by desc)
+  const seenIds = new Set();
+  const uniqueApps: any[] = [];
+  
+  for (const app of applications.value) {
+      if (app.tournament && !seenIds.has(app.tournament.id)) {
+          seenIds.add(app.tournament.id);
+          uniqueApps.push(app);
+      }
+  }
+
+  return uniqueApps.filter((app: any) => {
     if (!app.tournament) return false;
     const startTime = new Date(app.tournament.startTime);
-    const isCompleted = startTime < now; // Simple logic: past start time = completed? Or status?
-    // User asked for "Pending" (待比赛) and "Completed" (已完成).
-    // Let's use time for now. If time passed, it's completed.
-    // Also consider application status. Only APPROVED/WAITLIST should show?
-    // Maybe show all.
     
     if (currentTab.value === 0) {
       return startTime >= now;
