@@ -12,11 +12,10 @@ COPY backend/package*.json ./
 # 安装所有依赖（包括 devDependencies 用于构建）
 RUN npm install
 
-# 复制 Prisma Schema 并生成 Client
+# 复制 Prisma Schema
 COPY backend/prisma ./prisma/
-# 在构建时生成 Prisma Client 需要 DATABASE_URL，但构建环境可能没有。
-# 使用 --no-engine 或设置一个临时的环境变量来绕过检查，或者只生成客户端代码而不尝试连接数据库。
-# Prisma 7 需要配置，我们可以给一个假的 URL 用于构建阶段，实际运行时会用真实环境变量。
+
+# 生成 Prisma Client (使用 dummy URL)
 RUN DATABASE_URL="mysql://dummy:dummy@localhost:3306/dummy" npx prisma generate
 
 # 复制源代码
@@ -25,11 +24,14 @@ COPY backend/ .
 # 构建 TypeScript 代码
 RUN npm run build
 
+# 清理 devDependencies，只保留生产依赖
+RUN npm prune --production
+
 # 运行阶段
 FROM node:20-alpine
 
-# 安装 OpenSSL 1.1 (Prisma 需要)
-RUN apk add --no-cache openssl
+# 安装 OpenSSL (Prisma 需要)
+RUN apk add --no-cache openssl ca-certificates
 
 # 设置工作目录
 WORKDIR /app
@@ -38,19 +40,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=80
 
-# 复制依赖文件
-COPY backend/package*.json ./
-
-# 只安装生产环境依赖
-RUN npm install --production
+# 复制依赖 (包含已生成的 Prisma Client)
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 
 # 复制构建产物
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-
-# 重新生成 Prisma Client (确保二进制文件匹配)
-# 同样使用 dummy URL，因为我们只是需要生成代码
-RUN DATABASE_URL="mysql://dummy:dummy@localhost:3306/dummy" npx prisma generate
 
 # 复制启动脚本
 COPY backend/start.sh ./start.sh
