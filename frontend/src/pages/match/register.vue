@@ -373,6 +373,22 @@ const submit = async () => {
         // return;
     }
 
+    if (matchInfo.value.fee && matchInfo.value.fee > 0) {
+        // Need payment
+        uni.showModal({
+            title: '确认报名',
+            content: `本场比赛需支付报名费 ${matchInfo.value.fee} 元，是否前往支付？`,
+            success: async (res) => {
+                if (res.confirm) {
+                    await handlePaymentAndSubmit(userInfo);
+                } else {
+                    loading.value = false;
+                }
+            }
+        });
+        return;
+    }
+
     await submitApplication({
       playerId: userInfo.id,
       tournamentId: tournamentId.value,
@@ -389,6 +405,38 @@ const submit = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const handlePaymentAndSubmit = async (userInfo: any) => {
+    try {
+        uni.showLoading({ title: '创建订单...' });
+        // 1. Create Order
+        const order: any = await createOrder(Number(tournamentId.value));
+        
+        // 2. Pay Order (Simulation)
+        uni.showLoading({ title: '支付中...' });
+        await payOrder(order.orderNo);
+        
+        // 3. Submit Application
+        uni.showLoading({ title: '完成报名...' });
+        await submitApplication({
+          playerId: userInfo.id,
+          tournamentId: tournamentId.value,
+          partnerId: partner.value ? partner.value.id : null,
+          ...form.value
+        });
+        
+        uni.showToast({ title: '支付并报名成功' });
+        setTimeout(() => {
+            uni.navigateBack();
+        }, 1500);
+    } catch (err: any) {
+        console.error(err);
+        uni.showToast({ title: err.message || '支付失败', icon: 'none' });
+    } finally {
+        uni.hideLoading();
+        loading.value = false;
+    }
 };
 </script>
 

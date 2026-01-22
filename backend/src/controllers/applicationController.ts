@@ -215,3 +215,19 @@ export const auditApplication = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Audit failed' });
   }
 };
+
+export const getMyOrders = async (req: Request, res: Response) => {
+    // @ts-ignore
+    const userId = req.user?.id;
+    try {
+        const orders = await prisma.order.findMany({
+            where: { playerId: Number(userId) },
+            include: { tournament: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(orders);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch orders' });
+    }
+};

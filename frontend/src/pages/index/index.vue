@@ -65,10 +65,9 @@
           <view class="match-action">
             <view class="action-column">
               <template v-if="isRegistered(match.id)">
-                  <button class="btn-registered" v-if="getApplicationStatus(match.id) === 'APPROVED'" @click.stop="handleViewDraw(match)">已报名</button>
+                  <button class="btn-registered" v-if="['APPROVED', 'PENDING'].includes(getApplicationStatus(match.id))" @click.stop="handleViewDraw(match)">已报名</button>
                   <button class="btn-waitlist" v-else-if="getApplicationStatus(match.id) === 'WAITLIST'" @click.stop="handleViewDraw(match)">候补中</button>
-                  <button class="btn-registered" v-else>审核中</button>
-                  <!-- Cancel button removed and moved to details page -->
+                  <button class="btn-registered" v-else @click.stop="handleViewDraw(match)">已报名</button>
               </template>
               <button class="btn-register" @click.stop="handleRegister(match)" v-else-if="match.status === 'PENDING'">报名</button>
               <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
@@ -262,14 +261,25 @@ const formatDate = (dateStr: string) => {
   return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.toTimeString().slice(0, 5)} ${weekDay}`;
 };
 
-const getStatusText = (status: string) => {
-  const statusMap: Record<string, string> = {
-    'PENDING': '报名中',
-    'COMPLETED': '已结束',
-    'IN_PROGRESS': '进行中',
-    'CANCELLED': '已取消'
-  };
-  return statusMap[status] || status;
+const getStatusText = (status: string, match: any) => {
+  if (status === 'COMPLETED') return '已结束';
+  if (status === 'ONGOING') return '进行中';
+  if (status === 'CANCELLED') return '已取消';
+  
+  // Handle PENDING status with time logic
+  const now = new Date();
+  const start = new Date(match.startTime);
+  const regStart = match.registrationStart ? new Date(match.registrationStart) : null;
+  const regEnd = match.registrationEnd ? new Date(match.registrationEnd) : null;
+
+  if (now > start) {
+      return '已结束'; 
+  }
+  
+  if (regStart && now < regStart) return '待报名';
+  if (regEnd && now > regEnd) return '报名截止';
+  
+  return '报名中';
 };
 
 const getMatchCardClass = (type: string) => {

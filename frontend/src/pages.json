@@ -77,6 +77,12 @@
       }
     },
     {
+      "path": "pages/my/orders",
+      "style": {
+        "navigationBarTitleText": "我的订单"
+      }
+    },
+    {
       "path": "pages/my/auth",
       "style": {
         "navigationBarTitleText": "实名认证"

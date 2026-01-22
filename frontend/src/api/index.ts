@@ -156,6 +156,12 @@ export const updateProfile = (id: number, data: any) => request({ url: `/auth/${
 export const searchPlayers = (query: string) => request({ url: `/users/search?query=${encodeURIComponent(query)}` });
 // 获取手机号
 export const getWeChatPhone = (code: string) => request({ url: '/auth/phone', method: 'POST', data: { code } });
+
+// 支付订单
+export const createOrder = (tournamentId: number) => request({ url: '/orders/create', method: 'POST', data: { tournamentId } });
+export const payOrder = (orderNo: string) => request({ url: '/orders/pay', method: 'POST', data: { orderNo } });
+export const getMyOrders = () => request({ url: '/orders/my' });
+
 // 更新赛事信息
 export const updateMatch = (id: number, data: any) => request({ url: `/matches/${id}`, method: 'PUT', data });
 // 删除赛事

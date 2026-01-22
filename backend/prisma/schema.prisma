@@ -31,6 +31,25 @@ model Player {
   gamesAsPlayer2 MatchGame[] @relation("Player2")
   gamesAsPartner1 MatchGame[] @relation("Partner1")
   gamesAsPartner2 MatchGame[] @relation("Partner2")
+  orders          Order[]
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  orderNo       String   @unique
+  playerId      Int
+  tournamentId  Int
+  amount        Int      // 分 (cents) or 元 (yuan)? Let's use 元 (Int) as per fee field, or standard is cents. 
+  // Fee in Tournament is Int (yuan/person). Let's stick to Yuan for simplicity or convert.
+  // Standard payment is cents. Let's use Cents for Order.amount to be safe for future.
+  // But tournament.fee is likely Yuan.
+  // Let's assume tournament.fee is Yuan. Order.amount is Yuan.
+  status        String   @default("PENDING") // PENDING, PAID, CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  player        Player     @relation(fields: [playerId], references: [id])
+  tournament    Tournament @relation(fields: [tournamentId], references: [id])
 }
 
 model MatchGame {
@@ -123,6 +142,7 @@ model Tournament {
   referees    TournamentReferee[]
   games       MatchGame[]
   groups      MatchGroup[]
+  orders      Order[]
 }
 
 model MatchGroup {

@@ -48,6 +48,11 @@ router.post('/application/submit', authenticateToken, submitApplication);
 router.post('/application/:id/cancel', authenticateToken, cancelApplication);
 router.get('/application/my', authenticateToken, getUserApplications);
 
+// Payment & Orders
+router.post('/orders/create', authenticateToken, createOrder);
+router.post('/orders/pay', authenticateToken, simulatePayment);
+router.get('/orders/my', authenticateToken, getMyOrders);
+
 // Admin Routes (Protected)
 router.get('/admin/applications', authenticateToken, requireAdmin, getApplications);
 router.post('/admin/applications/:id/audit', authenticateToken, requireAdmin, auditApplication);

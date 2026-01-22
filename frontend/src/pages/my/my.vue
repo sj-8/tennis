@@ -31,15 +31,15 @@
         <text class="section-title">我的订单</text>
       </view>
       <view class="order-grid">
-        <view class="order-item">
+        <view class="order-item" @click="navigateTo('/pages/my/orders?status=PENDING')">
           <text class="order-icon">🛒</text>
           <text class="order-label">待支付</text>
         </view>
-        <view class="order-item">
+        <view class="order-item" @click="navigateTo('/pages/my/orders?status=PAID')">
           <text class="order-icon">🎫</text>
           <text class="order-label">已支付</text>
         </view>
-        <view class="order-item">
+        <view class="order-item" @click="navigateTo('/pages/my/orders')">
           <text class="order-icon">📦</text>
           <text class="order-label">全部</text>
         </view>
