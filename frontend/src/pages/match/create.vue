@@ -187,8 +187,9 @@ onLoad(async (options: any) => {
         matchTypeIndex.value = matchTypes.indexOf(form.value.matchType);
       }
       if (match.level) {
-        levelIndex.value = levels.indexOf(match.level);
-        form.value.level = match.level;
+        const levelStr = String(match.level);
+        levelIndex.value = levels.indexOf(levelStr);
+        form.value.level = levelStr;
       }
       
       if (match.registrationStart) {

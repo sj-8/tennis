@@ -43,6 +43,7 @@ WORKDIR /app
 # 环境变量
 ENV NODE_ENV=production
 ENV PORT=80
+ENV TZ=Asia/Shanghai
 
 # 复制依赖和构建产物
 COPY --from=builder /app/node_modules ./node_modules

@@ -149,6 +149,7 @@ export const updateMatch = async (req: Request, res: Response) => {
         drawSize: data.drawSize ? Number(data.drawSize) : null,
         fee: data.fee ? Number(data.fee) : null,
         matchType: data.matchType,
+        level: data.level,
       },
     });
     res.json(match);

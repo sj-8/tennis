@@ -113,7 +113,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { submitApplication, getMatches, deleteMatch, getMatchParticipants, cancelApplication, searchPlayers, getWeChatPhone } from '../../api';
+import { submitApplication, getMatches, deleteMatch, getMatchParticipants, cancelApplication, searchPlayers, getWeChatPhone, createOrder, payOrder } from '../../api';
 
 const loading = ref(false);
 const tournamentId = ref<number | null>(null);
@@ -378,7 +378,7 @@ const submit = async () => {
         uni.showModal({
             title: '确认报名',
             content: `本场比赛需支付报名费 ${matchInfo.value.fee} 元，是否前往支付？`,
-            success: async (res) => {
+            success: async (res: any) => {
                 if (res.confirm) {
                     await handlePaymentAndSubmit(userInfo);
                 } else {
@@ -431,11 +431,11 @@ const handlePaymentAndSubmit = async (userInfo: any) => {
                     package: params.package,
                     signType: params.signType,
                     paySign: params.paySign,
-                    success: (res) => {
+                    success: (res: any) => {
                         console.log('Payment success:', res);
                         resolve(res);
                     },
-                    fail: (err) => {
+                    fail: (err: any) => {
                         console.error('Payment failed:', err);
                         // User cancelled or error
                         reject(new Error(err.errMsg || 'Payment failed'));
