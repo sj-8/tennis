@@ -55,7 +55,7 @@ export const generatePaymentParams = async (description: string, outTradeNo: str
     const params = {
         description,
         out_trade_no: outTradeNo,
-        notify_url: process.env.WX_PAY_NOTIFY_URL || 'https://your-domain.com/api/orders/notify', // Must be configured
+        notify_url: process.env.WX_PAY_NOTIFY_URL || 'https://express-4y4r-199217-5-1386469492.sh.run.tcloudbase.com/api/orders/notify',
         amount: {
             total: Math.round(amount * 100), // Convert Yuan to Cents
             currency: 'CNY',
@@ -66,11 +66,22 @@ export const generatePaymentParams = async (description: string, outTradeNo: str
     };
 
     const result: any = await wxPay.transactions_jsapi(params);
-    return result; // Contains prepay_id
+    console.log('WeChat Pay JSAPI Result:', JSON.stringify(result));
+    
+    // wechatpay-node-v3 returns the Axios response object by default
+    // The actual API response data is in result.data
+    const responseData = result.data || result;
+    
+    if (!responseData || !responseData.prepay_id) {
+        throw new Error(`Failed to get prepay_id from WeChat Pay. Status: ${result.status}, Result: ${JSON.stringify(result)}`);
+    }
+    
+    return responseData; // Contains prepay_id
 };
 
 export const getJsApiSignature = (prepayId: string) => {
     if (!wxPay || !privateKeyContent) throw new Error('WeChat Pay not initialized');
+    if (!prepayId) throw new Error('Invalid prepayId for signature');
     
     const timeStamp = Math.floor(Date.now() / 1000).toString();
     const nonceStr = crypto.randomBytes(16).toString('hex');

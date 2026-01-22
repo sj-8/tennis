@@ -423,6 +423,8 @@ const handlePaymentAndSubmit = async (userInfo: any) => {
         } else if (paymentRes.paymentParams) {
             // Real Payment
             const params = paymentRes.paymentParams;
+            console.log('Requesting Payment with params:', JSON.stringify(params)); // Debug Log
+            
             await new Promise((resolve, reject) => {
                 uni.requestPayment({
                     provider: 'wxpay',
@@ -436,9 +438,16 @@ const handlePaymentAndSubmit = async (userInfo: any) => {
                         resolve(res);
                     },
                     fail: (err: any) => {
-                        console.error('Payment failed:', err);
-                        // User cancelled or error
-                        reject(new Error(err.errMsg || 'Payment failed'));
+                        console.error('Payment failed in uni.requestPayment:', err);
+                        // Handle user cancellation gracefully
+                        if (err.errMsg && (err.errMsg.includes('cancel') || err.errMsg.indexOf('cancel') > -1)) {
+                            console.log('User cancelled payment');
+                            reject(new Error('PAYMENT_CANCELLED'));
+                        } else {
+                            // Detailed error for debugging
+                            const debugMsg = `Payment SDK Error: ${err.errMsg}`;
+                            reject(new Error(debugMsg));
+                        }
                     }
                 });
             });
@@ -498,7 +507,10 @@ const handlePaymentAndSubmit = async (userInfo: any) => {
              uni.showToast({ title: err.message || '支付失败', icon: 'none' });
         }
     } finally {
-        uni.hideLoading();
+        // Delay hiding loading to prevent conflict with showToast
+        setTimeout(() => {
+            uni.hideLoading();
+        }, 500);
         loading.value = false;
     }
 };

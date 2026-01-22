@@ -159,7 +159,20 @@ const getApplicationStatus = (matchId: number) => {
   return app ? app.status : null;
 };
 
+const checkLogin = () => {
+  const userInfo = uni.getStorageSync('userInfo');
+  if (!userInfo) {
+      uni.showToast({ title: '请先登录', icon: 'none' });
+      setTimeout(() => {
+          uni.switchTab({ url: '/pages/my/my' });
+      }, 1000);
+      return false;
+  }
+  return true;
+};
+
 const goToCreate = () => {
+  if (!checkLogin()) return;
   // 跳转到创建赛事页面
   uni.navigateTo({ url: '/pages/match/create' });
 };
@@ -170,6 +183,7 @@ const goToMatchList = () => {
 };
 
 const goToMyMatches = () => {
+  if (!checkLogin()) return;
   uni.navigateTo({ url: '/pages/match/my-matches' });
 };
 
