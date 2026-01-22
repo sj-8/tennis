@@ -212,3 +212,32 @@ export const updateGameScore = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to update score' });
   }
 };
+
+export const deleteGame = async (req: Request, res: Response) => {
+  const { gameId } = req.params;
+  // @ts-ignore
+  const { role, id: userId } = req.user || {};
+
+  try {
+    const game = await prisma.matchGame.findUnique({ where: { id: Number(gameId) } });
+    if (!game) return res.status(404).json({ error: 'Game not found' });
+
+    // Verify Admin or Referee
+    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+        const isReferee = await prisma.tournamentReferee.findUnique({
+            where: {
+                tournamentId_playerId: {
+                    tournamentId: game.tournamentId,
+                    playerId: Number(userId)
+                }
+            }
+        });
+        if (!isReferee) return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    await prisma.matchGame.delete({ where: { id: Number(gameId) } });
+    res.json({ message: 'Game deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete game' });
+  }
+};

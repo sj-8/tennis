@@ -3,7 +3,7 @@ import { login, updateProfile, searchPlayers, getPhoneNumber } from '../controll
 import { getMatches, createMatch, updateMatch, deleteMatch, submitResult, getRankings, getMatchParticipants, getReferees, addReferee, removeReferee } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs, promotePlayerToAdmin } from '../controllers/adminController';
 import { submitApplication, getApplications, auditApplication, getUserApplications, cancelApplication, createOrder, initiatePayment, handlePaymentNotify, getMyOrders } from '../controllers/applicationController';
-import { createGame, getGames, updateGameScore, getGroups, createGroup, updateGroup, deleteGroup } from '../controllers/gameController';
+import { createGame, getGames, updateGameScore, getGroups, createGroup, updateGroup, deleteGroup, deleteGame } from '../controllers/gameController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -36,6 +36,7 @@ router.delete('/matches/:id/referees/:playerId', authenticateToken, requireAdmin
 router.post('/matches/:tournamentId/games', authenticateToken, createGame); 
 router.get('/matches/:tournamentId/games', getGames);
 router.put('/games/:gameId/score', authenticateToken, updateGameScore);
+router.delete('/games/:gameId', authenticateToken, deleteGame);
 
 // Groups
 router.get('/matches/:tournamentId/groups', getGroups);

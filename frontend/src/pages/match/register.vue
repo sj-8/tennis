@@ -419,7 +419,7 @@ const handlePaymentAndSubmit = async (userInfo: any) => {
         
         if (paymentRes.isSimulation) {
             // Simulation Success
-            uni.showToast({ title: '模拟支付成功' });
+            uni.showToast({ title: '模拟支付成功 (未配置支付证书)', icon: 'none' });
         } else if (paymentRes.paymentParams) {
             // Real Payment
             const params = paymentRes.paymentParams;

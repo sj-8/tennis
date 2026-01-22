@@ -137,6 +137,7 @@
           
           <view class="vs-divider">
             <text class="vs-text-fancy">VS</text>
+            <view class="delete-game-btn" v-if="isAdminOrReferee" @click="handleDeleteGame(game)">×</view>
           </view>
 
           <view class="player-block right">
@@ -470,6 +471,13 @@ const handleScoreBlur = (game: any, field: 'score1' | 'score2', e: any) => {
 .name-wrapper.right { align-items: flex-start; }
 .player-name { font-size: 14px; font-weight: bold; color: #333; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.4; }
 .score-input { width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; text-align: center; font-size: 18px; font-weight: bold; color: #3A5F0B; z-index: 1; flex-shrink: 0; }
+.delete-game-btn {
+    font-size: 16px;
+    color: #ff3b30;
+    font-weight: bold;
+    margin-top: 5px;
+    padding: 0 10px;
+}
 .vs-divider { display: flex; flex-direction: column; align-items: center; padding: 0 20px; flex-shrink: 0; }
 .vs-text-fancy { 
   font-size: 24px; 

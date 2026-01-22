@@ -122,7 +122,7 @@ const isEdit = ref(false);
 const loading = ref(false);
 const matchId = ref(0);
 const categories = ['周赛', '月赛', '公开赛', '大奖赛'];
-const levels = ['10', '25', '50', '100', '200', '400', '500', '1000'];
+const levels = ['2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0', '10', '25', '50', '100', '200', '400', '500', '1000'];
 const matchTypes = ['单打', '双打'];
 const jiangsuCities = ['南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const matchTypeIndex = ref(-1);
@@ -275,13 +275,24 @@ const submit = async () => {
     return;
   }
 
-  const data = {
-    ...form.value,
-    startTime: `${form.value.date} ${form.value.time}`.replace(/-/g, '/'), // Fix for iOS/Safari
+    // Explicitly set fields to ensure they are reactive and included
+    const data = {
+    name: form.value.name,
+    location: form.value.location,
+    region: form.value.region,
+    latitude: form.value.latitude,
+    longitude: form.value.longitude,
+    startTime: `${form.value.date} ${form.value.time}`.replace(/-/g, '/'),
     registrationStart: (form.value.regStartDate && form.value.regStartTime) ? `${form.value.regStartDate} ${form.value.regStartTime}`.replace(/-/g, '/') : null,
     registrationEnd: (form.value.regEndDate && form.value.regEndTime) ? `${form.value.regEndDate} ${form.value.regEndTime}`.replace(/-/g, '/') : null,
+    matchType: form.value.matchType,
+    level: form.value.level,
     drawSize: form.value.drawSize ? Number(form.value.drawSize) : null,
-    fee: form.value.fee ? Number(form.value.fee) : null
+    fee: form.value.fee ? Number(form.value.fee) : null,
+    description: form.value.description,
+    rules: form.value.rules,
+    withdrawalNotice: form.value.withdrawalNotice,
+    contact: form.value.contact
   };
 
   loading.value = true;
