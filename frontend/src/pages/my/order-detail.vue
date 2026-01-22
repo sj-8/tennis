@@ -1,36 +1,60 @@
 <template>
   <view class="container">
     <view class="order-detail" v-if="order">
-      <view class="header-status">
-        <text class="status-text" :class="order.status">{{ getStatusText(order.status) }}</text>
-        <text class="amount">￥{{ order.amount }}</text>
+      <view class="info-card first-card">
+        <view class="info-row">
+            <text class="label">比赛名称</text>
+            <text class="value highlight-name">{{ order.tournament?.name }}</text>
+        </view>
+        <view class="divider"></view>
+        <view class="info-row">
+            <text class="label">比赛时间</text>
+            <text class="value">{{ formatDate(order.tournament?.startTime) }}</text>
+        </view>
+        <view class="info-row">
+            <text class="label vertical-top">比赛地点</text>
+            <text class="value">{{ order.tournament?.location }}</text>
+        </view>
+        <view class="divider"></view>
+        <view class="info-row">
+            <text class="label">参赛人员</text>
+            <text class="value">{{ order.player?.name }}</text>
+        </view>
+        <view class="info-row">
+            <text class="label">联系电话</text>
+            <text class="value">{{ order.player?.phone || '-' }}</text>
+        </view>
+        <view class="divider"></view>
+        <view class="info-row">
+            <text class="label">备注信息</text>
+            <text class="value">-</text>
+        </view>
+        <view class="divider"></view>
+        <view class="info-row">
+            <text class="label">参赛资料</text>
+            <text class="value">-</text>
+        </view>
       </view>
 
       <view class="info-card">
-        <view class="card-title">比赛信息</view>
-        <view class="info-row">
-          <text class="label">比赛名称</text>
-          <text class="value">{{ order.tournament?.name }}</text>
-        </view>
-        <view class="info-row">
-          <text class="label">比赛时间</text>
-          <text class="value">{{ formatDate(order.tournament?.startTime) }}</text>
-        </view>
-        <view class="info-row">
-          <text class="label">比赛地点</text>
-          <text class="value">{{ order.tournament?.location }}</text>
-        </view>
-      </view>
-
-      <view class="info-card">
-        <view class="card-title">订单信息</view>
         <view class="info-row">
           <text class="label">订单编号</text>
           <text class="value">{{ order.orderNo }}</text>
         </view>
+        <view class="divider"></view>
         <view class="info-row">
-          <text class="label">创建时间</text>
+          <text class="label">订单时间</text>
           <text class="value">{{ formatDate(order.createdAt) }}</text>
+        </view>
+        <view class="divider"></view>
+        <view class="info-row">
+          <text class="label">订单状态</text>
+          <text class="value status-text" :class="order.status">{{ getStatusText(order.status) }}</text>
+        </view>
+        <view class="divider"></view>
+        <view class="info-row">
+          <text class="label">报名费用</text>
+          <text class="value price">￥{{ order.amount }}</text>
         </view>
       </view>
 
@@ -43,7 +67,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onLoad } from '@dcloudio/uni-app';
+import { ref } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
 import { payOrder, cancelOrder } from '../../api';
 
 const order = ref<any>(null);
@@ -63,7 +88,8 @@ const getStatusText = (status: string) => {
   const map: Record<string, string> = {
     'PENDING': '待支付',
     'PAID': '已支付',
-    'CANCELLED': '已取消'
+    'CANCELLED': '已取消',
+    'REFUNDED': '已退款'
   };
   return map[status] || status;
 };
@@ -71,7 +97,8 @@ const getStatusText = (status: string) => {
 const formatDate = (dateStr: string) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
-  return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+  const weekDay = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
+  return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')} ${weekDay}`;
 };
 
 const handlePay = async () => {
@@ -112,7 +139,7 @@ const handleCancel = async () => {
     uni.showModal({
         title: '提示',
         content: '确定要取消该订单吗？',
-        success: async (res) => {
+        success: async (res: any) => {
             if (res.confirm) {
                 try {
                     uni.showLoading({ title: '处理中...' });
@@ -133,19 +160,24 @@ const handleCancel = async () => {
 
 <style>
 .container { padding: 15px; background: #f5f5f5; min-height: 100vh; }
-.header-status { background: white; padding: 30px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; }
-.status-text { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+
+.info-card { background: white; padding: 0 15px; border-radius: 8px; margin-bottom: 15px; }
+.first-card { padding-top: 15px; padding-bottom: 15px; }
+
+.info-row { display: flex; padding: 12px 0; font-size: 14px; align-items: center; justify-content: space-between; }
+.label { color: #999; width: 80px; }
+.value { flex: 1; color: #333; text-align: right; }
+.vertical-top { align-self: flex-start; }
+
+.divider { height: 1px; background: #f5f5f5; width: 100%; }
+
+.highlight-name { color: #9c27b0; font-weight: bold; text-decoration: underline; }
 .status-text.PENDING { color: #ef6c00; }
 .status-text.PAID { color: #2e7d32; }
-.amount { font-size: 24px; font-weight: bold; color: #333; }
-
-.info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-.card-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
-.info-row { display: flex; margin-bottom: 10px; font-size: 14px; }
-.label { color: #999; width: 80px; }
-.value { flex: 1; color: #333; }
+.status-text.REFUNDED { color: #999; }
+.price { color: #2e7d32; font-weight: bold; }
 
 .footer-actions { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; display: flex; gap: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-.btn-cancel { flex: 1; background: #f5f5f5; color: #666; font-size: 14px; }
-.btn-pay { flex: 1; background: #3A5F0B; color: white; font-size: 14px; }
+.btn-cancel { flex: 1; background: #f5f5f5; color: #666; font-size: 14px; border-radius: 20px; border: none; }
+.btn-pay { flex: 1; background: #3A5F0B; color: white; font-size: 14px; border-radius: 20px; border: none; }
 </style>

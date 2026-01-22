@@ -98,20 +98,48 @@ export const initiatePayment = async (req: Request, res: Response) => {
 
     try {
         // @ts-ignore
-        const order = await prisma.order.findUnique({ where: { orderNo }, include: { player: true, tournament: true } });
+        let order = await prisma.order.findUnique({ where: { orderNo }, include: { player: true, tournament: true } });
         if (!order) return res.status(404).json({ error: 'Order not found' });
         if (order.status === 'PAID') return res.json({ message: 'Already paid', order });
         if (order.playerId !== userId) return res.status(403).json({ error: 'Not your order' });
 
         // If WeChat Pay is initialized, use it
         if (getWxPay()) {
-            // 1. Generate Payment Params (Call WeChat JSAPI)
-            const result: any = await generatePaymentParams(
-                `报名费-${order.tournament.name}`,
-                order.orderNo,
-                order.amount,
-                order.player.openid
-            );
+            let result;
+            try {
+                // 1. Generate Payment Params (Call WeChat JSAPI)
+                result = await generatePaymentParams(
+                    `报名费-${order.tournament.name}`,
+                    order.orderNo,
+                    order.amount,
+                    order.player.openid
+                );
+            } catch (err: any) {
+                if (err.message === 'ORDER_REENTRY_CONFLICT') {
+                    // Conflict detected (same orderNo, different params or expired).
+                    // We must regenerate the orderNo to start a fresh transaction.
+                    console.log(`Order reentry conflict for ${orderNo}, regenerating orderNo...`);
+                    
+                    const newOrderNo = generateOrderNo();
+                    // Update DB with new orderNo
+                    // @ts-ignore
+                    order = await prisma.order.update({
+                        where: { id: order.id },
+                        data: { orderNo: newOrderNo },
+                        include: { player: true, tournament: true }
+                    });
+                    
+                    // Retry payment with new orderNo
+                    result = await generatePaymentParams(
+                        `报名费-${order.tournament.name}`,
+                        order.orderNo,
+                        order.amount,
+                        order.player.openid
+                    );
+                } else {
+                    throw err;
+                }
+            }
             
             // 2. Sign for Frontend
             let paymentParams;
@@ -125,7 +153,7 @@ export const initiatePayment = async (req: Request, res: Response) => {
             
             res.json({ 
                 paymentParams,
-                order
+                order // Return updated order (with potentially new orderNo)
             });
         } else {
             // Fallback to Simulation (if no credentials)

@@ -65,24 +65,42 @@ export const generatePaymentParams = async (description: string, outTradeNo: str
         },
     };
 
-    const result: any = await wxPay.transactions_jsapi(params);
-    console.log('WeChat Pay JSAPI Result:', JSON.stringify(result));
-    
-    // wechatpay-node-v3 returns the Axios response object by default
-    // The actual API response data is in result.data
-    const responseData = result.data || result;
-    
-    // If the library returns signed params directly (contains package/paySign), use it.
-    // Some versions or configs might do this.
-    if (responseData.package && responseData.paySign) {
-        return responseData;
-    }
+    try {
+        const result: any = await wxPay.transactions_jsapi(params);
+        console.log('WeChat Pay JSAPI Result:', JSON.stringify(result));
+        
+        // wechatpay-node-v3 returns the Axios response object by default
+        // The actual API response data is in result.data
+        const responseData = result.data || result;
+        
+        // If the library returns signed params directly (contains package/paySign), use it.
+        // Some versions or configs might do this.
+        if (responseData.package && responseData.paySign) {
+            return responseData;
+        }
 
-    if (!responseData || !responseData.prepay_id) {
-        throw new Error(`Failed to get prepay_id from WeChat Pay. Status: ${result.status}, Result: ${JSON.stringify(result)}`);
+        if (!responseData || !responseData.prepay_id) {
+            throw new Error(`Failed to get prepay_id from WeChat Pay. Status: ${result.status}, Result: ${JSON.stringify(result)}`);
+        }
+        
+        return responseData; // Contains prepay_id
+    } catch (error: any) {
+        // Handle "INVALID_REQUEST: 请求重入时，参数与首次请求时不一致"
+        // This means the orderNo was already used but with different params (e.g. description or amount).
+        // Since we are retrying for the SAME order, we should theoretically get the SAME prepay_id if params are identical.
+        // But if we changed something (e.g. timestamp/nonce internal to lib, or description), it fails.
+        // Solution: Close the old order and create a new one with a new orderNo?
+        // OR: Just regenerate orderNo in controller.
+        
+        console.error('WeChat Pay JSAPI Error:', error);
+        
+        // Check for "INVALID_REQUEST"
+        if (error.response?.data?.code === 'INVALID_REQUEST' || (error.message && error.message.includes('INVALID_REQUEST'))) {
+             throw new Error('ORDER_REENTRY_CONFLICT');
+        }
+        
+        throw error;
     }
-    
-    return responseData; // Contains prepay_id
 };
 
 export const getJsApiSignature = (prepayId: string) => {
