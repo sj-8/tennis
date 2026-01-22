@@ -134,11 +134,11 @@ const form = ref({
   latitude: 0,
   longitude: 0,
   date: '',
-  time: '',
+  time: '08:00',
   regStartDate: '',
-  regStartTime: '',
+  regStartTime: '08:00',
   regEndDate: '',
-  regEndTime: '',
+  regEndTime: '08:00',
   matchType: '',
   level: '',
   drawSize: '',
@@ -186,8 +186,9 @@ onLoad(async (options: any) => {
       if (form.value.matchType) {
         matchTypeIndex.value = matchTypes.indexOf(form.value.matchType);
       }
-      if (form.value.level) {
-        levelIndex.value = levels.indexOf(form.value.level);
+      if (match.level) {
+        levelIndex.value = levels.indexOf(match.level);
+        form.value.level = match.level;
       }
       
       if (match.registrationStart) {
