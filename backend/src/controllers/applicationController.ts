@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
+import { generatePaymentParams, getJsApiSignature, verifyNotification, getWxPay } from '../utils/wechatPay';
 
 // Helper to generate unique order number
 const generateOrderNo = () => {
@@ -51,29 +52,80 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 };
 
-export const simulatePayment = async (req: Request, res: Response) => {
+export const initiatePayment = async (req: Request, res: Response) => {
     const { orderNo } = req.body;
     // @ts-ignore
     const userId = req.user?.id;
 
     try {
         // @ts-ignore
-        const order = await prisma.order.findUnique({ where: { orderNo } });
+        const order = await prisma.order.findUnique({ where: { orderNo }, include: { player: true, tournament: true } });
         if (!order) return res.status(404).json({ error: 'Order not found' });
         if (order.status === 'PAID') return res.json({ message: 'Already paid', order });
         if (order.playerId !== userId) return res.status(403).json({ error: 'Not your order' });
 
-        // Simulate success
-        // @ts-ignore
-        const updatedOrder = await prisma.order.update({
-            where: { id: order.id },
-            data: { status: 'PAID' }
-        });
+        // If WeChat Pay is initialized, use it
+        if (getWxPay()) {
+            // 1. Generate Payment Params (Call WeChat JSAPI)
+            const result: any = await generatePaymentParams(
+                `报名费-${order.tournament.name}`,
+                order.orderNo,
+                order.amount,
+                order.player.openid
+            );
+            
+            // 2. Sign for Frontend
+            const paymentParams = getJsApiSignature(result.prepay_id);
+            
+            res.json({ 
+                paymentParams,
+                order
+            });
+        } else {
+            // Fallback to Simulation (if no credentials)
+            console.warn('WeChat Pay not configured, using simulation');
+            // Simulate success immediately
+            // @ts-ignore
+            const updatedOrder = await prisma.order.update({
+                where: { id: order.id },
+                data: { status: 'PAID' }
+            });
+            res.json({ message: 'Simulation: Payment successful', order: updatedOrder, isSimulation: true });
+        }
+    } catch (error: any) {
+        console.error('Payment initiation error:', error);
+        res.status(500).json({ error: 'Payment initiation failed', details: error.message });
+    }
+};
 
-        res.json({ message: 'Payment successful', order: updatedOrder });
+export const handlePaymentNotify = async (req: Request, res: Response) => {
+    try {
+        // Verify Signature & Decrypt
+        const decrypted: any = await verifyNotification(req.headers, req.body);
+        console.log('Payment Notification:', decrypted);
+        
+        const { out_trade_no, trade_state } = decrypted;
+        
+        if (trade_state === 'SUCCESS') {
+            // Find Order
+            // @ts-ignore
+            const order = await prisma.order.findUnique({ where: { orderNo: out_trade_no } });
+            
+            if (order && order.status !== 'PAID') {
+                // Update Order
+                // @ts-ignore
+                await prisma.order.update({
+                    where: { id: order.id },
+                    data: { status: 'PAID' }
+                });
+                console.log(`Order ${out_trade_no} paid successfully`);
+            }
+        }
+        
+        res.status(200).send({ code: 'SUCCESS', message: 'OK' });
     } catch (error) {
-        console.error('Payment error:', error);
-        res.status(500).json({ error: 'Payment failed' });
+        console.error('Payment Notification Error:', error);
+        res.status(500).send({ code: 'FAIL', message: 'Error' });
     }
 };
 

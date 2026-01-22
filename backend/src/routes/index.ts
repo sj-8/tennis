@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { login, updateProfile, searchPlayers, getPhoneNumber } from '../controllers/authController';
 import { getMatches, createMatch, updateMatch, deleteMatch, submitResult, getRankings, getMatchParticipants, getReferees, addReferee, removeReferee } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs, promotePlayerToAdmin } from '../controllers/adminController';
-import { submitApplication, getApplications, auditApplication, getUserApplications, cancelApplication, createOrder, simulatePayment, getMyOrders } from '../controllers/applicationController';
+import { submitApplication, getApplications, auditApplication, getUserApplications, cancelApplication, createOrder, initiatePayment, handlePaymentNotify, getMyOrders } from '../controllers/applicationController';
 import { createGame, getGames, updateGameScore, getGroups, createGroup, updateGroup, deleteGroup } from '../controllers/gameController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 
@@ -50,7 +50,8 @@ router.get('/application/my', authenticateToken, getUserApplications);
 
 // Payment & Orders
 router.post('/orders/create', authenticateToken, createOrder);
-router.post('/orders/pay', authenticateToken, simulatePayment);
+router.post('/orders/pay', authenticateToken, initiatePayment);
+router.post('/orders/notify', handlePaymentNotify); // Public callback
 router.get('/orders/my', authenticateToken, getMyOrders);
 
 // Admin Routes (Protected)

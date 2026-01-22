@@ -411,20 +411,80 @@ const handlePaymentAndSubmit = async (userInfo: any) => {
     try {
         uni.showLoading({ title: '创建订单...' });
         // 1. Create Order
-        const order: any = await createOrder(Number(tournamentId.value));
+        const orderRes: any = await createOrder(Number(tournamentId.value));
         
-        // 2. Pay Order (Simulation)
-        uni.showLoading({ title: '支付中...' });
-        await payOrder(order.orderNo);
+        // 2. Pay Order (Initiate Payment)
+        uni.showLoading({ title: '发起支付...' });
+        const paymentRes: any = await payOrder(orderRes.orderNo);
+        
+        if (paymentRes.isSimulation) {
+            // Simulation Success
+            uni.showToast({ title: '模拟支付成功' });
+        } else if (paymentRes.paymentParams) {
+            // Real Payment
+            const params = paymentRes.paymentParams;
+            await new Promise((resolve, reject) => {
+                uni.requestPayment({
+                    provider: 'wxpay',
+                    timeStamp: params.timeStamp,
+                    nonceStr: params.nonceStr,
+                    package: params.package,
+                    signType: params.signType,
+                    paySign: params.paySign,
+                    success: (res) => {
+                        console.log('Payment success:', res);
+                        resolve(res);
+                    },
+                    fail: (err) => {
+                        console.error('Payment failed:', err);
+                        // User cancelled or error
+                        reject(new Error(err.errMsg || 'Payment failed'));
+                    }
+                });
+            });
+        }
         
         // 3. Submit Application
-        uni.showLoading({ title: '完成报名...' });
-        await submitApplication({
-          playerId: userInfo.id,
-          tournamentId: tournamentId.value,
-          partnerId: partner.value ? partner.value.id : null,
-          ...form.value
-        });
+        // Note: Ideally, we should wait for backend to confirm payment via callback.
+        // But for UX, we can submit application optimistically or check status.
+        // Backend `submitApplication` checks if order is PAID.
+        // So we need to wait a bit or retry if status is not yet updated by callback.
+        // Or better: Use a polling mechanism to check order status until PAID.
+        
+        uni.showLoading({ title: '确认支付结果...' });
+        // Poll for order status (max 5 times)
+        // Wait 2 seconds before first check
+        // ... (Simplified: Just try submitting, if fails due to payment required, user can retry)
+        // Actually, for better UX, we should just assume success if requestPayment success
+        // But backend `submitApplication` STRICTLY checks `status: 'PAID'`.
+        // So we MUST ensure DB is updated.
+        // We can add a delay loop here.
+        
+        let retries = 5;
+        while (retries > 0) {
+            try {
+                await submitApplication({
+                  playerId: userInfo.id,
+                  tournamentId: tournamentId.value,
+                  partnerId: partner.value ? partner.value.id : null,
+                  ...form.value
+                });
+                // Success
+                break;
+            } catch (e: any) {
+                // If error is "Payment required", wait and retry
+                if (e.message && e.message.includes('Payment required')) {
+                    retries--;
+                    await new Promise(r => setTimeout(r, 1000));
+                    continue;
+                }
+                throw e; // Other errors
+            }
+        }
+        
+        if (retries === 0) {
+             throw new Error('支付确认超时，请稍后在订单中查看状态');
+        }
         
         uni.showToast({ title: '支付并报名成功' });
         setTimeout(() => {

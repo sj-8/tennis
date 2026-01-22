@@ -24,7 +24,8 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.16.0",
-    "prisma": "^5.22.0"
+    "prisma": "^5.22.0",
+    "wechatpay-node-v3": "^2.2.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
