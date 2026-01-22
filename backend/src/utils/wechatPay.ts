@@ -98,6 +98,11 @@ export const generatePaymentParams = async (description: string, outTradeNo: str
         if (error.response?.data?.code === 'INVALID_REQUEST' || (error.message && error.message.includes('INVALID_REQUEST'))) {
              throw new Error('ORDER_REENTRY_CONFLICT');
         }
+
+        // Check for "ORDERPAID"
+        if (error.response?.data?.code === 'ORDERPAID' || (error.message && error.message.includes('ORDERPAID'))) {
+             throw new Error('ORDER_ALREADY_PAID');
+        }
         
         throw error;
     }

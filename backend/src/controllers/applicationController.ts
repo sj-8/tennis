@@ -76,13 +76,46 @@ export const cancelOrder = async (req: Request, res: Response) => {
         const order = await prisma.order.findUnique({ where: { orderNo } });
         if (!order) return res.status(404).json({ error: 'Order not found' });
         if (order.playerId !== userId) return res.status(403).json({ error: 'Not your order' });
-        if (order.status !== 'PENDING') return res.status(400).json({ error: 'Order cannot be cancelled' });
+        // Allow cancelling PENDING orders. 
+        // Note: If user wants to cancel PAID order, they should use 'cancelApplication' which handles refund.
+        if (order.status !== 'PENDING') return res.status(400).json({ error: 'Only PENDING orders can be cancelled here' });
 
+        // Update Order to CANCELLED
         // @ts-ignore
         const updatedOrder = await prisma.order.update({
             where: { id: order.id },
             data: { status: 'CANCELLED' }
         });
+        
+        // Also cancel the Application if it exists (so user can re-apply)
+        // Ideally application status should be synced or reset.
+        // If order is cancelled, the application remains in 'APPROVED' (if free) or 'PENDING_PAYMENT'?
+        // Actually our submitApplication creates 'APPROVED' or 'WAITLIST'.
+        // Wait, submitApplication checks for PAID order if fee > 0.
+        // If fee > 0, submitApplication is called AFTER payment.
+        // So if order is PENDING, submitApplication hasn't been called yet?
+        // Let's check frontend logic: 
+        // 1. createOrder -> 2. payOrder -> 3. submitApplication.
+        // So if order is PENDING, there is NO application yet!
+        // EXCEPT: If we changed logic to create application first? No.
+        
+        // But wait, "取消该赛事的报名订单。应将报名状态变为 提交报名状态"
+        // If user hasn't paid, they haven't "applied" in the DB sense (PlayerApplication).
+        // They only have an Order.
+        // So cancelling the order just means the next time they click "Apply", they create a NEW order.
+        // The frontend button state "待支付" is based on existence of PENDING order.
+        // If we cancel this order, getPendingOrder() returns null.
+        // So frontend button will revert to "提交报名" (or "待支付" if fee > 0 logic in template).
+        
+        // Template logic:
+        // v-if="getPendingOrder(match.id)" -> "待支付"
+        // v-else-if="match.status === 'PENDING'" -> "报名"
+        
+        // So if we cancel the order, getPendingOrder returns null.
+        // The button becomes "报名".
+        // Clicking "报名" calls createOrder -> payOrder.
+        
+        // So simply cancelling the order achieves the goal.
 
         res.json({ message: 'Order cancelled', order: updatedOrder });
     } catch (error) {
@@ -136,6 +169,16 @@ export const initiatePayment = async (req: Request, res: Response) => {
                         order.amount,
                         order.player.openid
                     );
+                } else if (err.message === 'ORDER_ALREADY_PAID') {
+                     // Order is actually PAID in WeChat, but PENDING in our DB (Callback missed/delayed)
+                     // Update DB and return "Already Paid"
+                     console.log(`Order ${orderNo} found PAID in WeChat but PENDING in DB. Syncing status...`);
+                     // @ts-ignore
+                     const paidOrder = await prisma.order.update({
+                         where: { id: order.id },
+                         data: { status: 'PAID' }
+                     });
+                     return res.json({ message: 'Already paid (synced from WeChat)', order: paidOrder });
                 } else {
                     throw err;
                 }

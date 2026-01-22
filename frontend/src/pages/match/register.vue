@@ -102,7 +102,15 @@
         </view>
     </view>
     
-    <button class="btn-submit" @click="submit" :loading="loading" v-if="!hasApplied">提交报名</button>
+    <view v-if="!hasApplied">
+        <button class="btn-submit btn-pending-pay" @click="submit" :loading="loading" v-if="matchInfo.status === 'PENDING' && matchInfo.fee && matchInfo.fee > 0">
+             待支付
+         </button>
+         <button class="btn-submit" @click="submit" :loading="loading" v-else-if="matchInfo.status === 'PENDING'">
+             提交报名
+         </button>
+        <button class="btn-submit" style="background-color: #ccc;" disabled v-else>报名已截止</button>
+    </view>
     <view class="applied-actions" v-else>
         <button class="btn-action btn-view-draw" @click="goToDraw">已报名 - 查看签表</button>
         <button class="btn-action btn-cancel" @click="handleCancelApplication">取消报名</button>
@@ -410,107 +418,16 @@ const submit = async () => {
 const handlePaymentAndSubmit = async (userInfo: any) => {
     try {
         uni.showLoading({ title: '创建订单...' });
-        // 1. Create Order
+        // 1. Create Order (or get existing PENDING order)
         const orderRes: any = await createOrder(Number(tournamentId.value));
         
-        // 2. Pay Order (Initiate Payment)
-        uni.showLoading({ title: '发起支付...' });
-        const paymentRes: any = await payOrder(orderRes.orderNo);
-        
-        if (paymentRes.isSimulation) {
-            // Simulation Success
-            uni.showToast({ title: '模拟支付成功 (未配置支付证书)', icon: 'none' });
-        } else if (paymentRes.paymentParams) {
-            // Real Payment
-            const params = paymentRes.paymentParams;
-            console.log('Requesting Payment with params:', JSON.stringify(params)); // Debug Log
-            
-            await new Promise((resolve, reject) => {
-                uni.requestPayment({
-                    provider: 'wxpay',
-                    timeStamp: params.timeStamp,
-                    nonceStr: params.nonceStr,
-                    package: params.package,
-                    signType: params.signType,
-                    paySign: params.paySign,
-                    success: (res: any) => {
-                        console.log('Payment success:', res);
-                        resolve(res);
-                    },
-                    fail: (err: any) => {
-                        console.error('Payment failed in uni.requestPayment:', err);
-                        // Handle user cancellation gracefully
-                        if (err.errMsg && (err.errMsg.includes('cancel') || err.errMsg.indexOf('cancel') > -1)) {
-                            console.log('User cancelled payment');
-                            reject(new Error('PAYMENT_CANCELLED'));
-                        } else {
-                            // Detailed error for debugging
-                            const debugMsg = `Payment SDK Error: ${err.errMsg}`;
-                            reject(new Error(debugMsg));
-                        }
-                    }
-                });
-            });
-        }
-        
-        // 3. Submit Application
-        // Note: Ideally, we should wait for backend to confirm payment via callback.
-        // But for UX, we can submit application optimistically or check status.
-        // Backend `submitApplication` checks if order is PAID.
-        // So we need to wait a bit or retry if status is not yet updated by callback.
-        // Or better: Use a polling mechanism to check order status until PAID.
-        
-        uni.showLoading({ title: '确认支付结果...' });
-        // Poll for order status (max 5 times)
-        // Wait 2 seconds before first check
-        // ... (Simplified: Just try submitting, if fails due to payment required, user can retry)
-        // Actually, for better UX, we should just assume success if requestPayment success
-        // But backend `submitApplication` STRICTLY checks `status: 'PAID'`.
-        // So we MUST ensure DB is updated.
-        // We can add a delay loop here.
-        
-        let retries = 5;
-        while (retries > 0) {
-            try {
-                await submitApplication({
-                  playerId: userInfo.id,
-                  tournamentId: tournamentId.value,
-                  partnerId: partner.value ? partner.value.id : null,
-                  ...form.value
-                });
-                // Success
-                break;
-            } catch (e: any) {
-                // If error is "Payment required", wait and retry
-                if (e.message && e.message.includes('Payment required')) {
-                    retries--;
-                    await new Promise(r => setTimeout(r, 1000));
-                    continue;
-                }
-                throw e; // Other errors
-            }
-        }
-        
-        if (retries === 0) {
-             throw new Error('支付确认超时，请稍后在订单中查看状态');
-        }
-        
-        uni.showToast({ title: '支付并报名成功' });
-        setTimeout(() => {
-            uni.navigateBack();
-        }, 1500);
+        // Navigate to Order Detail for payment/cancellation
+        uni.navigateTo({ url: `/pages/my/order-detail?data=${encodeURIComponent(JSON.stringify(orderRes))}` });
     } catch (err: any) {
-        if (err.message === 'PAYMENT_CANCELLED') {
-             uni.showToast({ title: '支付已取消', icon: 'none' });
-        } else {
-             console.error(err);
-             uni.showToast({ title: err.message || '支付失败', icon: 'none' });
-        }
+        console.error(err);
+        uni.showToast({ title: err.message || '操作失败', icon: 'none' });
     } finally {
-        // Delay hiding loading to prevent conflict with showToast
-        setTimeout(() => {
-            uni.hideLoading();
-        }, 500);
+        uni.hideLoading();
         loading.value = false;
     }
 };
@@ -563,8 +480,9 @@ const handlePaymentAndSubmit = async (userInfo: any) => {
 .label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; }
 .input { width: 100%; height: 44px; padding: 0 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fff; }
 .textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background: #fff; }
-.btn-submit { background: #2e7d32; color: white; padding: 12px; border-radius: 4px; text-align: center; margin-top: 30px; font-size: 16px; }
-.btn-action { color: white; padding: 12px; border-radius: 4px; text-align: center; font-size: 16px; flex: 1; }
+.btn-submit { background: #3A5F0B; color: white; width: 100%; border-radius: 25px; font-size: 16px; padding: 12px 0; margin-bottom: 10px; border: none; }
+.btn-submit.btn-pending-pay { background: #FFD700; color: #3A5F0B; font-weight: bold; }
+.btn-action { width: 100%; border-radius: 25px; font-size: 16px; padding: 12px 0; margin-bottom: 10px; border: none; }
 .btn-view-draw { background: #1976d2; }
 .btn-cancel { background: #d32f2f; }
 .applied-actions { display: flex; gap: 10px; margin-top: 30px; }

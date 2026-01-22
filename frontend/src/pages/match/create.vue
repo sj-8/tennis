@@ -122,7 +122,7 @@ const isEdit = ref(false);
 const loading = ref(false);
 const matchId = ref(0);
 const categories = ['周赛', '月赛', '公开赛', '大奖赛'];
-const levels = ['2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0', '10', '25', '50', '100', '200', '400', '500', '1000'];
+const levels = ['5.0', '10.0', '15.0', '20.0', '25.0', '30.0', '35.0', '40.0', '45.0', '50.0'];
 const matchTypes = ['单打', '双打'];
 const jiangsuCities = ['南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const matchTypeIndex = ref(-1);
@@ -166,13 +166,20 @@ onLoad(async (options: any) => {
     const matches: any = await getMatches();
     const match = matches.find((m: any) => m.id === matchId.value);
     if (match) {
+      const formatDate = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+
       const start = new Date(match.startTime);
       form.value.name = match.name;
       form.value.location = match.location;
       form.value.region = match.region || '';
       form.value.latitude = match.latitude || 0;
       form.value.longitude = match.longitude || 0;
-      form.value.date = start.toISOString().split('T')[0];
+      form.value.date = formatDate(start);
       form.value.time = start.toTimeString().slice(0, 5);
       form.value.matchType = match.matchType || '';
       form.value.drawSize = match.drawSize || '';
@@ -194,12 +201,12 @@ onLoad(async (options: any) => {
       
       if (match.registrationStart) {
          const rs = new Date(match.registrationStart);
-         form.value.regStartDate = rs.toISOString().split('T')[0];
+         form.value.regStartDate = formatDate(rs);
          form.value.regStartTime = rs.toTimeString().slice(0, 5);
       }
       if (match.registrationEnd) {
          const re = new Date(match.registrationEnd);
-         form.value.regEndDate = re.toISOString().split('T')[0];
+         form.value.regEndDate = formatDate(re);
          form.value.regEndTime = re.toTimeString().slice(0, 5);
       }
     }

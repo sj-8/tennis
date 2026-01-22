@@ -58,7 +58,7 @@
         </view>
       </view>
 
-      <view class="footer-actions" v-if="order.status === 'PENDING'">
+      <view class="footer-actions" v-if="order.status === 'PENDING'" style="padding-bottom: calc(15px + env(safe-area-inset-bottom))">
         <button class="btn-cancel" @click="handleCancel">取消订单</button>
         <button class="btn-pay" @click="handlePay">立即支付</button>
       </view>
@@ -109,6 +109,8 @@ const handlePay = async () => {
         if (paymentRes.isSimulation) {
             uni.showToast({ title: '模拟支付成功', icon: 'none' });
             order.value.status = 'PAID';
+            // Sync status with previous pages (e.g. index list)
+            uni.setStorageSync('should_refresh_matches', true);
         } else if (paymentRes.paymentParams) {
             const params = paymentRes.paymentParams;
             await new Promise((resolve, reject) => {
@@ -125,6 +127,8 @@ const handlePay = async () => {
             });
             uni.showToast({ title: '支付成功' });
             order.value.status = 'PAID';
+            // Sync status
+            uni.setStorageSync('should_refresh_matches', true);
         }
         setTimeout(() => uni.navigateBack(), 1500);
     } catch (err: any) {

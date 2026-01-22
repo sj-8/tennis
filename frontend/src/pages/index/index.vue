@@ -46,21 +46,21 @@
         <view class="match-info">
           <text class="match-name">
             <text class="tennis-title-deco"></text>
-            {{ match.name }}
+            {{ match.name }} <text v-if="match.matchType" style="margin-left: 5px; font-weight: normal;">- {{ match.matchType }}</text>
           </text>
           <view class="match-meta">
-            <text class="match-type-tag" v-if="match.matchType">{{ match.matchType }}</text>
+            <!-- <text class="match-type-tag" v-if="match.matchType">{{ match.matchType }}</text> -->
             <view class="location-row">
-                <text class="match-detail">📍 {{ match.location }}</text>
+                <text class="match-detail"><text class="icon-fixed">📍</text>{{ match.location }}</text>
                 <view class="nav-btn" @click.stop="openLocation(match)" v-if="match.latitude && match.longitude">
                     <text class="nav-icon">🧭</text>
                     <text>导航</text>
                 </view>
             </view>
-            <text class="match-detail">🕒 {{ formatDate(match.startTime) }}</text>
+            <text class="match-detail"><text class="icon-fixed">🕒</text>{{ formatDate(match.startTime) }}</text>
           </view>
           <text class="match-detail" v-if="match.drawSize">
-              👥 {{ match._count?.applications || 0 }}/{{ match.drawSize }}
+              <text class="icon-fixed">👥</text>{{ match._count?.applications || 0 }}/{{ match.drawSize }}
               <text v-if="match.fee && match.fee > 0" style="margin-left: 10px; color: #ff6b81; font-weight: bold;">
                   ¥{{ match.fee }}
               </text>
@@ -69,16 +69,18 @@
         </view>
           <view class="match-action">
             <view class="action-column">
-              <template v-if="isRegistered(match.id)">
-                  <button class="btn-registered" v-if="['APPROVED', 'PENDING'].includes(getApplicationStatus(match.id))" @click.stop="handleViewDraw(match)">已报名</button>
-                  <button class="btn-waitlist" v-else-if="getApplicationStatus(match.id) === 'WAITLIST'" @click.stop="handleViewDraw(match)">候补中</button>
-                  <button class="btn-registered" v-else @click.stop="handleViewDraw(match)">已报名</button>
-              </template>
-              <template v-else-if="getPendingOrder(match.id)">
-                  <button class="btn-pay" @click.stop="handlePayOrder(match)">待支付</button>
-              </template>
-              <button class="btn-register" @click.stop="handleRegister(match)" v-else-if="match.status === 'PENDING'">报名</button>
-              <button class="btn-draw" @click.stop="handleViewDraw(match)">签表</button>
+                <template v-if="isRegistered(match.id)">
+                    <text class="status-text registered">已报名</text>
+                </template>
+                <template v-else-if="getPendingOrder(match.id)">
+                    <text class="status-text pending">待支付</text>
+                </template>
+                <template v-else-if="match.status === 'PENDING'">
+                    <text class="status-text open">报名中</text>
+                </template>
+                <template v-else>
+                     <text class="status-text closed">已截止</text>
+                </template>
             </view>
           </view>
       </view>
@@ -354,7 +356,13 @@ onMounted(() => {
 
 onShow(() => {
   checkUserRole();
-  fetchMatches();
+  const shouldRefresh = uni.getStorageSync('should_refresh_matches');
+  if (shouldRefresh) {
+      uni.removeStorageSync('should_refresh_matches');
+      fetchMatches();
+  } else {
+      fetchMatches();
+  }
 });
 
 onPullDownRefresh(() => {
@@ -500,22 +508,34 @@ onPullDownRefresh(() => {
   border-left: 5px solid #FFD700; /* 网球黄装饰线 */
 }
 .match-info { flex: 1; }
-.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 80px; justify-content: center; align-items: center; }
-.action-column { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; }
-.btn-register, .btn-registered, .btn-waitlist, .btn-cancel, .btn-draw, .btn-score, .btn-edit, .btn-referee, .btn-delete { 
+.match-action { margin-left: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 60px; justify-content: center; align-items: flex-end; }
+.action-column { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: flex-end; }
+
+.status-text { font-size: 14px; font-weight: bold; }
+.status-text.registered { color: #27ae60; }
+.status-text.pending { color: #ef6c00; }
+.status-text.open { color: #3A5F0B; }
+.status-text.closed { color: #999; }
+
+/* .btn-register, .btn-registered, .btn-waitlist, .btn-cancel, .btn-draw, .btn-score, .btn-edit, .btn-referee, .btn-delete { ... } Removed/Hidden */
+
+.btn-cancel { margin-left: 0; margin-top: 5px; }
+
+.btn-score { 
   font-size: 12px; 
   padding: 0; 
   height: 28px; 
   line-height: 28px; 
   border-radius: 14px; 
   font-weight: bold; 
-  width: 100%; /* Full width in column */
+  width: 100%; 
   text-align: center;
+  background-color: #FFD700; 
+  color: #3A5F0B; 
 }
-.btn-cancel { margin-left: 0; margin-top: 5px; }
 
 .location-row { display: flex; align-items: center; margin-bottom: 4px; }
-.nav-btn { background: #3A5F0B; color: white; font-size: 10px; padding: 1px 6px; border-radius: 12px; margin-left: 8px; display: inline-flex; align-items: center; }
+.nav-btn { background: #3A5F0B; color: white; font-size: 10px; padding: 2px 8px; border-radius: 12px; margin-left: 15px; display: inline-flex; align-items: center; min-width: 40px; justify-content: center; }
 .nav-icon { margin-right: 2px; font-size: 10px; }
 .btn-register { background-color: #3A5F0B; color: white; }
 .btn-registered { background-color: #27ae60; color: white; cursor: pointer; }
@@ -528,8 +548,21 @@ onPullDownRefresh(() => {
 .btn-pay { background-color: #ff9800; color: white; }
 .btn-delete { background-color: #e74c3c; color: white; }
 .btn-delete.full-width { width: 100%; flex: none; }
-.match-name { font-size: 18px; font-weight: bold; display: flex; align-items: center; margin-bottom: 8px; color: #333; }
-.match-detail { color: #666; font-size: 14px; display: block; margin-bottom: 4px; }
+.match-name { font-size: 16px; font-weight: bold; display: flex; align-items: center; margin-bottom: 8px; color: #333; }
+.tennis-title-deco {
+  display: inline-block;
+  width: 8px;
+  height: 24px;
+  background-color: #FFD700;
+  margin-right: 8px;
+  border-radius: 4px;
+  vertical-align: middle;
+  /* Align with icons below: Icon width 20px, center is 10px. Deco width 8px, center is 4px. Offset = 10 - 4 = 6px */
+  margin-left: 6px; 
+}
+.location-row { display: flex; align-items: center; margin-bottom: 4px; }
+.match-detail { color: #666; font-size: 14px; display: flex; align-items: center; margin-bottom: 4px; }
+.icon-fixed { width: 20px; text-align: center; margin-right: 5px; display: inline-block; }
 .match-status { margin-top: 5px; font-size: 12px; padding: 2px 8px; border-radius: 4px; background: #eee; display: inline-block; font-weight: bold; }
 .match-status.PENDING { background: #e8f5e9; color: #3A5F0B; }
 .match-status.COMPLETED { background: #f5f5f5; color: #666; }
