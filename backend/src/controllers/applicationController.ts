@@ -2,6 +2,81 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 
+// Helper to generate unique order number
+const generateOrderNo = () => {
+    const now = new Date();
+    const timestamp = now.getFullYear().toString() +
+        (now.getMonth() + 1).toString().padStart(2, '0') +
+        now.getDate().toString().padStart(2, '0') +
+        now.getHours().toString().padStart(2, '0') +
+        now.getMinutes().toString().padStart(2, '0') +
+        now.getSeconds().toString().padStart(2, '0');
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `ORD${timestamp}${random}`;
+};
+
+export const createOrder = async (req: Request, res: Response) => {
+    // @ts-ignore
+    const userId = req.user?.id;
+    const { tournamentId } = req.body;
+
+    try {
+        const tournament = await prisma.tournament.findUnique({
+            where: { id: Number(tournamentId) }
+        });
+
+        if (!tournament) return res.status(404).json({ error: 'Tournament not found' });
+        // @ts-ignore
+        if (!tournament.fee || tournament.fee <= 0) {
+            return res.status(400).json({ error: 'This tournament is free, no order needed' });
+        }
+
+        // Create Order
+        // @ts-ignore
+        const order = await prisma.order.create({
+            data: {
+                orderNo: generateOrderNo(),
+                playerId: Number(userId),
+                tournamentId: Number(tournamentId),
+                // @ts-ignore
+                amount: tournament.fee, // Assuming Yuan
+                status: 'PENDING'
+            }
+        });
+
+        res.json(order);
+    } catch (error) {
+        console.error('Create order error:', error);
+        res.status(500).json({ error: 'Failed to create order' });
+    }
+};
+
+export const simulatePayment = async (req: Request, res: Response) => {
+    const { orderNo } = req.body;
+    // @ts-ignore
+    const userId = req.user?.id;
+
+    try {
+        // @ts-ignore
+        const order = await prisma.order.findUnique({ where: { orderNo } });
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+        if (order.status === 'PAID') return res.json({ message: 'Already paid', order });
+        if (order.playerId !== userId) return res.status(403).json({ error: 'Not your order' });
+
+        // Simulate success
+        // @ts-ignore
+        const updatedOrder = await prisma.order.update({
+            where: { id: order.id },
+            data: { status: 'PAID' }
+        });
+
+        res.json({ message: 'Payment successful', order: updatedOrder });
+    } catch (error) {
+        console.error('Payment error:', error);
+        res.status(500).json({ error: 'Payment failed' });
+    }
+};
+
 export const submitApplication = async (req: Request, res: Response) => {
   const { tournamentId, partnerId } = req.body;
   // @ts-ignore
@@ -19,6 +94,22 @@ export const submitApplication = async (req: Request, res: Response) => {
 
     if (!tournament) {
       return res.status(404).json({ error: 'Tournament not found' });
+    }
+    
+    // Check Payment if fee exists
+    if (tournament.fee && tournament.fee > 0) {
+        // Find a PAID order for this user and tournament
+        const paidOrder = await prisma.order.findFirst({
+            where: {
+                tournamentId: Number(tournamentId),
+                playerId: Number(userId),
+                status: 'PAID'
+            }
+        });
+        
+        if (!paidOrder) {
+            return res.status(402).json({ error: 'Payment required', fee: tournament.fee });
+        }
     }
 
     // Check if already applied
@@ -220,6 +311,7 @@ export const getMyOrders = async (req: Request, res: Response) => {
     // @ts-ignore
     const userId = req.user?.id;
     try {
+        // @ts-ignore
         const orders = await prisma.order.findMany({
             where: { playerId: Number(userId) },
             include: { tournament: true },
