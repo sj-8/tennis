@@ -1,6 +1,7 @@
 backend/node_modules
 backend/dist
 backend/.env
+backend/frontend
 .git
 frontend
 test
