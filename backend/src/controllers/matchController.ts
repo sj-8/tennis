@@ -4,8 +4,12 @@ import prisma from '../prisma';
 export const getMatches = async (req: Request, res: Response) => {
   // Support both query params and body params (for POST)
   const params = { ...req.query, ...req.body };
-  const { region, category, level, matchType, status, search } = params;
+  const { region, category, level, matchType, status, search, page, pageSize, limit } = params;
   
+  const pageNum = Number(page) || 1;
+  const size = Number(pageSize) || Number(limit) || 20; // Default 20
+  const skip = (pageNum - 1) * size;
+
   try {
     const whereClause: any = {
         status: { not: 'CANCELLED' } // Default: Exclude cancelled matches
@@ -36,6 +40,8 @@ export const getMatches = async (req: Request, res: Response) => {
     const matches = await prisma.tournament.findMany({
       where: whereClause,
       orderBy: { startTime: 'desc' },
+      take: size,
+      skip: skip,
       include: {
         _count: {
           select: { applications: { where: { status: { in: ['APPROVED', 'PENDING', 'WAITLIST'] } } } } // Count valid applications
@@ -141,6 +147,7 @@ export const updateMatch = async (req: Request, res: Response) => {
         registrationStart: registrationStart,
         registrationEnd: registrationEnd,
         drawSize: data.drawSize ? Number(data.drawSize) : null,
+        fee: data.fee ? Number(data.fee) : null,
         matchType: data.matchType,
       },
     });

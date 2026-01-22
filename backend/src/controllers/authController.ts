@@ -160,3 +160,49 @@ export const login = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Login failed', details: String(error) });
   }
 };
+
+export const getPhoneNumber = async (req: Request, res: Response) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: 'Code is required' });
+
+  if (!WX_APP_ID || !WX_APP_SECRET) {
+      return res.status(500).json({ error: 'Server misconfigured: Missing WX credentials' });
+  }
+
+  try {
+    // 1. Get Access Token
+    const tokenUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${WX_APP_ID}&secret=${WX_APP_SECRET}`;
+    const tokenRes = await axios.get(tokenUrl);
+    
+    if (!tokenRes.data.access_token) {
+        throw new Error('Failed to get access token: ' + JSON.stringify(tokenRes.data));
+    }
+    const accessToken = tokenRes.data.access_token;
+
+    // 2. Get Phone Number
+    const phoneUrl = `https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${accessToken}`;
+    const phoneRes = await axios.post(phoneUrl, { code });
+
+    if (phoneRes.data.errcode === 0 && phoneRes.data.phone_info) {
+        const phone = phoneRes.data.phone_info.phoneNumber;
+        
+        // Optionally update user's phone in DB if they are logged in
+        // @ts-ignore
+        const userId = req.user?.id;
+        if (userId) {
+            await prisma.player.update({
+                where: { id: Number(userId) },
+                data: { phone }
+            });
+        }
+
+        res.json({ phone });
+    } else {
+        throw new Error('WeChat API Error: ' + JSON.stringify(phoneRes.data));
+    }
+
+  } catch (error: any) {
+    console.error('Get Phone Number Error:', error);
+    res.status(500).json({ error: 'Failed to get phone number', details: error.message });
+  }
+};

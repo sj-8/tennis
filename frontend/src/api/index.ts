@@ -52,63 +52,80 @@ export const request = (options: any) => {
       reject(err);
     };
 
-    // #ifdef MP-WEIXIN
-    wx.cloud.callContainer({
-      config: {
-        env: 'prod-8g8j609ye88db758',
-        timeout: 15000
-      },
-      path: fullPath, 
-      header: {
-        ...header,
-        'X-WX-SERVICE': 'express-4y4r'
-      },
-      method: options.method || 'GET',
-      data: options.data || {},
-      success: (res: any) => {
-        if (res.statusCode === 401 || res.statusCode === 403) {
-           handleLoginError();
-           reject(res.data || 'Unauthorized/Forbidden');
-           return;
-        }
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-           resolve(res.data);
-        } else {
-           console.error(`[API] Error ${res.statusCode}:`, res.data);
-           handleError({ message: (res.data && res.data.error) || `请求失败 (${res.statusCode})` });
-        }
-      },
-      fail: (err: any) => {
-        console.error('[API] CallContainer Fail:', err);
-        if (err?.error === 'INVALID_PATH' || (err?.message && err.message.includes('INVALID_PATH'))) {
-            err.message = 'API路径配置错误，请检查云托管状态';
-        }
-        if (err?.statusCode === 404 || err?.message?.includes('404')) {
-            err.message = '接口不存在或服务未启动';
-        }
-        handleError(err);
-      }
-    });
-    // #endif
+    const attemptRequest = (retryCount = 0) => {
+      // #ifdef MP-WEIXIN
+      wx.cloud.callContainer({
+        config: {
+          env: 'prod-8g8j609ye88db758',
+          timeout: 15000 // Max allowed by WeChat is 15s
+        },
+        path: fullPath, 
+        header: {
+          ...header,
+          'X-WX-SERVICE': 'express-4y4r'
+        },
+        method: options.method || 'GET',
+        data: options.data || {},
+        success: (res: any) => {
+          if (res.statusCode === 401 || res.statusCode === 403) {
+             handleLoginError();
+             reject(res.data || 'Unauthorized/Forbidden');
+             return;
+          }
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+             resolve(res.data);
+          } else {
+             console.error(`[API] Error ${res.statusCode}:`, res.data);
+             handleError({ message: (res.data && res.data.error) || `请求失败 (${res.statusCode})` });
+          }
+        },
+        fail: (err: any) => {
+          console.error('[API] CallContainer Fail:', err);
+          
+          // Retry logic for Timeout (102002) or System Error (-1) which might be cold start related
+          const isTimeout = err?.errCode === 102002 || (err?.errMsg && err.errMsg.includes('timeout')) || (err?.errMsg && err.errMsg.includes('请求超时'));
+          const isSystemError = err?.errCode === -1; // Sometimes cold start returns -1
+          
+          if ((isTimeout || isSystemError) && retryCount < 2) {
+             console.log(`[API] Request failed (Code: ${err?.errCode}), retrying... (${retryCount + 1}/2)`);
+             setTimeout(() => {
+                 attemptRequest(retryCount + 1);
+             }, 500);
+             return;
+          }
 
-    // #ifndef MP-WEIXIN
-    uni.request({
-      url: `${BASE_URL}${options.url}`,
-      method: options.method || 'GET',
-      data: options.data,
-      header,
-      success: (res: any) => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(res.data);
-        } else {
-          handleError({ message: res.data.error || `请求失败 ${res.statusCode}` });
+          if (err?.error === 'INVALID_PATH' || (err?.message && err.message.includes('INVALID_PATH'))) {
+              err.message = 'API路径配置错误，请检查云托管状态';
+          }
+          if (err?.statusCode === 404 || err?.message?.includes('404')) {
+              err.message = '接口不存在或服务未启动';
+          }
+          handleError(err);
         }
-      },
-      fail: (err: any) => {
-        handleError(err);
-      }
-    });
-    // #endif
+      });
+      // #endif
+
+      // #ifndef MP-WEIXIN
+      uni.request({
+        url: `${BASE_URL}${options.url}`,
+        method: options.method || 'GET',
+        data: options.data,
+        header,
+        success: (res: any) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(res.data);
+          } else {
+            handleError({ message: res.data.error || `请求失败 ${res.statusCode}` });
+          }
+        },
+        fail: (err: any) => {
+          handleError(err);
+        }
+      });
+      // #endif
+    };
+
+    attemptRequest();
   });
 };
 
@@ -137,6 +154,8 @@ export const cancelApplication = (matchId: number) => request({ url: `/applicati
 export const updateProfile = (id: number, data: any) => request({ url: `/auth/${id}/profile`, method: 'PUT', data });
 // 搜索用户
 export const searchPlayers = (query: string) => request({ url: `/users/search?query=${encodeURIComponent(query)}` });
+// 获取手机号
+export const getWeChatPhone = (code: string) => request({ url: '/auth/phone', method: 'POST', data: { code } });
 // 更新赛事信息
 export const updateMatch = (id: number, data: any) => request({ url: `/matches/${id}`, method: 'PUT', data });
 // 删除赛事

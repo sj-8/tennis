@@ -71,10 +71,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { onReachBottom, onPullDownRefresh } from '@dcloudio/uni-app';
 import { request, getMatches } from '../../api';
 
 const matches = ref<any[]>([]);
 const searchKeyword = ref('');
+const page = ref(1);
+const hasMore = ref(true);
+const isLoading = ref(false);
 
 // Filters
 const regions = ['全部', '南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
@@ -95,20 +99,33 @@ const levelIndex = ref(0);
 const matchTypeIndex = ref(0);
 const statusIndex = ref(1); // Default '待开始'
 
-const onRegionChange = (e: any) => { regionIndex.value = e.detail.value; region.value = regions[e.detail.value]; fetchMatches(); };
-const onCategoryChange = (e: any) => { categoryIndex.value = e.detail.value; category.value = categories[e.detail.value]; fetchMatches(); };
-const onLevelChange = (e: any) => { levelIndex.value = e.detail.value; level.value = levels[e.detail.value]; fetchMatches(); };
-const onMatchTypeChange = (e: any) => { matchTypeIndex.value = e.detail.value; matchType.value = matchTypes[e.detail.value]; fetchMatches(); };
-const onStatusChange = (e: any) => { statusIndex.value = e.detail.value; status.value = statuses[e.detail.value]; fetchMatches(); };
+const onRegionChange = (e: any) => { regionIndex.value = e.detail.value; region.value = regions[e.detail.value]; resetAndFetch(); };
+const onCategoryChange = (e: any) => { categoryIndex.value = e.detail.value; category.value = categories[e.detail.value]; resetAndFetch(); };
+const onLevelChange = (e: any) => { levelIndex.value = e.detail.value; level.value = levels[e.detail.value]; resetAndFetch(); };
+const onMatchTypeChange = (e: any) => { matchTypeIndex.value = e.detail.value; matchType.value = matchTypes[e.detail.value]; resetAndFetch(); };
+const onStatusChange = (e: any) => { statusIndex.value = e.detail.value; status.value = statuses[e.detail.value]; resetAndFetch(); };
 
 const onSearch = () => {
-  fetchMatches();
+  resetAndFetch();
+};
+
+const resetAndFetch = () => {
+    page.value = 1;
+    hasMore.value = true;
+    matches.value = [];
+    fetchMatches();
 };
 
 const fetchMatches = async () => {
+  if (isLoading.value || !hasMore.value) return;
+  isLoading.value = true;
   uni.showLoading({ title: '加载中...' });
+  
   try {
-    const params: any = {};
+    const params: any = {
+        page: page.value,
+        pageSize: 10
+    };
     if (region.value !== '区域' && region.value !== '全部') params.region = region.value;
     if (category.value !== '类别' && category.value !== '全部') params.category = category.value;
     if (level.value !== '级别' && level.value !== '全部') params.level = level.value;
@@ -117,12 +134,24 @@ const fetchMatches = async () => {
     if (searchKeyword.value) params.search = searchKeyword.value;
 
     const res: any = await getMatches(params);
-    matches.value = res;
+    
+    if (res && res.length > 0) {
+        matches.value = [...matches.value, ...res];
+        if (res.length < 10) {
+            hasMore.value = false;
+        } else {
+            page.value++;
+        }
+    } else {
+        hasMore.value = false;
+    }
   } catch (err) {
     console.error(err);
     uni.showToast({ title: '加载失败', icon: 'none' });
   } finally {
+    isLoading.value = false;
     uni.hideLoading();
+    uni.stopPullDownRefresh();
   }
 };
 
@@ -188,6 +217,16 @@ const openLocation = (match: any) => {
 
 onMounted(() => {
   fetchMatches();
+});
+
+onPullDownRefresh(() => {
+    resetAndFetch();
+});
+
+onReachBottom(() => {
+    if (hasMore.value) {
+        fetchMatches();
+    }
 });
 </script>
 

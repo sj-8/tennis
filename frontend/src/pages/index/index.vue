@@ -60,7 +60,7 @@
             <text class="match-detail">🕒 {{ formatDate(match.startTime) }}</text>
           </view>
           <text class="match-detail" v-if="match.drawSize">👥 {{ match._count?.applications || 0 }}/{{ match.drawSize }}</text>
-          <text class="match-status" :class="match.status">{{ getStatusText(match.status) }}</text>
+          <text class="match-status" :class="match.status">{{ getStatusText(match.status, match) }}</text>
         </view>
           <view class="match-action">
             <view class="action-column">
@@ -114,7 +114,7 @@ const fetchMatches = async (isPullDown = false) => {
   try {
     // 3. 并行请求数据
     const [matchesRes, appsRes] = await Promise.all([
-      getMatches().catch(e => ({ _err: e })), 
+      getMatches({ limit: 5 }).catch(e => ({ _err: e })), 
       getUserApplications().catch(e => ({ _err: e }))
     ]);
 

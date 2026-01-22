@@ -17,6 +17,11 @@
             <text class="meta-text center">{{ formatDate(matchInfo.startTime) }}</text>
             <view class="placeholder-right"></view>
           </view>
+          <view class="meta-row" v-if="matchInfo.fee">
+             <text class="meta-icon left">💰</text>
+             <text class="meta-text center">{{ matchInfo.fee }} 元/人</text>
+             <view class="placeholder-right"></view>
+          </view>
           <view class="meta-row" v-if="matchInfo.contact">
              <text class="meta-icon left">📞</text>
              <text class="meta-text center">{{ matchInfo.contact }}</text>
@@ -45,9 +50,9 @@
             <text class="action-icon">📋</text>
             <text>查看签表</text>
          </view>
-         <view class="action-btn delete" @click="handleDelete">
-            <text class="action-icon">🗑️</text>
-            <text>删除赛事</text>
+         <view class="action-btn delete" @click="handleCancelMatch">
+            <text class="action-icon">🚫</text>
+            <text>取消赛事</text>
          </view>
       </view>
 
@@ -108,7 +113,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { submitApplication, getMatches, deleteMatch, getMatchParticipants, cancelApplication, searchPlayers } from '../../api';
+import { submitApplication, getMatches, deleteMatch, getMatchParticipants, cancelApplication, searchPlayers, getWeChatPhone } from '../../api';
 
 const loading = ref(false);
 const tournamentId = ref<number | null>(null);
@@ -360,8 +365,12 @@ const submit = async () => {
     }
 
     if (isDoubles.value && !partner.value) {
-        uni.showToast({ title: '双打比赛请选择搭档', icon: 'none' });
-        return;
+        // Allow single registration for doubles if user wants to be paired later or just register alone first
+        // But prompt to confirm? Or just allow it.
+        // User requirement: "Doubles registration does not necessarily need to bind a partner. Can also register alone."
+        // So we remove the blocker.
+        // uni.showToast({ title: '双打比赛请选择搭档', icon: 'none' });
+        // return;
     }
 
     await submitApplication({
@@ -449,5 +458,21 @@ const submit = async () => {
 .partner-info { flex: 1; }
 .partner-name { font-weight: bold; font-size: 16px; }
 .btn-remove { color: #999; font-size: 18px; padding: 5px; }
+
+.phone-wrapper { display: flex; align-items: center; }
+.phone-input { flex: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.btn-get-phone { 
+    background: #3A5F0B; 
+    color: white; 
+    font-size: 12px; 
+    padding: 0 15px; 
+    height: 44px; 
+    line-height: 44px; 
+    border-top-right-radius: 4px; 
+    border-bottom-right-radius: 4px; 
+    border-top-left-radius: 0; 
+    border-bottom-left-radius: 0; 
+    margin: 0;
+}
 
 </style>

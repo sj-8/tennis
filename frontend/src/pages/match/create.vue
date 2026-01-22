@@ -30,6 +30,11 @@
       </view>
 
       <view class="form-item">
+        <text class="label">报名费用 (元/人)</text>
+        <input class="input" v-model="form.fee" placeholder="请输入报名费用" type="number" />
+      </view>
+
+      <view class="form-item">
         <text class="label">比赛级别</text>
         <picker @change="bindLevelChange" :value="levelIndex" :range="levels">
           <view class="picker-view">
@@ -137,6 +142,7 @@ const form = ref({
   matchType: '',
   level: '',
   drawSize: '',
+  fee: '',
   rules: '',
   description: '',
   withdrawalNotice: '',
@@ -170,6 +176,7 @@ onLoad(async (options: any) => {
       form.value.time = start.toTimeString().slice(0, 5);
       form.value.matchType = match.matchType || '';
       form.value.drawSize = match.drawSize || '';
+      form.value.fee = match.fee || '';
       form.value.description = match.description || '';
       form.value.rules = match.rules || '';
       form.value.withdrawalNotice = match.withdrawalNotice || '';
@@ -271,7 +278,8 @@ const submit = async () => {
     startTime: `${form.value.date} ${form.value.time}`.replace(/-/g, '/'), // Fix for iOS/Safari
     registrationStart: (form.value.regStartDate && form.value.regStartTime) ? `${form.value.regStartDate} ${form.value.regStartTime}`.replace(/-/g, '/') : null,
     registrationEnd: (form.value.regEndDate && form.value.regEndTime) ? `${form.value.regEndDate} ${form.value.regEndTime}`.replace(/-/g, '/') : null,
-    drawSize: form.value.drawSize ? Number(form.value.drawSize) : null
+    drawSize: form.value.drawSize ? Number(form.value.drawSize) : null,
+    fee: form.value.fee ? Number(form.value.fee) : null
   };
 
   loading.value = true;

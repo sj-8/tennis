@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, updateProfile, searchPlayers } from '../controllers/authController';
+import { login, updateProfile, searchPlayers, getPhoneNumber } from '../controllers/authController';
 import { getMatches, createMatch, updateMatch, deleteMatch, submitResult, getRankings, getMatchParticipants, getReferees, addReferee, removeReferee } from '../controllers/matchController';
 import { adminLogin, createAdmin, getAuditLogs, promotePlayerToAdmin } from '../controllers/adminController';
 import { submitApplication, getApplications, auditApplication, getUserApplications, cancelApplication } from '../controllers/applicationController';
@@ -12,6 +12,7 @@ const router = Router();
 router.post('/auth/login', login);
 router.put('/auth/:id/profile', authenticateToken, updateProfile);
 router.get('/users/search', authenticateToken, searchPlayers);
+router.post('/auth/phone', authenticateToken, getPhoneNumber);
 
 // Matches
 router.get('/matches', getMatches);

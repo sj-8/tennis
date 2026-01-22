@@ -34,7 +34,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { request, updateProfile } from '../../api';
+import { request, updateProfile, getWeChatPhone } from '../../api';
 
 const form = ref({
   realName: '',
@@ -60,17 +60,12 @@ const isValid = computed(() => {
 const handleGetPhoneNumber = (e: any) => {
   if (e.detail.errMsg === 'getPhoneNumber:ok') {
     uni.showLoading({ title: '获取中...' });
-    request({
-      url: '/auth/phone',
-      method: 'POST',
-      data: { code: e.detail.code }
-    }).then((res: any) => {
-      form.value.phone = res.phone || '13800138000';
+    getWeChatPhone(e.detail.code).then((res: any) => {
+      form.value.phone = res.phone;
       uni.showToast({ title: '获取成功' });
     }).catch(err => {
       console.error(err);
-      form.value.phone = '13800138000'; 
-      uni.showToast({ title: '（模拟）获取成功', icon: 'none' });
+      uni.showToast({ title: '获取失败', icon: 'none' });
     }).finally(() => {
       uni.hideLoading();
     });
