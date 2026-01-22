@@ -56,6 +56,10 @@ export const createOrder = async (req: Request, res: Response) => {
                 // @ts-ignore
                 amount: tournament.fee, // Assuming Yuan
                 status: 'PENDING'
+            },
+            include: {
+                tournament: true,
+                player: true
             }
         });
 
@@ -229,13 +233,66 @@ export const handlePaymentNotify = async (req: Request, res: Response) => {
             const order = await prisma.order.findUnique({ where: { orderNo: out_trade_no } });
             
             if (order && order.status !== 'PAID') {
-                // Update Order
-                // @ts-ignore
-                await prisma.order.update({
-                    where: { id: order.id },
-                    data: { status: 'PAID' }
+                // Transaction: Update Order -> Create/Update Application
+                await prisma.$transaction(async (tx) => {
+                    // 1. Update Order
+                    // @ts-ignore
+                    await tx.order.update({
+                        where: { id: order.id },
+                        data: { status: 'PAID' }
+                    });
+                    console.log(`Order ${out_trade_no} paid successfully`);
+
+                    // 2. Auto-Submit Application if not exists or pending payment
+                    // This ensures that even if frontend fails to call submitApplication,
+                    // the payment callback will guarantee the user is registered.
+                    const tournamentId = order.tournamentId;
+                    const playerId = order.playerId;
+                    
+                    // @ts-ignore
+                    const tournament = await tx.tournament.findUnique({ where: { id: tournamentId } });
+                    
+                    if (tournament) {
+                        const existingApp = await tx.playerApplication.findFirst({
+                            where: { tournamentId, playerId }
+                        });
+                        
+                        // Determine Status
+                        let status = 'APPROVED';
+                        // @ts-ignore
+                        if (tournament.drawSize) {
+                            const count = await tx.playerApplication.count({
+                                where: { tournamentId, status: 'APPROVED' }
+                            });
+                            // @ts-ignore
+                            if (count >= tournament.drawSize) {
+                                status = 'WAITLIST';
+                            }
+                        }
+
+                        if (existingApp) {
+                            // If app exists but was cancelled/rejected/pending, update it
+                            if (['CANCELLED', 'REJECTED', 'PENDING_PAYMENT'].includes(existingApp.status)) {
+                                await tx.playerApplication.update({
+                                    where: { id: existingApp.id },
+                                    data: { status, createdAt: new Date() }
+                                });
+                            }
+                        } else {
+                            // Create new application
+                            await tx.playerApplication.create({
+                                data: {
+                                    tournamentId,
+                                    playerId,
+                                    status,
+                                    realName: '', // These might be empty if callback handles it, ideally fetch from profile
+                                    phone: '',
+                                    idCard: ''
+                                }
+                            });
+                        }
+                    }
                 });
-                console.log(`Order ${out_trade_no} paid successfully`);
             }
         }
         

@@ -122,7 +122,7 @@ const isEdit = ref(false);
 const loading = ref(false);
 const matchId = ref(0);
 const categories = ['周赛', '月赛', '公开赛', '大奖赛'];
-const levels = ['5.0', '10.0', '15.0', '20.0', '25.0', '30.0', '35.0', '40.0', '45.0', '50.0'];
+const levels = ['5', '10', '15', '20', '25', '30', '35', '40', '45', '50'];
 const matchTypes = ['单打', '双打'];
 const jiangsuCities = ['南京市', '无锡市', '徐州市', '常州市', '苏州市', '南通市', '连云港市', '淮安市', '盐城市', '扬州市', '镇江市', '泰州市', '宿迁市'];
 const matchTypeIndex = ref(-1);
@@ -194,7 +194,11 @@ onLoad(async (options: any) => {
         matchTypeIndex.value = matchTypes.indexOf(form.value.matchType);
       }
       if (match.level) {
-        const levelStr = String(match.level);
+        let levelStr = String(match.level);
+        // Handle legacy "5.0" format by removing .0
+        if (levelStr.indexOf('.0') !== -1) {
+            levelStr = parseFloat(levelStr).toString();
+        }
         levelIndex.value = levels.indexOf(levelStr);
         form.value.level = levelStr;
       }
