@@ -6,11 +6,14 @@ FROM node:20-alpine AS builder
 # 设置工作目录
 WORKDIR /app
 
+# 设置 npm 镜像加速 (腾讯云内网源)
+RUN npm config set registry https://mirrors.cloud.tencent.com/npm/
+
 # 复制依赖文件
 COPY backend/package*.json ./
 
 # 安装所有依赖（包括 devDependencies 用于构建）
-RUN npm install
+RUN npm ci
 
 # 复制 Prisma Schema
 COPY backend/prisma ./prisma/
