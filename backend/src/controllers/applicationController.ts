@@ -75,7 +75,14 @@ export const initiatePayment = async (req: Request, res: Response) => {
             );
             
             // 2. Sign for Frontend
-            const paymentParams = getJsApiSignature(result.prepay_id);
+            let paymentParams;
+            if (result.package && result.paySign) {
+                // Already signed by the library
+                paymentParams = result;
+            } else {
+                // Manually sign prepay_id
+                paymentParams = getJsApiSignature(result.prepay_id);
+            }
             
             res.json({ 
                 paymentParams,

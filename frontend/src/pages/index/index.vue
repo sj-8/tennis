@@ -59,7 +59,12 @@
             </view>
             <text class="match-detail">🕒 {{ formatDate(match.startTime) }}</text>
           </view>
-          <text class="match-detail" v-if="match.drawSize">👥 {{ match._count?.applications || 0 }}/{{ match.drawSize }}</text>
+          <text class="match-detail" v-if="match.drawSize">
+              👥 {{ match._count?.applications || 0 }}/{{ match.drawSize }}
+              <text v-if="match.fee && match.fee > 0" style="margin-left: 10px; color: #ff6b81; font-weight: bold;">
+                  ¥{{ match.fee }}
+              </text>
+          </text>
           <text class="match-status" :class="match.status">{{ getStatusText(match.status, match) }}</text>
         </view>
           <view class="match-action">

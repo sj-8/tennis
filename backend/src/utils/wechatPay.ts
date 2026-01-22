@@ -72,6 +72,12 @@ export const generatePaymentParams = async (description: string, outTradeNo: str
     // The actual API response data is in result.data
     const responseData = result.data || result;
     
+    // If the library returns signed params directly (contains package/paySign), use it.
+    // Some versions or configs might do this.
+    if (responseData.package && responseData.paySign) {
+        return responseData;
+    }
+
     if (!responseData || !responseData.prepay_id) {
         throw new Error(`Failed to get prepay_id from WeChat Pay. Status: ${result.status}, Result: ${JSON.stringify(result)}`);
     }
