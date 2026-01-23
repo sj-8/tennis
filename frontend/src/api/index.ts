@@ -163,6 +163,7 @@ export const getWeChatPhone = (code: string) => request({ url: '/auth/phone', me
 // 支付订单
 export const createOrder = (tournamentId: number) => request({ url: '/orders/create', method: 'POST', data: { tournamentId } });
 export const cancelOrder = (orderNo: string) => request({ url: `/orders/${orderNo}/cancel`, method: 'POST' });
+export const checkOrderStatus = (orderNo: string) => request({ url: `/orders/${orderNo}/status`, method: 'GET' });
 export const payOrder = (orderNo: string) => request({ url: '/orders/pay', method: 'POST', data: { orderNo } });
 export const getMyOrders = () => request({ url: '/orders/my' });
 

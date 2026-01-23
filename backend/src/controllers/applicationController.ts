@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
-import { generatePaymentParams, getJsApiSignature, verifyNotification, getWxPay, refundOrder } from '../utils/wechatPay';
+import { generatePaymentParams, getJsApiSignature, verifyNotification, getWxPay, refundOrder, queryOrder } from '../utils/wechatPay';
 
 // Helper to generate unique order number
 const generateOrderNo = () => {
@@ -67,6 +67,85 @@ export const createOrder = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Create order error:', error);
         res.status(500).json({ error: 'Failed to create order' });
+    }
+};
+
+export const checkOrderStatus = async (req: Request, res: Response) => {
+    const { orderNo } = req.params;
+    
+    try {
+        // @ts-ignore
+        const order = await prisma.order.findUnique({ where: { orderNo } });
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+        
+        if (order.status === 'PAID') {
+            return res.json({ status: 'PAID', message: 'Order is paid' });
+        }
+        
+        // If PENDING, query WeChat
+        if (getWxPay()) {
+            const wxResult = await queryOrder(orderNo);
+            if (wxResult.trade_state === 'SUCCESS') {
+                // Sync status
+                 // Transaction: Update Order -> Create/Update Application
+                await prisma.$transaction(async (tx) => {
+                    // 1. Update Order
+                    // @ts-ignore
+                    await tx.order.update({
+                        where: { id: order.id },
+                        data: { status: 'PAID' }
+                    });
+                    
+                    // 2. Auto-Submit Application logic (copied from handlePaymentNotify)
+                    const tournamentId = order.tournamentId;
+                    const playerId = order.playerId;
+                    // @ts-ignore
+                    const tournament = await tx.tournament.findUnique({ where: { id: tournamentId } });
+                    
+                    if (tournament) {
+                        const existingApp = await tx.playerApplication.findFirst({
+                            where: { tournamentId, playerId }
+                        });
+                        let status = 'APPROVED';
+                        // @ts-ignore
+                        if (tournament.drawSize) {
+                            const count = await tx.playerApplication.count({
+                                where: { tournamentId, status: 'APPROVED' }
+                            });
+                            // @ts-ignore
+                            if (count >= tournament.drawSize) { status = 'WAITLIST'; }
+                        }
+
+                        if (existingApp) {
+                            if (['CANCELLED', 'REJECTED', 'PENDING_PAYMENT'].includes(existingApp.status)) {
+                                await tx.playerApplication.update({
+                                    where: { id: existingApp.id },
+                                    data: { status, createdAt: new Date() }
+                                });
+                            }
+                        } else {
+                            await tx.playerApplication.create({
+                                data: {
+                                    tournamentId,
+                                    playerId,
+                                    status,
+                                    realName: '',
+                                    phone: '',
+                                    idCard: ''
+                                }
+                            });
+                        }
+                    }
+                });
+                
+                return res.json({ status: 'PAID', message: 'Order synced from WeChat' });
+            }
+        }
+        
+        res.json({ status: order.status });
+    } catch (error) {
+        console.error('Check order status error:', error);
+        res.status(500).json({ error: 'Failed to check status' });
     }
 };
 

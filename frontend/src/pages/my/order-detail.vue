@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { payOrder, cancelOrder } from '../../api';
+import { payOrder, cancelOrder, checkOrderStatus } from '../../api';
 
 const order = ref<any>(null);
 
@@ -109,8 +109,8 @@ const handlePay = async () => {
         if (paymentRes.isSimulation) {
             uni.showToast({ title: '模拟支付成功', icon: 'none' });
             order.value.status = 'PAID';
-            // Sync status with previous pages (e.g. index list)
             uni.setStorageSync('should_refresh_matches', true);
+            setTimeout(() => uni.navigateBack(), 1500);
         } else if (paymentRes.paymentParams) {
             const params = paymentRes.paymentParams;
             await new Promise((resolve, reject) => {
@@ -125,12 +125,28 @@ const handlePay = async () => {
                     fail: reject
                 });
             });
-            uni.showToast({ title: '支付成功' });
+            
+            // Payment success callback
+            uni.showLoading({ title: '确认结果...' });
+            
+            // Poll for status update (Max 3 times, 1s interval)
+            let synced = false;
+            for (let i = 0; i < 3; i++) {
+                try {
+                    const statusRes: any = await checkOrderStatus(order.value.orderNo);
+                    if (statusRes.status === 'PAID') {
+                        synced = true;
+                        break;
+                    }
+                } catch (e) { console.error(e); }
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            
+            uni.showToast({ title: synced ? '支付成功' : '支付已提交，请稍后查看' });
             order.value.status = 'PAID';
-            // Sync status
             uni.setStorageSync('should_refresh_matches', true);
+            setTimeout(() => uni.navigateBack(), 1500);
         }
-        setTimeout(() => uni.navigateBack(), 1500);
     } catch (err: any) {
         console.error(err);
         uni.showToast({ title: err.errMsg || '支付失败', icon: 'none' });

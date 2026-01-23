@@ -160,6 +160,19 @@ export const verifyNotification = async (headers: any, body: any) => {
     return decrypted; // Contains out_trade_no, trade_state, etc.
 };
 
+export const queryOrder = async (orderNo: string) => {
+    if (!wxPay) throw new Error('WeChat Pay not initialized');
+    
+    try {
+        const result: any = await wxPay.query({ out_trade_no: orderNo });
+        console.log('WeChat Pay Query Result:', JSON.stringify(result));
+        return result.data || result;
+    } catch (error: any) {
+        console.error('WeChat Pay Query Error:', error);
+        throw error;
+    }
+};
+
 export const refundOrder = async (orderNo: string, amount: number, refundReason: string) => {
     if (!wxPay) throw new Error('WeChat Pay not initialized');
 
